@@ -1,0 +1,5 @@
+ig_cookie.txt
+.env
+data/*.json
+data/*.csv
+.tools/
