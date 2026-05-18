@@ -1,3 +1,39 @@
 {
-  "version": 2
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "review_app.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/stats",
+      "dest": "/api/stats.js"
+    },
+    {
+      "src": "/api/candidates",
+      "dest": "/api/candidates.js"
+    },
+    {
+      "src": "/api/candidates/([^/]+)",
+      "dest": "/api/candidates/[id].js?id=$1"
+    },
+    {
+      "src": "/review_app.html",
+      "dest": "/review_app.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
 }
