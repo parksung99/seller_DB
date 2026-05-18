@@ -25,11 +25,12 @@ export function verifyAccessCode(request, body = {}) {
   if (!env.teamAccessCode) return;
 
   const headers = request.headers || {};
-  const code =
+  const rawCode =
     headers["x-team-access-code"] ||
     headers["X-Team-Access-Code"] ||
     headers.get?.("x-team-access-code") ||
     body.access_code;
+  const code = typeof rawCode === "string" ? decodeURIComponent(rawCode) : rawCode;
 
   if (code !== env.teamAccessCode) {
     const error = new Error("\uC811\uADFC \uCF54\uB4DC\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.");
@@ -144,7 +145,7 @@ export async function updateCandidate(id, patch, actor) {
   const now = new Date().toISOString();
   body.status_updated_by = String(actor || "").trim() || "unknown";
   body.status_updated_at = now;
-  if (body.dm_status === "발송완료" || body.dm_status === "답장옴") {
+  if (body.dm_status === DM_STATUSES[1] || body.dm_status === DM_STATUSES[2]) {
     body.last_contacted_at = now;
   }
 
