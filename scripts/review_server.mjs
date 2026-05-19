@@ -2,6 +2,7 @@ import http from "node:http";
 import fs from "node:fs/promises";
 import {
   handleError,
+  createCandidate,
   listCandidates,
   readBody,
   sendJson,
@@ -26,6 +27,13 @@ const server = http.createServer(async (request, response) => {
     if (url.pathname === "/api/candidates" && request.method === "GET") {
       verifyAccessCode(request);
       sendJson(response, 200, await listCandidates(url));
+      return;
+    }
+
+    if (url.pathname === "/api/candidates" && request.method === "POST") {
+      const body = await readBody(request);
+      verifyAccessCode(request, body);
+      sendJson(response, 200, await createCandidate(body, body.actor));
       return;
     }
 

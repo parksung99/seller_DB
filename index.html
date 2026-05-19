@@ -1,58 +1,853 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Team DM Manager</title>
-  <style>
-    * { box-sizing: border-box; }
-    :root { --bg:#f5f6f8; --panel:#fff; --line:#dfe3e8; --text:#15171a; --muted:#667085; --accent:#0f766e; --accent-soft:#d9f3ef; --shadow:0 10px 22px rgba(15,23,42,.08); }
-    body { margin:0; font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:var(--bg); color:var(--text); }
-    header { min-height:60px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2; }
-    h1 { font-size:17px; margin:0; } h2 { font-size:24px; margin:0 0 4px; }
-    label { display:block; font-size:12px; color:var(--muted); margin:12px 0 5px; }
-    input,select,textarea { width:100%; border:1px solid #cfd6dd; border-radius:8px; padding:9px 10px; font:inherit; background:#fff; color:var(--text); }
-    textarea { resize:vertical; min-height:120px; }
-    button,a.button { border:1px solid #c7cdd4; background:#fff; border-radius:8px; padding:9px 12px; cursor:pointer; text-decoration:none; color:inherit; font:inherit; display:inline-flex; align-items:center; justify-content:center; min-height:38px; }
-    a.primary { background:#111827; color:#fff; border-color:#111827; } button.accent { background:var(--accent); color:#fff; border-color:var(--accent); } button:disabled { opacity:.55; cursor:wait; }
-    main { display:grid; grid-template-columns:minmax(340px,430px) 1fr; min-height:calc(100vh - 60px); }
-    aside { background:var(--panel); border-right:1px solid var(--line); max-height:calc(100vh - 60px); overflow:auto; } section { max-height:calc(100vh - 60px); overflow:auto; padding:18px; }
-    .toolbar { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px; border-bottom:1px solid var(--line); } .toolbar input { grid-column:1/-1; }
-    .stats,.actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .stats { justify-content:flex-end; }
-    .muted { color:var(--muted); font-size:12px; } .pill { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:12px; background:#eef2f6; color:#344054; margin:2px 3px 2px 0; white-space:nowrap; }
-    .pill.high { background:#fee4e2; color:#b42318; } .pill.mid { background:#fff1c2; color:#8a5a00; } .pill.good { background:var(--accent-soft); color:#0f5f59; }
-    .item { padding:12px; border-bottom:1px solid #edf0f2; cursor:pointer; } .item:hover,.item.active { background:#eef8f6; } .item-top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
-    .name { font-weight:700; overflow-wrap:anywhere; } .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:14px; box-shadow:var(--shadow); } .plain { box-shadow:none; }
-    .grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; } .metric { border:1px solid #edf0f2; border-radius:8px; padding:10px; background:#fafbfc; min-width:0; } .metric strong { display:block; font-size:20px; margin-top:4px; overflow-wrap:anywhere; }
-    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 12px; } .form-grid .full { grid-column:1/-1; } .empty { padding:30px; text-align:center; color:var(--muted); }
-    .auth { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(17,24,39,.42); z-index:10; } .auth.open { display:flex; } .auth-box { width:min(420px,100%); background:#fff; border-radius:8px; padding:18px; box-shadow:var(--shadow); }
-    .toast { position:fixed; right:16px; bottom:16px; max-width:min(420px,calc(100vw - 32px)); background:#111827; color:#fff; padding:11px 13px; border-radius:8px; display:none; z-index:20; } .toast.show { display:block; }
-    @media (max-width:920px){ header{align-items:flex-start; flex-direction:column;} .stats{justify-content:flex-start;} main{grid-template-columns:1fr;} aside,section{max-height:none;} .grid,.form-grid{grid-template-columns:1fr 1fr;} }
-    @media (max-width:560px){ .toolbar,.grid,.form-grid{grid-template-columns:1fr;} .toolbar input,.form-grid .full{grid-column:auto;} }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>인플루언서 DB</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface2: #f4f3f0;
+  --border: #e8e5e0;
+  --border2: #d4d0c8;
+  --text: #1a1916;
+  --text2: #6b6860;
+  --text3: #a8a49c;
+  --pink: #e8457a;
+  --pink-light: #fce8ef;
+  --pink-mid: #f4a0be;
+  --pink-dark: #c4325e;
+  --green: #2d9f6e;
+  --green-light: #e6f7f0;
+  --amber: #d4820a;
+  --amber-light: #fef3e2;
+  --red: #d44;
+  --red-light: #fdeaea;
+  --blue: #3a7fd4;
+  --blue-light: #e8f1fc;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+}
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; }
+.nav-logo-mark {
+  width: 28px; height: 28px; background: var(--pink); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: #fff; font-weight: 700;
+}
+.nav-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.nav-tabs { display: flex; gap: 2px; }
+.tab-btn {
+  background: transparent; border: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--text2); padding: 6px 14px; border-radius: 8px;
+  transition: all 0.15s;
+}
+.tab-btn:hover { background: var(--surface2); color: var(--text); }
+.tab-btn.active { background: var(--pink-light); color: var(--pink); }
+.nav-count, .cloud-status {
+  font-size: 12px; color: var(--text2); background: var(--surface2);
+  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+}
+.cloud-status { font-size: 11px; margin-left: 8px; white-space: nowrap; }
+.cloud-status.ok { background: var(--green-light); color: var(--green); border-color: #b9ead4; }
+.cloud-status.warn { background: var(--amber-light); color: var(--amber); border-color: #f5d39b; }
+.cloud-status.err { background: var(--red-light); color: var(--red); border-color: #f4b6b6; }
+.page { display: none; flex: 1; padding: 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
+.page.active { display: block; }
+.section-title { font-size: 18px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); margin-bottom: 4px; }
+.section-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+.setup-banner {
+  background: var(--amber-light); border: 1px solid #f5d39b; color: #8a5405;
+  border-radius: var(--radius); padding: 12px 14px; font-size: 13px; margin-bottom: 16px;
+  display: none; line-height: 1.6;
+}
+.status-tabs {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 14px; overflow-x: auto;
+}
+.status-tab {
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+  border-radius: 999px; padding: 8px 12px; white-space: nowrap; transition: all 0.15s;
+}
+.status-tab:hover { border-color: var(--pink-mid); color: var(--pink); }
+.status-tab.active { background: var(--pink); border-color: var(--pink); color: #fff; }
+.status-tab-count { opacity: 0.72; font-weight: 600; margin-left: 4px; }
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.search-wrap { position: relative; flex: 1; min-width: 200px; }
+.search-wrap svg {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text3); pointer-events: none;
+}
+.search-input {
+  width: 100%; font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 9px 12px 9px 36px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus, .filter-select:focus, input:focus, textarea:focus, select:focus {
+  border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-light);
+}
+.filter-select {
+  font-family: inherit; font-size: 13px; color: var(--text2);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 9px 12px; outline: none; cursor: pointer;
+}
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
+}
+.stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 4px; }
+.stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--text3); }
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: auto;
+}
+table { width: 100%; border-collapse: collapse; min-width: 1020px; }
+thead { background: var(--surface2); }
+th {
+  padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td {
+  padding: 12px 14px; font-size: 13px; color: var(--text);
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: var(--pink-light); }
+.handle { color: var(--text3); font-size: 12px; }
+.followers-cell { font-weight: 600; color: var(--text); }
+.er-badge {
+  display: inline-block; padding: 3px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.er-low { background: var(--red-light); color: var(--red); }
+.er-mid { background: var(--amber-light); color: var(--amber); }
+.er-good { background: var(--green-light); color: var(--green); }
+.er-great { background: var(--pink-light); color: var(--pink); }
+.status-badge {
+  display: inline-block; padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.s-none { background: var(--surface2); color: var(--text2); }
+.s-dm { background: var(--blue-light); color: var(--blue); }
+.s-wait { background: var(--amber-light); color: var(--amber); }
+.s-reply { background: var(--green-light); color: var(--green); }
+.s-call { background: var(--pink-light); color: var(--pink); }
+.s-done { background: #e8f5e9; color: #2e7d32; }
+.s-exclude { background: var(--surface2); color: var(--text3); text-decoration: line-through; }
+.action-btn {
+  font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border2); background: transparent; color: var(--text2);
+  border-radius: 6px; padding: 4px 10px; transition: all 0.1s;
+}
+.action-btn:hover { background: var(--pink-light); color: var(--pink); border-color: var(--pink-mid); }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); display: none; }
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 4px; }
+.empty-state small { font-size: 13px; }
+.form-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+}
+.form-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.form-section:last-child { border-bottom: none; }
+.form-section-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--pink); margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+}
+.form-section-title::after { content: ''; flex: 1; height: 1px; background: var(--pink-light); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.solo { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.field input, .field select, .field textarea {
+  font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 9px 12px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field textarea { resize: vertical; min-height: 72px; }
+.engagement-row { display: flex; align-items: flex-end; gap: 10px; }
+.engagement-row .field { flex: 1; }
+.engagement-calc {
+  background: var(--pink-light); border: 1px solid var(--pink-mid);
+  border-radius: var(--radius); padding: 9px 14px; font-size: 13px;
+  font-weight: 700; color: var(--pink); white-space: nowrap; min-width: 90px; text-align: center;
+}
+.engagement-calc span { font-size: 11px; font-weight: 400; color: var(--pink-dark); display: block; }
+.form-actions { padding: 16px 24px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; background: var(--surface2); }
+.btn {
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  border-radius: var(--radius); padding: 9px 20px; border: none; transition: all 0.15s;
+}
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-primary { background: var(--pink); color: #fff; }
+.btn-primary:hover { background: var(--pink-dark); }
+.btn-primary:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; }
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(10,8,6,0.45); z-index: 200; align-items: flex-start; justify-content: flex-end;
+}
+.overlay.open { display: flex; }
+.drawer {
+  background: var(--surface); width: 440px; max-width: 100vw; height: 100vh;
+  overflow-y: auto; box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+  animation: slideIn 0.22s ease;
+}
+@keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.drawer-header {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.drawer-name { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
+.drawer-handle { font-size: 13px; color: var(--text3); margin-top: 2px; }
+.close-btn {
+  background: var(--surface2); border: none; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 8px; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text2);
+  transition: background 0.1s;
+}
+.close-btn:hover { background: var(--border); }
+.drawer-body { padding: 20px 24px; }
+.detail-section { margin-bottom: 20px; }
+.detail-section-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text3); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.detail-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; gap: 12px; }
+.detail-key { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.detail-val { font-size: 13px; font-weight: 500; color: var(--text); text-align: right; word-break: break-all; }
+.detail-note { background: var(--surface2); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
+.drawer-edit-btn {
+  font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  background: var(--pink-light); color: var(--pink); border: 1px solid var(--pink-mid);
+  border-radius: 8px; padding: 5px 14px; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px;
+}
+.drawer-edit-btn:hover { background: var(--pink); color: #fff; }
+.edit-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.edit-field label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+.edit-field input, .edit-field select, .edit-field textarea {
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 11px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.edit-field textarea { resize: vertical; min-height: 64px; }
+.edit-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.edit-actions { display: flex; gap: 8px; padding: 16px 0 4px; border-top: 1px solid var(--border); margin-top: 8px; }
+.autosave-status { align-self: center; color: var(--text2); font-size: 12px; margin-right: auto; }
+.autosave-status.saving { color: var(--amber); }
+.autosave-status.saved { color: var(--green); }
+.autosave-status.error { color: var(--red); }
+.auth {
+  position: fixed; inset: 0; background: rgba(10,8,6,0.45); z-index: 300;
+  display: none; align-items: center; justify-content: center; padding: 16px;
+}
+.auth.open { display: flex; }
+.auth-card {
+  width: min(420px, 100%); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 18px;
+}
+.auth-card h3 { font-size: 18px; margin-bottom: 6px; }
+.auth-card p { color: var(--text2); font-size: 13px; margin-bottom: 14px; }
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
+  padding: 10px 20px; border-radius: 30px; z-index: 999; transition: transform 0.3s;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.tag { display: inline-block; padding: 2px 7px; border-radius: 999px; background: var(--surface2); color: var(--text2); font-size: 11px; margin: 0 4px 4px 0; }
+@media (max-width: 720px) {
+  .nav { padding: 0 12px; }
+  .page { padding: 16px; }
+  .form-row, .form-row.triple { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  td, th { padding: 10px; }
+  .edit-grid-2 { grid-template-columns: 1fr; }
+  .engagement-row { display: grid; grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
-  <header><div><h1>&#54016; DM &#48156;&#49569; &#44288;&#47532;</h1><div id="memberLabel" class="muted"></div></div><div id="stats" class="stats muted">&#48520;&#47084;&#50724;&#45716; &#51473;...</div></header>
-  <main><aside><div class="toolbar"><input id="q" placeholder="&#49472;&#47084;&#47749;, &#54644;&#49884;&#53468;&#44536;, &#47700;&#47784; &#44160;&#49353;" /><select id="grade"></select><select id="review_status"></select><select id="dm_status"></select><select id="assignee"></select></div><div id="list" class="empty">&#54980;&#48372;&#47484; &#48520;&#47084;&#50724;&#45716; &#51473;&#51077;&#45768;&#45796;.</div></aside><section><div id="detail" class="card">&#50780;&#51901; &#47785;&#47197;&#50640;&#49436; &#49472;&#47084;&#47484; &#49440;&#53469;&#54616;&#49464;&#50836;.</div></section></main>
-  <div id="auth" class="auth"><div class="auth-box"><h2>&#54016; &#51217;&#49549;</h2><p class="muted">&#54016; &#44277;&#50857; &#53076;&#46300;&#50752; &#48376;&#51064; &#51060;&#47492;&#51012; &#51077;&#47141;&#54616;&#47732; &#48320;&#44221;&#51088;&#44032; &#44592;&#47197;&#46121;&#45768;&#45796;.</p><label for="accessCode">&#51217;&#44540; &#53076;&#46300;</label><input id="accessCode" autocomplete="off" /><label for="memberName">&#51060;&#47492;</label><input id="memberName" autocomplete="name" /><div class="actions"><button class="accent" onclick="saveIdentity()">&#51077;&#51109;</button></div></div></div><div id="toast" class="toast"></div>
-  <script>
-    const T={allGrades:"\uB4F1\uAE09 \uC804\uCCB4",allReviews:"\uAC80\uD1A0 \uC804\uCCB4",allDm:"DM \uC804\uCCB4",allAssignees:"\uB2F4\uB2F9\uC790 \uC804\uCCB4",unreviewed:"\uBBF8\uD655\uC778",good:"\uC88B\uC74C",hold:"\uBCF4\uB958",excluded:"\uC81C\uC678",brandSent:"\uBE0C\uB79C\uB4DC\uC804\uB2EC",unsent:"\uBBF8\uBC1C\uC1A1",sent:"\uBC1C\uC1A1\uC644\uB8CC",replied:"\uB2F5\uC7A5\uC634",rejected:"\uAC70\uC808",high:"\uB192\uC74C",middle:"\uC911\uAC04",low:"\uB0AE\uC74C",gradeHigh:"\uC0C1",gradeMid:"\uC911",gradeLow:"\uD558"};
-    const REVIEW_STATUSES=[T.unreviewed,T.good,T.hold,T.excluded,T.brandSent],DM_STATUSES=[T.unsent,T.sent,T.replied,T.rejected,T.hold],BRAND_FITS=["",T.high,T.middle,T.low],GRADES=[T.gradeHigh,T.gradeMid,T.gradeLow];
-    let candidates=[],selected=null,assignees=[],saveTimer=null; const $=id=>document.getElementById(id); const esc=v=>String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); const split=v=>String(v||"").split("|").map(x=>x.trim()).filter(Boolean); const identity=()=>({code:localStorage.getItem("team_access_code")||"",name:localStorage.getItem("team_member_name")||""});
-    function fillSelect(id,label,values){$(id).innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option>${esc(v)}</option>`).join("");} fillSelect("grade",T.allGrades,GRADES); fillSelect("review_status",T.allReviews,REVIEW_STATUSES); fillSelect("dm_status",T.allDm,DM_STATUSES); fillSelect("assignee",T.allAssignees,[]);
-    function toast(m){$("toast").textContent=m;$("toast").classList.add("show");clearTimeout(saveTimer);saveTimer=setTimeout(()=>$("toast").classList.remove("show"),2600);} function headers(){return {"x-team-access-code":encodeURIComponent(identity().code)};}
-    async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{...headers(),...(opt.headers||{})}});const text=await r.text();const data=text?JSON.parse(text):null;if(!r.ok)throw new Error(data?.error||"\uC694\uCCAD\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");return data;}
-    function requireIdentity(){const s=identity();$("memberLabel").textContent=s.name?`${s.name}\uB2D8\uC73C\uB85C \uAE30\uB85D \uC911`:"\uC774\uB984\uC744 \uC785\uB825\uD558\uBA74 \uBCC0\uACBD\uC790\uAC00 \uAE30\uB85D\uB429\uB2C8\uB2E4.";if(!s.name)$("auth").classList.add("open");}
-    function saveIdentity(){const code=$("accessCode").value.trim(),name=$("memberName").value.trim();if(!name)return toast("\uC774\uB984\uC744 \uC785\uB825\uD574\uC8FC\uC138\uC694.");localStorage.setItem("team_access_code",code);localStorage.setItem("team_member_name",name);$("auth").classList.remove("open");requireIdentity();refresh();}
-    function statusClass(v){if([T.gradeHigh,T.good,T.sent,T.replied].includes(v))return"good";if([T.gradeMid,T.hold,T.brandSent].includes(v))return"mid";if([T.gradeLow,T.excluded,T.rejected].includes(v))return"high";return"";} function formatDate(v){return v?new Intl.DateTimeFormat("ko-KR",{dateStyle:"short",timeStyle:"short"}).format(new Date(v)):"";}
-    async function loadStats(){const s=await api("/api/stats");assignees=s.assignees||[];$("stats").innerHTML=`<span>\uCD1D ${s.total}\uBA85</span><span class="pill good">\uC0C1 ${s.byGrade?.[T.gradeHigh]||0}</span><span class="pill">${T.unsent} ${s.byDmStatus?.[T.unsent]||0}</span><span class="pill mid">${T.sent} ${s.byDmStatus?.[T.sent]||0}</span><button onclick="openIdentity()">\uC774\uB984/\uCF54\uB4DC \uBCC0\uACBD</button>`;renderAssigneeFilter();}
-    function renderAssigneeFilter(){const cur=$("assignee").value;fillSelect("assignee",T.allAssignees,assignees);$("assignee").value=cur;} async function loadCandidates(){const p=new URLSearchParams();["q","grade","review_status","dm_status","assignee"].forEach(id=>{if($(id).value)p.set(id,$(id).value)});candidates=await api(`/api/candidates?${p}`);if(selected)selected=candidates.find(x=>x.id===selected.id)||selected;else if(candidates[0])selected=candidates[0];renderList();renderDetail();}
-    async function refresh(){try{await loadStats();await loadCandidates();}catch(e){toast(e.message);if(e.message.includes("\uC811\uADFC \uCF54\uB4DC"))openIdentity();}}
-    function renderList(){if(!candidates.length){$("list").className="empty";$("list").textContent="\uC870\uAC74\uC5D0 \uB9DE\uB294 \uD6C4\uBCF4\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.";return;}$("list").className="";$("list").innerHTML=candidates.map(i=>`<div class="item ${selected&&selected.id===i.id?"active":""}" onclick="selectCandidate(${i.id})"><div class="item-top"><span class="name">@${esc(i.seller_name)}</span><span class="pill ${statusClass(i.grade)}">${esc(i.grade||"-")}</span></div><div class="muted">\uC885\uD569 ${i.combination_score||0} - \uBDF0\uD2F0 ${i.beauty_score||0} - \uB313\uAE00 ${i.total_comments||0}</div><div>${split(i.beauty_anchor_tags).slice(0,4).map(t=>`<span class="pill">${esc(t)}</span>`).join("")}</div><div class="muted">${esc(i.review_status||T.unreviewed)} - ${esc(i.dm_status||T.unsent)} - \uB2F4\uB2F9 ${esc(i.assignee||"\uC5C6\uC74C")}</div></div>`).join("");}
-    function selectCandidate(id){selected=candidates.find(i=>i.id===id);renderList();renderDetail();} function options(values,sel){return values.map(v=>`<option value="${esc(v)}" ${sel===v?"selected":""}>${esc(v||"\uC120\uD0DD \uC548 \uD568")}</option>`).join("");}
-    function renderDetail(){if(!selected){$("detail").innerHTML="\uC67C\uCABD \uBAA9\uB85D\uC5D0\uC11C \uC140\uB7EC\uB97C \uC120\uD0DD\uD558\uC138\uC694.";return;}const i=selected,posts=split(i.sample_post_urls),updated=i.status_updated_at?`${esc(i.status_updated_by||"unknown")} - ${formatDate(i.status_updated_at)}`:"\uBCC0\uACBD \uAE30\uB85D \uC5C6\uC74C";$("detail").innerHTML=`<div class="card plain"><h2>@${esc(i.seller_name)}</h2><p class="muted">${esc(i.category||"-")} - ${esc(i.matched_hashtags||"")}</p><div class="actions"><a class="button primary" href="${esc(i.profile_url)}" target="_blank" rel="noopener">\uD504\uB85C\uD544 \uC5F4\uAE30</a>${posts.map((u,n)=>`<a class="button" href="${esc(u)}" target="_blank" rel="noopener">\uAC8C\uC2DC\uBB3C ${n+1}</a>`).join("")}</div></div><div class="grid card"><div class="metric"><span class="muted">\uB4F1\uAE09</span><strong>${esc(i.grade||"-")}</strong></div><div class="metric"><span class="muted">\uC885\uD569\uC810\uC218</span><strong>${i.combination_score||0}</strong></div><div class="metric"><span class="muted">\uC88B\uC544\uC694</span><strong>${i.total_likes||0}</strong></div><div class="metric"><span class="muted">\uB313\uAE00</span><strong>${i.total_comments||0}</strong></div></div><div class="card"><strong>\uBDF0\uD2F0 \uC2E0\uD638</strong><br>${split(i.beauty_anchor_tags).map(t=>`<span class="pill">${esc(t)}</span>`).join("")||"<span class='muted'>\uC5C6\uC74C</span>"}<hr><strong>\uAD11\uACE0/\uD310\uB9E4 \uC2E0\uD638</strong><br>${split(i.commercial_signal_tags).map(t=>`<span class="pill high">${esc(t)}</span>`).join("")||"<span class='muted'>\uC5C6\uC74C</span>"}<hr><strong>\uD3EC\uB9F7 \uC2E0\uD638</strong><br>${split(i.format_signal_tags).map(t=>`<span class="pill mid">${esc(t)}</span>`).join("")||"<span class='muted'>\uC5C6\uC74C</span>"}</div><div class="card"><strong>\uD06C\uB864\uB9C1 \uADFC\uAC70 \uBA54\uBAA8</strong><p>${esc(i.notes||"\uC5C6\uC74C")}</p></div><div class="card"><div class="form-grid"><div><label>\uAC80\uD1A0 \uC0C1\uD0DC</label><select id="edit_review_status">${options(REVIEW_STATUSES,i.review_status||T.unreviewed)}</select></div><div><label>DM \uC0C1\uD0DC</label><select id="edit_dm_status">${options(DM_STATUSES,i.dm_status||T.unsent)}</select></div><div><label>\uBE0C\uB79C\uB4DC \uC801\uD569\uB3C4</label><select id="edit_brand_fit">${options(BRAND_FITS,i.brand_fit||"")}</select></div><div><label>\uB2F4\uB2F9\uC790</label><input id="edit_assignee" list="assigneeList" value="${esc(i.assignee||identity().name)}"><datalist id="assigneeList">${assignees.map(n=>`<option value="${esc(n)}"></option>`).join("")}</datalist></div><div class="full"><label>\uD300 \uBA54\uBAA8</label><textarea id="edit_memo">${esc(i.memo||"")}</textarea></div></div><div class="muted">\uB9C8\uC9C0\uB9C9 \uBCC0\uACBD: ${updated}${i.last_contacted_at?` - \uCD5C\uADFC \uC5F0\uB77D ${formatDate(i.last_contacted_at)}`:""}</div><div class="actions"><button id="saveBtn" class="accent" onclick="saveSelected()">\uC800\uC7A5</button></div></div>`;}
-    async function saveSelected(){const person=identity().name||$("edit_assignee").value.trim();if(!person){openIdentity();toast("\uC774\uB984\uC744 \uBA3C\uC800 \uC785\uB825\uD574\uC8FC\uC138\uC694.");return;}const b=$("saveBtn");b.disabled=true;const patch={review_status:$("edit_review_status").value,dm_status:$("edit_dm_status").value,brand_fit:$("edit_brand_fit").value,assignee:$("edit_assignee").value.trim(),memo:$("edit_memo").value,actor:person};try{const rows=await api(`/api/candidates/${selected.id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(patch)});selected=rows?.[0]||{...selected,...patch};toast("\uC800\uC7A5\uD588\uC2B5\uB2C8\uB2E4.");await refresh();}catch(e){toast(e.message);}finally{b.disabled=false;}}
-    function openIdentity(){const s=identity();$("accessCode").value=s.code;$("memberName").value=s.name;$("auth").classList.add("open");} ["q","grade","review_status","dm_status","assignee"].forEach(id=>$(id).addEventListener("input",()=>loadCandidates().catch(e=>toast(e.message)))); requireIdentity(); refresh();
-  </script>
+<div class="app">
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-mark">✦</div>
+      <div><div class="nav-title">인플루언서 DB</div></div>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="showPage('list')">📋 전체보기</button>
+      <button class="tab-btn" onclick="showPage('add')">＋ 추가하기</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:0;">
+      <div class="nav-count" id="nav-count">0명 등록</div>
+      <div class="cloud-status warn" id="cloud-status">Supabase 연결중…</div>
+    </div>
+  </nav>
+
+  <div class="page active" id="page-list">
+    <div class="setup-banner" id="setup-banner">Supabase 환경변수 또는 접근 코드가 필요합니다. 우측 상단 상태와 접근 설정을 확인하세요.</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">전체</div><div class="stat-val" id="s-total">0</div><div class="stat-sub">인플루언서</div></div>
+      <div class="stat-card"><div class="stat-label">평균 ER</div><div class="stat-val" id="s-er">—</div><div class="stat-sub">인게이지먼트율</div></div>
+      <div class="stat-card"><div class="stat-label">할당완료</div><div class="stat-val" id="s-assigned">0</div><div class="stat-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label">DM 발송완료</div><div class="stat-val" id="s-sent">0</div><div class="stat-sub">명</div></div>
+    </div>
+
+    <div class="status-tabs" id="status-tabs">
+      <button class="status-tab active" data-dashboard-tab="unreviewed" onclick="setDashboardTab('unreviewed')">미확인<span class="status-tab-count" id="tab-count-unreviewed">0</span></button>
+      <button class="status-tab" data-dashboard-tab="sendable" onclick="setDashboardTab('sendable')">발송할 DB<span class="status-tab-count" id="tab-count-sendable">0</span></button>
+      <button class="status-tab" data-dashboard-tab="excluded" onclick="setDashboardTab('excluded')">제외 DB<span class="status-tab-count" id="tab-count-excluded">0</span></button>
+      <button class="status-tab" data-dashboard-tab="all" onclick="setDashboardTab('all')">전체<span class="status-tab-count" id="tab-count-all">0</span></button>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="q" placeholder="인스타그램 URL, 닉네임 또는 핸들(@), 해시태그, 메모 검색…" />
+      </div>
+      <select class="filter-select" id="dm_status"></select>
+      <select class="filter-select" id="review_status"></select>
+      <select class="filter-select" id="assignee"></select>
+      <button class="action-btn" onclick="openIdentity()">이름 / 코드 변경</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>닉네임</th>
+            <th>핸들(@)</th>
+            <th>팔로워</th>
+            <th>ER(%)</th>
+            <th>카테고리</th>
+            <th>담당자</th>
+            <th>컨택상태</th>
+            <th>검토상태</th>
+            <th>마지막 액션</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🌸</div>
+        <p>조회된 인플루언서가 없어요</p>
+        <small>검색어나 필터를 조정해보세요</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-add">
+    <p class="section-title">인플루언서 추가</p>
+    <p class="section-sub">정보를 입력하고 저장하면 Supabase DB에 즉시 반영됩니다</p>
+    <div class="form-card">
+      <div class="form-section">
+        <div class="form-section-title">기본 정보</div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field"><label>닉네임 *</label><input type="text" id="f-nickname" placeholder="예) bom_beauty" /></div>
+          <div class="field"><label>핸들(@) *</label><input type="text" id="f-handle" placeholder="예) @bom_beauty" oninput="syncProfileUrl()" /></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>인스타그램 프로필 링크</label><input type="url" id="f-profile-url" placeholder="예) https://www.instagram.com/bom_beauty/" /></div>
+          <div class="field"><label>카테고리</label><input type="text" id="f-category" placeholder="예) 뷰티" /></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">인게이지먼트율 계산</div>
+        <div class="engagement-row">
+          <div class="field"><label>팔로워 수 *</label><input type="number" id="f-followers" placeholder="0" oninput="calcER()" /></div>
+          <div class="field"><label>평균 좋아요</label><input type="number" id="f-likes" placeholder="0" oninput="calcER()" /></div>
+          <div class="field"><label>평균 댓글</label><input type="number" id="f-comments" placeholder="0" oninput="calcER()" /></div>
+          <div><div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;">계산된 ER</div><div class="engagement-calc" id="er-calc">—<span>입력 후 자동계산</span></div></div>
+          <div class="field"><label>ER 직접 입력(%)</label><input type="number" id="f-er" placeholder="예) 4.2" step="0.01" /></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">컨택 & 관리</div>
+        <div class="form-row triple" style="margin-bottom:12px;">
+          <div class="field"><label>컨택 상태</label><select id="f-dm-status"></select></div>
+          <div class="field"><label>검토 상태</label><select id="f-review-status"></select></div>
+          <div class="field"><label>담당자</label><input type="text" id="f-assignee" placeholder="예) 팀원A" /></div>
+        </div>
+        <div class="form-row solo">
+          <div class="field"><label>특이사항</label><textarea id="f-note" placeholder="협업 이력, 메모, 확인할 내용"></textarea></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="clearForm()">초기화</button>
+        <button class="btn btn-primary" id="save-new-btn" onclick="saveInfluencer()">💾 저장하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeDrawer(event)">
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-name" id="d-name">—</div>
+        <div class="drawer-handle" id="d-handle">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a class="drawer-edit-btn" id="d-profile" href="#" target="_blank" rel="noopener">Instagram</a>
+        <button class="close-btn" onclick="closeDrawerDirect()">✕</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </div>
+</div>
+
+<div class="auth" id="auth">
+  <div class="auth-card">
+    <h3>접근 설정</h3>
+    <p>팀 공용 코드와 이름을 입력하세요. 코드가 없는 로컬 환경이면 이름만 입력해도 됩니다.</p>
+    <div class="field" style="margin-bottom:10px;"><label>TEAM_ACCESS_CODE</label><input id="accessCode" autocomplete="off" /></div>
+    <div class="field"><label>이름(기록자)</label><input id="memberName" autocomplete="name" /></div>
+    <div class="form-actions" style="padding:14px 0 0;background:transparent;">
+      <button class="btn btn-primary" onclick="saveIdentity()">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const REVIEW_STATUSES = ["미확인", "좋음", "보류", "제외", "브랜드전달"];
+const DM_STATUSES = ["미발송", "발송완료", "답장옴", "거절", "보류"];
+const BRAND_FITS = ["", "높음", "중간", "낮음"];
+const AUTOSAVE_DELAY = 700;
+const state = {
+  candidates: [],
+  stats: null,
+  selected: null,
+  dashboardTab: "unreviewed",
+  assignees: [],
+  toastTimer: null,
+  autoSave: { timer: null, saving: false, pending: null },
+};
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+const num = (value) => Number(value || 0);
+const idToPayload = (code) => `b64:${btoa(unescape(encodeURIComponent(code || "")))}`;
+
+function identity() {
+  return { code: localStorage.getItem("team_access_code") || "", name: localStorage.getItem("team_member_name") || "" };
+}
+function headers() {
+  const code = identity().code || "";
+  return { "x-team-access-code": idToPayload(code) };
+}
+function toast(message) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(state.toastTimer);
+  state.toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+async function api(path, options = {}) {
+  const response = await fetch(path, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+  const text = await response.text();
+  const contentType = (response.headers.get("content-type") || "").toLowerCase();
+  if (!response.ok) {
+    let message = text;
+    if (contentType.includes("application/json")) {
+      try { message = JSON.parse(text).error || text; } catch {}
+    }
+    throw new Error(message || "요청 실패");
+  }
+  if (!text.trim()) return null;
+  return JSON.parse(text);
+}
+function setCloudStatus(text, mode = "warn") {
+  $("cloud-status").textContent = text;
+  $("cloud-status").className = `cloud-status ${mode}`;
+}
+function showPage(name) {
+  document.querySelectorAll(".page").forEach((page) => page.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach((button) => button.classList.remove("active"));
+  $(`page-${name}`).classList.add("active");
+  document.querySelectorAll(".tab-btn")[name === "list" ? 0 : 1].classList.add("active");
+}
+function setDashboardTab(tab) {
+  state.dashboardTab = tab;
+  document.querySelectorAll(".status-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.dashboardTab === tab);
+  });
+  $("review_status").value = tab === "excluded" ? "제외" : tab === "unreviewed" ? "미확인" : "";
+  refresh();
+}
+function fillSelect(id, allLabel, values) {
+  $(id).innerHTML = `<option value="">${esc(allLabel)}</option>` + values.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`).join("");
+}
+function fillPlainSelect(id, values) {
+  $(id).innerHTML = values.map((value) => `<option value="${esc(value)}">${esc(value || "선택")}</option>`).join("");
+}
+function formatDate(value) {
+  if (!value) return "—";
+  try { return new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+  catch { return "—"; }
+}
+function profileUrl(row) {
+  if (row.profile_url) return row.profile_url;
+  const handle = (row.seller_id || row.seller_name || "").replace(/^@/, "");
+  return handle ? `https://www.instagram.com/${handle}/` : "#";
+}
+function handle(row) {
+  return (row.seller_id || row.seller_name || "").replace(/^@/, "");
+}
+function erClass(value) {
+  const er = num(value);
+  if (er >= 5) return "er-great";
+  if (er >= 3) return "er-good";
+  if (er >= 1) return "er-mid";
+  return "er-low";
+}
+function dmClass(value) {
+  if (value === "발송완료") return "s-dm";
+  if (value === "답장옴") return "s-reply";
+  if (value === "보류") return "s-wait";
+  if (value === "거절" || value === "제외") return "s-exclude";
+  return "s-none";
+}
+function reviewClass(value) {
+  if (value === "좋음") return "s-reply";
+  if (value === "보류") return "s-wait";
+  if (value === "브랜드전달") return "s-dm";
+  if (value === "제외") return "s-exclude";
+  return "s-none";
+}
+function splitTags(value) {
+  return String(value || "").split("|").map((item) => item.trim()).filter(Boolean);
+}
+function calcER() {
+  const followers = num($("f-followers").value);
+  const avgLikes = num($("f-likes").value);
+  const avgComments = num($("f-comments").value);
+  if (!followers) {
+    $("er-calc").innerHTML = "—<span>입력 후 자동계산</span>";
+    return null;
+  }
+  const er = ((avgLikes + avgComments) / followers) * 100;
+  $("er-calc").innerHTML = `${er.toFixed(2)}%<span>자동 계산됨</span>`;
+  if (!$("f-er").value) $("f-er").value = er.toFixed(4);
+  return er;
+}
+function syncProfileUrl() {
+  const clean = $("f-handle").value.trim().replace(/^@/, "");
+  if (clean && !$("f-profile-url").value.trim()) $("f-profile-url").value = `https://www.instagram.com/${clean}/`;
+}
+function openIdentity() {
+  const saved = identity();
+  $("accessCode").value = saved.code;
+  $("memberName").value = saved.name;
+  $("auth").classList.add("open");
+}
+function saveIdentity() {
+  const name = $("memberName").value.trim();
+  localStorage.setItem("team_access_code", $("accessCode").value.trim());
+  localStorage.setItem("team_member_name", name);
+  $("auth").classList.remove("open");
+  refresh();
+}
+function renderStats() {
+  const total = state.candidates.length;
+  const assigned = state.candidates.filter((row) => row.assignee).length;
+  const sent = state.candidates.filter((row) => row.dm_status === "발송완료").length;
+  const erRows = state.candidates.filter((row) => num(row.engagement_rate) > 0);
+  const avgEr = erRows.length ? erRows.reduce((sum, row) => sum + num(row.engagement_rate), 0) / erRows.length : 0;
+  $("s-total").textContent = total.toLocaleString();
+  $("s-er").textContent = avgEr ? `${avgEr.toFixed(2)}%` : "—";
+  $("s-assigned").textContent = assigned.toLocaleString();
+  $("s-sent").textContent = sent.toLocaleString();
+  $("nav-count").textContent = `${total.toLocaleString()}명 등록`;
+}
+function renderDashboardTabCounts() {
+  const stats = state.stats || {};
+  const review = stats.byReviewStatus || {};
+  const total = num(stats.total);
+  const excluded = num(review["제외"]);
+  const unreviewed = num(review["미확인"]);
+  const sendable = Math.max(total - excluded, 0);
+  $("tab-count-unreviewed").textContent = unreviewed.toLocaleString();
+  $("tab-count-sendable").textContent = sendable.toLocaleString();
+  $("tab-count-excluded").textContent = excluded.toLocaleString();
+  $("tab-count-all").textContent = total.toLocaleString();
+}
+function renderTable() {
+  const tbody = $("table-body");
+  $("empty-state").style.display = state.candidates.length ? "none" : "block";
+  tbody.innerHTML = state.candidates.map((row, index) => `
+    <tr onclick="openDrawer(${row.id})">
+      <td>${index + 1}</td>
+      <td><strong>${esc(row.seller_name || "-")}</strong><div class="handle">${esc(row.grade || "")}</div></td>
+      <td class="handle">@${esc(handle(row) || "-")}</td>
+      <td class="followers-cell">${num(row.follower_count).toLocaleString()}</td>
+      <td><span class="er-badge ${erClass(row.engagement_rate)}">${num(row.engagement_rate) ? num(row.engagement_rate).toFixed(2) : "—"}</span></td>
+      <td>${esc(row.category || "-")}</td>
+      <td>${row.assignee ? `<span class="status-badge s-done">${esc(row.assignee)}</span>` : `<span class="status-badge s-none">미할당</span>`}</td>
+      <td><span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span></td>
+      <td><span class="status-badge ${reviewClass(row.review_status)}">${esc(row.review_status || "미확인")}</span></td>
+      <td class="handle">${formatDate(row.status_updated_at || row.updated_at)}</td>
+      <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${row.id})">보기</button></td>
+    </tr>
+  `).join("");
+}
+function renderDrawer(row) {
+  $("d-name").textContent = row.seller_name || "—";
+  $("d-handle").textContent = `@${handle(row) || "—"}`;
+  $("d-profile").href = profileUrl(row);
+  const tags = splitTags(row.matched_hashtags).map((tag) => `<span class="tag">${esc(tag)}</span>`).join("");
+  const postLinks = splitTags(row.engagement_posts || row.sample_post_urls).slice(0, 6).map((url, i) => `<a class="action-btn" href="${esc(url)}" target="_blank" rel="noopener">post ${i + 1}</a>`).join(" ");
+  $("drawer-body").innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">PROFILE</div>
+      <div class="detail-row"><div class="detail-key">팔로워</div><div class="detail-val">${num(row.follower_count).toLocaleString()}</div></div>
+      <div class="detail-row"><div class="detail-key">평균 좋아요</div><div class="detail-val">${num(row.avg_likes).toLocaleString()}</div></div>
+      <div class="detail-row"><div class="detail-key">평균 댓글</div><div class="detail-val">${num(row.avg_comments).toLocaleString()}</div></div>
+      <div class="detail-row"><div class="detail-key">ER</div><div class="detail-val">${num(row.engagement_rate) ? num(row.engagement_rate).toFixed(4) + "%" : "—"}</div></div>
+      <div class="detail-row"><div class="detail-key">최근 수집</div><div class="detail-val">${formatDate(row.last_engagement_refresh_at)}</div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">TAGS & POSTS</div>
+      <div style="margin-bottom:10px;">${tags || "<span class='handle'>해시태그 없음</span>"}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${postLinks}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">MEMO</div>
+      <div class="detail-note">${esc(row.notes || row.memo || "-")}</div>
+      ${row.engagement_refresh_error ? `<div class="detail-note" style="margin-top:8px;color:var(--red);">${esc(row.engagement_refresh_error)}</div>` : ""}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">EDIT</div>
+      <div class="edit-grid-2">
+        <div class="edit-field"><label>컨택 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${row.dm_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+        <div class="edit-field"><label>검토 상태</label><select id="edit_review_status">${REVIEW_STATUSES.map((item) => `<option ${row.review_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+        <div class="edit-field"><label>브랜드 적합도</label><select id="edit_brand_fit">${BRAND_FITS.map((item) => `<option value="${esc(item)}" ${row.brand_fit === item ? "selected" : ""}>${esc(item || "선택")}</option>`).join("")}</select></div>
+        <div class="edit-field"><label>담당자</label><input id="edit_assignee" value="${esc(row.assignee || identity().name)}" list="assigneeList" /></div>
+      </div>
+      <datalist id="assigneeList">${state.assignees.map((name) => `<option value="${esc(name)}"></option>`).join("")}</datalist>
+      <div class="edit-field"><label>팀 메모</label><textarea id="edit_memo">${esc(row.memo || "")}</textarea></div>
+      <div class="edit-actions">
+        <span class="autosave-status" id="autosave-status">변경하면 자동 저장됩니다</span>
+        <button class="btn btn-ghost" onclick="closeDrawerDirect()">닫기</button>
+      </div>
+    </div>
+  `;
+  bindDrawerAutosave();
+}
+function openDrawer(id) {
+  state.selected = state.candidates.find((row) => Number(row.id) === Number(id)) || null;
+  if (!state.selected) return;
+  renderDrawer(state.selected);
+  $("overlay").classList.add("open");
+}
+function closeDrawer(event) {
+  if (event.target.id === "overlay") closeDrawerDirect();
+}
+function closeDrawerDirect() {
+  flushAutoSave();
+  $("overlay").classList.remove("open");
+}
+function setAutoSaveStatus(text, mode = "") {
+  const el = $("autosave-status");
+  if (!el) return;
+  el.textContent = text;
+  el.className = `autosave-status ${mode}`;
+}
+function readEditPayload() {
+  return {
+    actor: identity().name || $("edit_assignee").value.trim(),
+    dm_status: $("edit_dm_status").value,
+    review_status: $("edit_review_status").value,
+    brand_fit: $("edit_brand_fit").value,
+    assignee: $("edit_assignee").value.trim(),
+    memo: $("edit_memo").value,
+  };
+}
+function bindDrawerAutosave() {
+  ["edit_dm_status", "edit_review_status", "edit_brand_fit", "edit_assignee", "edit_memo"].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener(el.tagName === "SELECT" ? "change" : "input", scheduleAutoSave);
+  });
+}
+function scheduleAutoSave() {
+  if (!state.selected) return;
+  state.autoSave.pending = { id: state.selected.id, payload: readEditPayload() };
+  setAutoSaveStatus("저장 대기 중...", "saving");
+  clearTimeout(state.autoSave.timer);
+  state.autoSave.timer = setTimeout(flushAutoSave, AUTOSAVE_DELAY);
+}
+async function flushAutoSave() {
+  clearTimeout(state.autoSave.timer);
+  if (state.autoSave.saving || !state.autoSave.pending) return;
+
+  const pending = state.autoSave.pending;
+  state.autoSave.pending = null;
+  state.autoSave.saving = true;
+  if (state.selected && Number(state.selected.id) === Number(pending.id)) {
+    setAutoSaveStatus("저장 중...", "saving");
+  }
+
+  try {
+    const saved = await api(`/api/candidates/${pending.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(pending.payload),
+    });
+    const updated = Array.isArray(saved) ? saved[0] : saved;
+    if (updated) {
+      const index = state.candidates.findIndex((row) => Number(row.id) === Number(updated.id));
+      if (index >= 0) state.candidates[index] = { ...state.candidates[index], ...updated };
+      if (state.selected && Number(state.selected.id) === Number(updated.id)) state.selected = { ...state.selected, ...updated };
+      if (updated.assignee && !state.assignees.includes(updated.assignee)) {
+        state.assignees = [...state.assignees, updated.assignee].sort((a, b) => a.localeCompare(b, "ko"));
+      }
+      renderTable();
+      renderStats();
+    }
+    if (state.selected && Number(state.selected.id) === Number(pending.id)) {
+      setAutoSaveStatus(`저장됨 ${new Intl.DateTimeFormat("ko-KR", { timeStyle: "short" }).format(new Date())}`, "saved");
+    }
+  } catch (error) {
+    toast(error.message);
+    if (state.selected && Number(state.selected.id) === Number(pending.id)) setAutoSaveStatus("저장 실패", "error");
+    if (String(error.message).includes("접근")) openIdentity();
+  } finally {
+    state.autoSave.saving = false;
+    if (state.autoSave.pending) flushAutoSave();
+  }
+}
+async function saveSelected() {
+  if (!state.selected) return;
+  state.autoSave.pending = { id: state.selected.id, payload: readEditPayload() };
+  await flushAutoSave();
+}
+function clearForm() {
+  ["f-nickname", "f-handle", "f-profile-url", "f-category", "f-followers", "f-likes", "f-comments", "f-er", "f-assignee", "f-note"].forEach((id) => $(id).value = "");
+  calcER();
+}
+async function saveInfluencer() {
+  const er = $("f-er").value || calcER() || "";
+  const payload = {
+    actor: identity().name || $("f-assignee").value.trim(),
+    seller_name: $("f-nickname").value.trim() || $("f-handle").value.trim(),
+    seller_id: $("f-handle").value.trim(),
+    profile_url: $("f-profile-url").value.trim(),
+    category: $("f-category").value.trim(),
+    follower_count: $("f-followers").value,
+    avg_likes: $("f-likes").value,
+    avg_comments: $("f-comments").value,
+    engagement_rate: er,
+    dm_status: $("f-dm-status").value,
+    review_status: $("f-review-status").value,
+    assignee: $("f-assignee").value.trim(),
+    notes: $("f-note").value,
+  };
+  if (!payload.seller_name) { toast("닉네임 또는 핸들을 입력하세요."); return; }
+  $("save-new-btn").disabled = true;
+  try {
+    await api("/api/candidates", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    toast("저장 완료");
+    clearForm();
+    showPage("list");
+    await refresh();
+  } catch (error) {
+    toast(error.message);
+    if (String(error.message).includes("접근")) openIdentity();
+  } finally {
+    $("save-new-btn").disabled = false;
+  }
+}
+async function loadStats() {
+  try {
+    state.stats = await api("/api/stats");
+    state.assignees = state.stats.assignees || [];
+    fillSelect("assignee", "담당자 전체", state.assignees);
+    renderDashboardTabCounts();
+  } catch (error) {
+    state.stats = null;
+    renderDashboardTabCounts();
+  }
+}
+async function loadCandidates() {
+  const params = new URLSearchParams();
+  ["q", "dm_status", "review_status", "assignee"].forEach((id) => {
+    const value = $(id).value;
+    if (value) params.set(id, value);
+  });
+  if (state.dashboardTab === "sendable" && !params.has("review_status")) params.set("review_status_mode", "sendable");
+  state.candidates = await api(`/api/candidates?${params.toString()}`);
+  setCloudStatus("Supabase 연결됨", "ok");
+  $("setup-banner").style.display = "none";
+  renderStats();
+  renderTable();
+}
+async function refresh() {
+  try {
+    await loadStats();
+    await loadCandidates();
+  } catch (error) {
+    setCloudStatus("Supabase 오류", "err");
+    $("setup-banner").style.display = "block";
+    toast(error.message);
+    if (String(error.message).includes("접근")) openIdentity();
+  }
+}
+function bind() {
+  fillSelect("dm_status", "전체 컨택상태", DM_STATUSES);
+  fillSelect("review_status", "전체 검토상태", REVIEW_STATUSES);
+  $("review_status").value = "미확인";
+  fillPlainSelect("f-dm-status", DM_STATUSES);
+  fillPlainSelect("f-review-status", REVIEW_STATUSES);
+  ["q", "dm_status", "assignee"].forEach((id) => $(id).addEventListener("input", refresh));
+  $("review_status").addEventListener("input", () => {
+    const value = $("review_status").value;
+    state.dashboardTab = value === "제외" ? "excluded" : value === "미확인" ? "unreviewed" : "all";
+    document.querySelectorAll(".status-tab").forEach((button) => {
+      button.classList.toggle("active", button.dataset.dashboardTab === state.dashboardTab);
+    });
+    refresh();
+  });
+  if (!identity().name) openIdentity();
+  refresh();
+}
+bind();
+</script>
 </body>
 </html>

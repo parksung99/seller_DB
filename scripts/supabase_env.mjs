@@ -2,6 +2,7 @@ import fs from "node:fs";
 
 export function readSupabaseEnv() {
   const text = fs.existsSync(".env") ? fs.readFileSync(".env", "utf8") : "";
+  const instagramCookieFile = fs.existsSync("ig_cookie.txt") ? fs.readFileSync("ig_cookie.txt", "utf8").trim() : "";
   const entries = Object.fromEntries(
     text
       .split(/\r?\n/)
@@ -24,6 +25,11 @@ export function readSupabaseEnv() {
     entries.service_role_key ||
     entries.supabase_service_role_key;
   const secret = env.SUPABASE_SECRET || entries.secret || entries.supabase_secret;
+  const accessToken =
+    env.SUPABASE_ACCESS_TOKEN ||
+    entries.supabase_access_token ||
+    entries.access_token ||
+    env.ACCESS_TOKEN;
   const supabaseUrl = env.SUPABASE_URL || entries.supabase_url || (projectId ? `https://${projectId}.supabase.co` : "");
 
   return {
@@ -32,6 +38,8 @@ export function readSupabaseEnv() {
     anonKey,
     serviceRoleKey,
     secret,
+    accessToken,
     teamAccessCode: env.TEAM_ACCESS_CODE || entries.team_access_code || "",
+    instagramCookie: env.IG_COOKIE || entries.ig_cookie || entries.instagram_cookie || instagramCookieFile || "",
   };
 }

@@ -1,11 +1,17 @@
 {
-  "name": "seller-db",
+  "name": "seller-crolling",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "crawl:instagram": "node scripts/instagram_hashtag_crawler.mjs",
+    "mine:hashtags": "node scripts/instagram_seed_hashtag_miner.mjs",
     "supabase:setup": "node scripts/setup_supabase_table.mjs",
     "supabase:import": "node scripts/import_candidates_to_supabase.mjs",
+    "supabase:import:refresh": "node scripts/import_then_refresh.mjs",
+    "supabase:dedupe-id": "node scripts/dedupe_seller_id_rows.mjs",
+    "engagement:refresh": "node scripts/refresh_engagement_from_instagram.mjs",
+    "assign:candidates": "node scripts/assign_candidates.mjs",
     "review": "node scripts/review_server.mjs",
     "start": "node scripts/review_server.mjs"
   }

@@ -27,12 +27,25 @@ async function main() {
     throw new Error("project_id or SUPABASE_PROJECT_ID is required.");
   }
 
-  const tokens = [
-    ["secret", env.secret],
+  const normalize = (token) => (token || "").replace(/^secret:/, "").trim();
+  const tokenCandidates = [
+    ["secret(raw)", env.secret],
+    ["secret(normalized)", normalize(env.secret)],
     ["service_role", env.serviceRoleKey],
-  ].filter(([, token]) => token);
+    ["SUPABASE_ACCESS_TOKEN", env.accessToken],
+  ];
+  const tokens = tokenCandidates.filter(([, token]) => token);
 
+  const seen = new Set();
+  const uniqueTokens = [];
   for (const [name, token] of tokens) {
+    if (!seen.has(token)) {
+      seen.add(token);
+      uniqueTokens.push([name, token]);
+    }
+  }
+
+  for (const [name, token] of uniqueTokens) {
     console.log(`[setup] Trying Management SQL API: ${name}`);
     const result = await runManagementQuery({ projectId: env.projectId, token, sql });
     console.log(`[setup] status: ${result.status}`);

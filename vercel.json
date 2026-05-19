@@ -1,18 +1,11 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "review_app.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "review_app.html", "use": "@vercel/static" },
+    { "src": "api/candidates.js", "use": "@vercel/node" },
+    { "src": "api/candidates/[id].js", "use": "@vercel/node" },
+    { "src": "api/stats.js", "use": "@vercel/node" }
   ],
   "routes": [
     {
