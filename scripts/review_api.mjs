@@ -138,7 +138,6 @@ async function queryCandidates(url, options = {}) {
   const order = options.order || "grade.desc,combination_score.desc,beauty_score.desc,total_comments.desc";
   const grade = options.hasOwnProperty("grade") ? options.grade : params.get("grade");
   const reviewStatus = options.hasOwnProperty("reviewStatus") ? options.reviewStatus : params.get("review_status");
-  const reviewStatusMode = options.hasOwnProperty("reviewStatusMode") ? options.reviewStatusMode : params.get("review_status_mode");
   const dmStatus = options.hasOwnProperty("dmStatus") ? options.dmStatus : params.get("dm_status");
   const assignee = options.hasOwnProperty("assignee") ? options.assignee : params.get("assignee");
 
@@ -151,7 +150,6 @@ async function queryCandidates(url, options = {}) {
   apiParams.set("limit", "500");
   if (grade) apiParams.set("grade", `eq.${grade}`);
   if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
-  if (!reviewStatus && reviewStatusMode === "sendable") apiParams.set("review_status", `neq.${REVIEW_STATUSES[3]}`);
   if (dmStatus) apiParams.set("dm_status", `eq.${dmStatus}`);
   if (assignee) apiParams.set("assignee", `eq.${assignee}`);
   if (queries.length && orColumns.length) {
@@ -173,9 +171,6 @@ async function queryCandidates(url, options = {}) {
       }
       if (missing === "review_status" && reviewStatus) {
         return queryCandidates(url, { ...options, reviewStatus: null });
-      }
-      if (missing === "review_status" && reviewStatusMode) {
-        return queryCandidates(url, { ...options, reviewStatusMode: null });
       }
       if (missing === "dm_status" && dmStatus) {
         return queryCandidates(url, { ...options, dmStatus: null });

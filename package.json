@@ -12,6 +12,7 @@
     "supabase:dedupe-id": "node scripts/dedupe_seller_id_rows.mjs",
     "engagement:refresh": "node scripts/refresh_engagement_from_instagram.mjs",
     "assign:candidates": "node scripts/assign_candidates.mjs",
+    "sent:dedupe": "node scripts/mark_sent_handles_dedupe.mjs",
     "review": "node scripts/review_server.mjs",
     "start": "node scripts/review_server.mjs"
   }
