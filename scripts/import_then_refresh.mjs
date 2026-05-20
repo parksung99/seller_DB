@@ -13,7 +13,6 @@ function parseArgs(argv) {
     includeWithoutSellerId: false,
     skipAssign: false,
     assignLimit: 10000,
-    skipOutOfRangeExclude: false,
   };
 
   const rest = [];
@@ -38,7 +37,7 @@ function parseArgs(argv) {
     } else if (arg === "--assign-limit") {
       args.assignLimit = Number(argv[++i]) || args.assignLimit;
     } else if (arg === "--skip-out-of-range-exclude") {
-      args.skipOutOfRangeExclude = true;
+      // Kept as a no-op for older commands. Assignment no longer excludes out-of-range rows.
     } else if (arg.startsWith("--")) {
       console.log(`[warn] unknown option: ${arg}`);
     } else {
@@ -105,9 +104,6 @@ function main() {
 
   if (!args.skipAssign) {
     const assignArgs = ["--limit", String(args.assignLimit)];
-    if (args.skipOutOfRangeExclude) {
-      assignArgs.push("--skip-out-of-range-exclude");
-    }
     console.log(`[pipeline] assigning candidates: ${assignArgs.join(" ")}`);
     run("assign_candidates.mjs", assignArgs, "assign");
   }

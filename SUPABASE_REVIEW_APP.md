@@ -139,11 +139,11 @@ To prevent client/anon/authenticated users from reading any candidate rows, run 
 
 ## Auto assignment
 
-CSV import automatically assigns unassigned, unchecked candidates to 김시은 and 박민서. To run assignment manually:
+CSV import automatically assigns every unassigned, unchecked candidate to 김시은 or 박민서. Manual exclusions remain tied to the assigned owner and appear in that owner's excluded tab. To run assignment manually:
 
 ```powershell
 .\.tools\node-v22.22.3-win-x64\node.exe scripts\assign_candidates.mjs --dry-run
 .\.tools\node-v22.22.3-win-x64\node.exe scripts\assign_candidates.mjs
 ```
 
-Existing `assignee` values are preserved and skipped by default. Use `--skip-assign` on import scripts only when assignment should be delayed.
+Existing `assignee` values are preserved and skipped by default. Follower ranges are used as a first preference, and rows outside those ranges are still balanced between 김시은 and 박민서 instead of being excluded. Use `--skip-assign` on import scripts only when assignment should be delayed.
