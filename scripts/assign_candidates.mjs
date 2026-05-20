@@ -15,7 +15,6 @@ function parseArgs(argv) {
     members: DEFAULT_MEMBERS,
     limit: 10000,
     dryRun: false,
-    skipOutOfRangeExclude: false,
     includeAssigned: false,
   };
 
@@ -31,7 +30,7 @@ function parseArgs(argv) {
     } else if (arg === "--dry-run") {
       args.dryRun = true;
     } else if (arg === "--skip-out-of-range-exclude") {
-      args.skipOutOfRangeExclude = true;
+      // Kept as a no-op for older pipeline commands. Assignment no longer excludes out-of-range rows.
     } else if (arg === "--include-assigned") {
       args.includeAssigned = true;
     }
@@ -131,30 +130,6 @@ async function patchAssignee(env, row, assignee) {
   });
 }
 
-async function upsertExcludedHandle(env, row, reason) {
-  const handle = handleFromRow(row);
-  if (!handle) return false;
-  try {
-    await supabaseJson(env, `${EXCLUDED_TABLE}?on_conflict=handle`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        prefer: "resolution=merge-duplicates,return=minimal",
-      },
-      body: JSON.stringify({
-        handle,
-        reason,
-        source: "assign_candidates",
-        excluded_by: "assign_candidates",
-      }),
-    });
-    return true;
-  } catch (error) {
-    if (error.status === 404) return false;
-    throw error;
-  }
-}
-
 function buildAssignments(rows, members, excludedHandles) {
   const seen = new Set();
   const counts = Object.fromEntries(members.map((name) => [name, 0]));
@@ -177,13 +152,10 @@ function buildAssignments(rows, members, excludedHandles) {
     const eligible = members.filter((member) => canAssign(member, row));
     if (!followerCount(row)) {
       missingFollowers.push(row);
-      continue;
-    }
-    if (!eligible.length) {
+    } else if (!eligible.length) {
       outOfRange.push(row);
-      continue;
     }
-    eligibleItems.push({ row, eligible });
+    eligibleItems.push({ row, eligible: eligible.length ? eligible : members });
   }
 
   const orderedItems = [
@@ -239,13 +211,6 @@ async function main() {
     console.log(`[assign] @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${assignee}`);
   }
 
-  if (!args.skipOutOfRangeExclude) {
-    let excluded = 0;
-    for (const row of outOfRange) {
-      if (await upsertExcludedHandle(env, row, "out_of_assignment_range")) excluded += 1;
-    }
-    console.log(`[assign] out-of-range excluded=${excluded}`);
-  }
   console.log("[assign] done.");
 }
 
