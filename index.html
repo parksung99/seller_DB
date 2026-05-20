@@ -314,11 +314,16 @@ tbody tr:hover { background: var(--pink-light); }
   <div class="page active" id="page-list">
     <div class="setup-banner" id="setup-banner">Supabase 환경변수 또는 접근 코드가 필요합니다. 우측 상단 상태와 접근 설정을 확인하세요.</div>
     <div class="member-tabs">
-      <button class="member-tab active" data-assignee-tab="all" onclick="setAssigneeTab('all')">전체</button>
-      <button class="member-tab" data-assignee-tab="김시은" onclick="setAssigneeTab('김시은')">김시은</button>
-      <button class="member-tab" data-assignee-tab="박민서" onclick="setAssigneeTab('박민서')">박민서</button>
-      <button class="member-tab" data-assignee-tab="unassigned" onclick="setAssigneeTab('unassigned')">미할당/확인필요</button>
-      <button class="member-tab" data-assignee-tab="excluded" onclick="setAssigneeTab('excluded')">제외</button>
+      <button class="member-tab active" data-assignee-tab="kim-unchecked" onclick="setAssigneeTab('kim-unchecked')">김시은 할당</button>
+      <button class="member-tab" data-assignee-tab="kim-db" onclick="setAssigneeTab('kim-db')">김시은 DB</button>
+      <button class="member-tab" data-assignee-tab="kim-wait" onclick="setAssigneeTab('kim-wait')">김시은 보류</button>
+      <button class="member-tab" data-assignee-tab="kim-sent" onclick="setAssigneeTab('kim-sent')">김시은 발송완료</button>
+      <button class="member-tab" data-assignee-tab="kim-excluded" onclick="setAssigneeTab('kim-excluded')">김시은 제외</button>
+      <button class="member-tab" data-assignee-tab="park-unchecked" onclick="setAssigneeTab('park-unchecked')">박민서 할당</button>
+      <button class="member-tab" data-assignee-tab="park-db" onclick="setAssigneeTab('park-db')">박민서 DB</button>
+      <button class="member-tab" data-assignee-tab="park-wait" onclick="setAssigneeTab('park-wait')">박민서 보류</button>
+      <button class="member-tab" data-assignee-tab="park-sent" onclick="setAssigneeTab('park-sent')">박민서 발송완료</button>
+      <button class="member-tab" data-assignee-tab="park-excluded" onclick="setAssigneeTab('park-excluded')">박민서 제외</button>
     </div>
     <div class="stats-row">
       <div class="stat-card"><div class="stat-label">전체</div><div class="stat-val" id="s-total">0</div><div class="stat-sub">인플루언서</div></div>
@@ -442,7 +447,19 @@ tbody tr:hover { background: var(--pink-light); }
 const REVIEW_STATUSES = ["미확인", "좋음", "보류", "제외", "브랜드전달"];
 const DM_STATUSES = ["미발송", "발송완료", "답장옴", "거절", "보류"];
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
-const state = { candidates: [], stats: null, selected: null, assignees: [], activeAssigneeTab: "all", toastTimer: null };
+const ASSIGNEE_TABS = {
+  "kim-unchecked": { assignee: "김시은", review_status: "미확인" },
+  "kim-db": { assignee: "김시은", review_status: "좋음" },
+  "kim-wait": { assignee: "김시은", review_status: "보류" },
+  "kim-sent": { assignee: "김시은", dm_status: "발송완료" },
+  "kim-excluded": { assignee: "김시은", review_status: "제외", include_excluded: "1" },
+  "park-unchecked": { assignee: "박민서", review_status: "미확인" },
+  "park-db": { assignee: "박민서", review_status: "좋음" },
+  "park-wait": { assignee: "박민서", review_status: "보류" },
+  "park-sent": { assignee: "박민서", dm_status: "발송완료" },
+  "park-excluded": { assignee: "박민서", review_status: "제외", include_excluded: "1" },
+};
+const state = { candidates: [], stats: null, selected: null, assignees: [], activeAssigneeTab: "kim-unchecked", toastTimer: null };
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const num = (value) => Number(value || 0);
@@ -669,11 +686,12 @@ async function saveSelected() {
 }
 async function excludeSelected() {
   if (!state.selected) return;
-  const actor = identity().name || $("edit_assignee").value.trim();
+  const assignee = $("edit_assignee").value.trim() || state.selected.assignee || identity().name;
+  const actor = identity().name || assignee;
   const payload = {
     actor,
     review_status: "제외",
-    assignee: $("edit_assignee").value.trim(),
+    assignee,
     memo: $("edit_memo").value,
   };
   $("excludeBtn").disabled = true;
@@ -740,14 +758,17 @@ async function loadCandidates() {
     const value = $(id).value;
     if (value) params.set(id, value);
   });
-  if (state.activeAssigneeTab === "김시은" || state.activeAssigneeTab === "박민서") {
-    params.set("assignee", state.activeAssigneeTab);
-  } else if (state.activeAssigneeTab === "unassigned") {
-    params.set("review_status", "미확인");
-    params.set("unassigned", "1");
-  } else if (state.activeAssigneeTab === "excluded") {
-    params.set("review_status", "제외");
-    params.set("include_excluded", "1");
+  const tab = ASSIGNEE_TABS[state.activeAssigneeTab] || ASSIGNEE_TABS["kim-unchecked"];
+  params.delete("unassigned");
+  params.delete("include_excluded");
+  params.delete("assignee");
+  params.delete("review_status");
+  params.delete("dm_status");
+  params.set("assignee", tab.assignee);
+  if (tab.review_status) params.set("review_status", tab.review_status);
+  if (tab.dm_status) params.set("dm_status", tab.dm_status);
+  if (tab.include_excluded) {
+    params.set("include_excluded", tab.include_excluded);
   }
   state.candidates = await api(`/api/candidates?${params.toString()}`);
   setCloudStatus("Supabase 연결됨", "ok");
