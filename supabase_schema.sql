@@ -107,6 +107,18 @@ create index if not exists idx_beauty_seller_candidates_assignee
 create index if not exists idx_beauty_seller_candidates_scores
   on public.beauty_seller_candidates (combination_score desc, beauty_score desc, selling_score desc);
 
+create table if not exists public.excluded_instagram_handles (
+  id bigserial primary key,
+  handle text not null unique,
+  reason text,
+  source text,
+  excluded_by text,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_excluded_instagram_handles_handle
+  on public.excluded_instagram_handles (handle);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql

@@ -22,6 +22,7 @@ function parseArgs(argv) {
     sellerName: "",
     onlyMissingFollowers: false,
     onlyMissingEr: false,
+    onlyMissingMetrics: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -35,6 +36,7 @@ function parseArgs(argv) {
     else if (arg === "--seller" || arg === "--seller-name") args.sellerName = String(argv[++i] || "").trim();
     else if (arg === "--only-missing-followers") args.onlyMissingFollowers = true;
     else if (arg === "--only-missing-er") args.onlyMissingEr = true;
+    else if (arg === "--only-missing-metrics") args.onlyMissingMetrics = true;
   }
 
   if (!Number.isFinite(args.limit) || args.limit <= 0) args.limit = 80;
@@ -98,10 +100,16 @@ async function fetchSupabaseRows(env, args) {
       if (args.onlyWithSellerId && !args.includeWithoutSellerId) {
         params.set("seller_id", "not.is.null");
       }
-      if (args.onlyMissingFollowers && columns.includes("follower_count")) {
+      if (args.onlyMissingMetrics && columns.includes("follower_count") && columns.includes("engagement_rate")) {
+        params.set("or", "(follower_count.is.null,follower_count.eq.0,engagement_rate.is.null,engagement_rate.eq.0)");
+      } else if (args.onlyMissingMetrics && columns.includes("follower_count")) {
+        params.set("or", "(follower_count.is.null,follower_count.eq.0)");
+      } else if (args.onlyMissingMetrics && columns.includes("engagement_rate")) {
+        params.set("or", "(engagement_rate.is.null,engagement_rate.eq.0)");
+      } else if (args.onlyMissingFollowers && columns.includes("follower_count")) {
         params.set("or", "(follower_count.is.null,follower_count.eq.0)");
       }
-      if (args.onlyMissingEr && columns.includes("engagement_rate")) {
+      else if (args.onlyMissingEr && columns.includes("engagement_rate")) {
         params.set("or", "(engagement_rate.is.null,engagement_rate.eq.0)");
       }
       const response = await fetch(`${env.supabaseUrl}/rest/v1/${TABLE}?${params}`, {
@@ -191,7 +199,12 @@ async function fetchFromUserFeed(sellerId, maxPosts, cookie) {
       },
     });
     const text = await response.text();
-    const json = text ? JSON.parse(text) : null;
+    let json = null;
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      return null;
+    }
     if (!response.ok || !json?.items) {
       return null;
     }
@@ -471,6 +484,9 @@ async function main() {
   }
   if (args.onlyMissingEr) {
     console.log("[engagement] mode: only rows with missing engagement_rate");
+  }
+  if (args.onlyMissingMetrics) {
+    console.log("[engagement] mode: only rows with missing follower_count or engagement_rate");
   }
 
   let updated = 0;

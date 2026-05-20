@@ -1,13 +1,22 @@
 import { readSupabaseEnv } from "./supabase_env.mjs";
 
 const TABLE = "beauty_seller_candidates";
+const EXCLUDED_TABLE = "excluded_instagram_handles";
+const DEFAULT_MEMBERS = ["김시은", "박민서"];
+const REVIEW_UNCHECKED = "미확인";
+
+const MEMBER_RULES = {
+  "김시은": { min: 5000, max: 100000 },
+  "박민서": { min: 1000, max: 50000 },
+};
 
 function parseArgs(argv) {
   const args = {
-    members: [],
-    perMemberLimit: 30,
+    members: DEFAULT_MEMBERS,
     limit: 10000,
     dryRun: false,
+    skipOutOfRangeExclude: false,
+    includeAssigned: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -17,16 +26,17 @@ function parseArgs(argv) {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean);
-    } else if (arg === "--per-member-limit") {
-      args.perMemberLimit = Number(argv[++i]);
     } else if (arg === "--limit") {
       args.limit = Number(argv[++i]);
     } else if (arg === "--dry-run") {
       args.dryRun = true;
+    } else if (arg === "--skip-out-of-range-exclude") {
+      args.skipOutOfRangeExclude = true;
+    } else if (arg === "--include-assigned") {
+      args.includeAssigned = true;
     }
   }
 
-  if (!Number.isFinite(args.perMemberLimit) || args.perMemberLimit <= 0) args.perMemberLimit = 30;
   if (!Number.isFinite(args.limit) || args.limit <= 0) args.limit = 10000;
   return args;
 }
@@ -39,46 +49,70 @@ function headers(env, extra = {}) {
   };
 }
 
-function normalizeHandle(row) {
-  const value =
-    row.seller_id ||
-    row.seller_name ||
-    String(row.profile_url || "").match(/instagram\.com\/([^/?#]+)/i)?.[1] ||
-    "";
-  return String(value)
-    .trim()
-    .replace(/^@/, "")
-    .replace(/\/+$/, "")
-    .toLowerCase();
+function normalizeHandle(value) {
+  const raw = String(value || "").trim().replace(/^@/, "").replace(/\/+$/, "");
+  if (!raw) return "";
+  const match = raw.match(/instagram\.com\/(?!p\/|reel\/|tv\/|explore\/|accounts\/)([A-Za-z0-9._]+)/i);
+  return (match ? match[1] : raw).trim().replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
+}
+
+function handleFromRow(row) {
+  return normalizeHandle(row.seller_id || row.profile_url || row.seller_name || "");
+}
+
+function followerCount(row) {
+  const value = Number(row.follower_count || 0);
+  return Number.isFinite(value) ? value : 0;
 }
 
 function score(row) {
-  return Number(row.follower_count || 0) + Number(row.engagement_rate || 0);
+  return (
+    Number(row.combination_score || 0) * 1000000 +
+    Number(row.beauty_score || 0) * 10000 +
+    Number(row.follower_count || 0) +
+    Number(row.engagement_rate || 0)
+  );
+}
+
+function canAssign(member, row) {
+  const rule = MEMBER_RULES[member];
+  const followers = followerCount(row);
+  return Boolean(rule && followers >= rule.min && followers <= rule.max);
+}
+
+async function supabaseJson(env, path, options = {}) {
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/${path}`, {
+    ...options,
+    headers: headers(env, options.headers || {}),
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    const error = new Error(`${response.status}: ${text}`);
+    error.status = response.status;
+    throw error;
+  }
+  return text ? JSON.parse(text) : null;
 }
 
 async function fetchCandidates(env, args) {
-  const columnSets = [
-    "id,seller_name,seller_id,profile_url,assignee,follower_count,engagement_rate,avg_likes,avg_comments,updated_at",
-    "id,seller_name,profile_url,assignee,follower_count,engagement_rate,updated_at",
-    "*",
-  ];
+  const params = new URLSearchParams();
+  params.set("select", "id,seller_name,seller_id,profile_url,assignee,review_status,follower_count,engagement_rate,beauty_score,combination_score,updated_at");
+  params.set("limit", String(args.limit));
+  params.set("or", `(review_status.is.null,review_status.eq.${REVIEW_UNCHECKED})`);
+  if (!args.includeAssigned) params.set("assignee", "is.null");
+  return supabaseJson(env, `${TABLE}?${params}`, { headers: { accept: "application/json" } });
+}
 
-  let lastError = "";
-  for (const columns of columnSets) {
-    const params = new URLSearchParams();
-    params.set("select", columns);
-    params.set("limit", String(args.limit));
-
-    const response = await fetch(`${env.supabaseUrl}/rest/v1/${TABLE}?${params}`, {
-      headers: headers(env, { accept: "application/json" }),
+async function fetchExcludedHandles(env) {
+  try {
+    const rows = await supabaseJson(env, `${EXCLUDED_TABLE}?select=handle&limit=10000`, {
+      headers: { accept: "application/json" },
     });
-    const text = await response.text();
-    if (response.ok) return text ? JSON.parse(text) : [];
-    lastError = `Supabase load failed (${response.status}): ${text}`;
-    if (!text.includes("does not exist")) break;
+    return new Set((rows || []).map((row) => normalizeHandle(row.handle)).filter(Boolean));
+  } catch (error) {
+    if (error.status === 404) return new Set();
+    throw error;
   }
-
-  throw new Error(lastError);
 }
 
 async function patchAssignee(env, row, assignee) {
@@ -87,53 +121,88 @@ async function patchAssignee(env, row, assignee) {
     status_updated_by: "assign_candidates",
     status_updated_at: new Date().toISOString(),
   };
-  const response = await fetch(`${env.supabaseUrl}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(row.id)}`, {
+  await supabaseJson(env, `${TABLE}?id=eq.${encodeURIComponent(row.id)}`, {
     method: "PATCH",
-    headers: headers(env, {
+    headers: {
       "content-type": "application/json",
       prefer: "return=minimal",
-    }),
+    },
     body: JSON.stringify(payload),
   });
-  const text = await response.text();
-  if (!response.ok) throw new Error(`Assign failed @${row.seller_name || row.seller_id}: ${response.status}: ${text}`);
 }
 
-function buildAssignments(rows, members, perMemberLimit) {
+async function upsertExcludedHandle(env, row, reason) {
+  const handle = handleFromRow(row);
+  if (!handle) return false;
+  try {
+    await supabaseJson(env, `${EXCLUDED_TABLE}?on_conflict=handle`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify({
+        handle,
+        reason,
+        source: "assign_candidates",
+        excluded_by: "assign_candidates",
+      }),
+    });
+    return true;
+  } catch (error) {
+    if (error.status === 404) return false;
+    throw error;
+  }
+}
+
+function buildAssignments(rows, members, excludedHandles) {
   const seen = new Set();
   const counts = Object.fromEntries(members.map((name) => [name, 0]));
   const assignments = [];
+  const outOfRange = [];
+  const missingFollowers = [];
+
   const candidates = rows
-    .filter((row) => !String(row.assignee || "").trim())
     .filter((row) => {
-      const handle = normalizeHandle(row);
-      if (!handle || seen.has(handle)) return false;
+      const handle = handleFromRow(row);
+      if (row.assignee) return false;
+      if (!handle || seen.has(handle) || excludedHandles.has(handle)) return false;
       seen.add(handle);
       return true;
     })
     .sort((a, b) => score(b) - score(a));
 
-  let memberIndex = 0;
+  const eligibleItems = [];
   for (const row of candidates) {
-    const availableMembers = members.filter((name) => counts[name] < perMemberLimit);
-    if (!availableMembers.length) break;
-
-    let assignee = null;
-    for (let attempt = 0; attempt < members.length; attempt += 1) {
-      const candidateMember = members[memberIndex % members.length];
-      memberIndex += 1;
-      if (counts[candidateMember] < perMemberLimit) {
-        assignee = candidateMember;
-        break;
-      }
+    const eligible = members.filter((member) => canAssign(member, row));
+    if (!followerCount(row)) {
+      missingFollowers.push(row);
+      continue;
     }
-    if (!assignee) continue;
+    if (!eligible.length) {
+      outOfRange.push(row);
+      continue;
+    }
+    eligibleItems.push({ row, eligible });
+  }
+
+  const orderedItems = [
+    ...eligibleItems.filter((item) => item.eligible.length === 1),
+    ...eligibleItems.filter((item) => item.eligible.length > 1),
+  ];
+
+  for (const { row, eligible } of orderedItems) {
+    const assignee = [...eligible].sort((a, b) => {
+      const countDiff = counts[a] - counts[b];
+      if (countDiff !== 0) return countDiff;
+      return members.indexOf(a) - members.indexOf(b);
+    })[0];
 
     counts[assignee] += 1;
     assignments.push({ row, assignee });
   }
 
-  return { assignments, counts, skippedAlreadyAssigned: rows.length - rows.filter((row) => !String(row.assignee || "").trim()).length };
+  return { assignments, counts, outOfRange, missingFollowers };
 }
 
 async function main() {
@@ -143,21 +212,23 @@ async function main() {
   }
 
   const args = parseArgs(process.argv.slice(2));
-  if (args.members.length !== 2) {
-    throw new Error('Exactly two team members are required. Example: --members "팀원A,팀원B"');
+  if (args.members.length !== 2 || args.members.some((member) => !MEMBER_RULES[member])) {
+    throw new Error(`Supported members: ${DEFAULT_MEMBERS.join(", ")}`);
   }
 
   const rows = await fetchCandidates(env, args);
-  const { assignments, counts, skippedAlreadyAssigned } = buildAssignments(rows, args.members, args.perMemberLimit);
+  const excludedHandles = await fetchExcludedHandles(env);
+  const { assignments, counts, outOfRange, missingFollowers } = buildAssignments(rows, args.members, excludedHandles);
 
-  console.log(`[assign] loaded=${rows.length} already_assigned=${skippedAlreadyAssigned} planned=${assignments.length}`);
+  console.log(`[assign] loaded=${rows.length} excluded_handles=${excludedHandles.size} planned=${assignments.length}`);
   for (const member of args.members) {
     console.log(`[assign] ${member}: ${counts[member]}`);
   }
+  console.log(`[assign] missing_followers=${missingFollowers.length} out_of_range=${outOfRange.length}`);
 
   if (args.dryRun) {
-    assignments.slice(0, 20).forEach(({ row, assignee }, index) => {
-      console.log(`[dry-run] ${index + 1}. @${row.seller_name || row.seller_id} -> ${assignee}`);
+    assignments.slice(0, 30).forEach(({ row, assignee }, index) => {
+      console.log(`[dry-run] ${index + 1}. @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${assignee}`);
     });
     console.log("[assign] dry-run only. Supabase was not modified.");
     return;
@@ -165,7 +236,15 @@ async function main() {
 
   for (const { row, assignee } of assignments) {
     await patchAssignee(env, row, assignee);
-    console.log(`[assign] @${row.seller_name || row.seller_id} -> ${assignee}`);
+    console.log(`[assign] @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${assignee}`);
+  }
+
+  if (!args.skipOutOfRangeExclude) {
+    let excluded = 0;
+    for (const row of outOfRange) {
+      if (await upsertExcludedHandle(env, row, "out_of_assignment_range")) excluded += 1;
+    }
+    console.log(`[assign] out-of-range excluded=${excluded}`);
   }
   console.log("[assign] done.");
 }

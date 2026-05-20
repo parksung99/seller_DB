@@ -87,18 +87,15 @@ body {
   border-radius: var(--radius); padding: 12px 14px; font-size: 13px; margin-bottom: 16px;
   display: none; line-height: 1.6;
 }
-.status-tabs {
-  display: flex; align-items: center; gap: 6px; margin-bottom: 14px; overflow-x: auto;
-}
-.status-tab {
-  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text2);
-  border-radius: 999px; padding: 8px 12px; white-space: nowrap; transition: all 0.15s;
-}
-.status-tab:hover { border-color: var(--pink-mid); color: var(--pink); }
-.status-tab.active { background: var(--pink); border-color: var(--pink); color: #fff; }
-.status-tab-count { opacity: 0.72; font-weight: 600; margin-left: 4px; }
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.member-tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.member-tab {
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+  border-radius: 8px; padding: 7px 12px; transition: all 0.15s;
+}
+.member-tab:hover { border-color: var(--pink-mid); color: var(--pink); }
+.member-tab.active { background: var(--pink-light); color: var(--pink); border-color: var(--pink-mid); }
 .search-wrap { position: relative; flex: 1; min-width: 200px; }
 .search-wrap svg {
   position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
@@ -130,7 +127,7 @@ body {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: auto;
 }
-table { width: 100%; border-collapse: collapse; min-width: 1020px; }
+table { width: 100%; border-collapse: collapse; min-width: 940px; }
 thead { background: var(--surface2); }
 th {
   padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700;
@@ -145,13 +142,6 @@ tr:last-child td { border-bottom: none; }
 tbody tr { transition: background 0.1s; cursor: pointer; }
 tbody tr:hover { background: var(--pink-light); }
 .handle { color: var(--text3); font-size: 12px; }
-.handle-with-link { display: inline-flex; align-items: center; gap: 6px; }
-.instagram-link {
-  width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
-  color: var(--pink); border-radius: 5px; vertical-align: middle; transition: background 0.12s, color 0.12s;
-}
-.instagram-link:hover { background: var(--pink-light); color: var(--pink-dark); }
-.instagram-link svg { width: 15px; height: 15px; display: block; }
 .followers-cell { font-weight: 600; color: var(--text); }
 .er-badge {
   display: inline-block; padding: 3px 8px; border-radius: 20px;
@@ -274,10 +264,6 @@ tbody tr:hover { background: var(--pink-light); }
 .edit-field textarea { resize: vertical; min-height: 64px; }
 .edit-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .edit-actions { display: flex; gap: 8px; padding: 16px 0 4px; border-top: 1px solid var(--border); margin-top: 8px; }
-.autosave-status { align-self: center; color: var(--text2); font-size: 12px; margin-right: auto; }
-.autosave-status.saving { color: var(--amber); }
-.autosave-status.saved { color: var(--green); }
-.autosave-status.error { color: var(--red); }
 .auth {
   position: fixed; inset: 0; background: rgba(10,8,6,0.45); z-index: 300;
   display: none; align-items: center; justify-content: center; padding: 16px;
@@ -327,20 +313,18 @@ tbody tr:hover { background: var(--pink-light); }
 
   <div class="page active" id="page-list">
     <div class="setup-banner" id="setup-banner">Supabase 환경변수 또는 접근 코드가 필요합니다. 우측 상단 상태와 접근 설정을 확인하세요.</div>
+    <div class="member-tabs">
+      <button class="member-tab active" data-assignee-tab="all" onclick="setAssigneeTab('all')">전체</button>
+      <button class="member-tab" data-assignee-tab="김시은" onclick="setAssigneeTab('김시은')">김시은</button>
+      <button class="member-tab" data-assignee-tab="박민서" onclick="setAssigneeTab('박민서')">박민서</button>
+      <button class="member-tab" data-assignee-tab="unassigned" onclick="setAssigneeTab('unassigned')">미할당/확인필요</button>
+      <button class="member-tab" data-assignee-tab="excluded" onclick="setAssigneeTab('excluded')">제외</button>
+    </div>
     <div class="stats-row">
       <div class="stat-card"><div class="stat-label">전체</div><div class="stat-val" id="s-total">0</div><div class="stat-sub">인플루언서</div></div>
       <div class="stat-card"><div class="stat-label">평균 ER</div><div class="stat-val" id="s-er">—</div><div class="stat-sub">인게이지먼트율</div></div>
       <div class="stat-card"><div class="stat-label">할당완료</div><div class="stat-val" id="s-assigned">0</div><div class="stat-sub">명</div></div>
       <div class="stat-card"><div class="stat-label">DM 발송완료</div><div class="stat-val" id="s-sent">0</div><div class="stat-sub">명</div></div>
-    </div>
-
-    <div class="status-tabs" id="status-tabs">
-      <button class="status-tab active" data-dashboard-tab="unreviewed" onclick="setDashboardTab('unreviewed')">미확인<span class="status-tab-count" id="tab-count-unreviewed">0</span></button>
-      <button class="status-tab" data-dashboard-tab="sendable" onclick="setDashboardTab('sendable')">발송할 DB<span class="status-tab-count" id="tab-count-sendable">0</span></button>
-      <button class="status-tab" data-dashboard-tab="sent" onclick="setDashboardTab('sent')">발송완료<span class="status-tab-count" id="tab-count-sent">0</span></button>
-      <button class="status-tab" data-dashboard-tab="hold" onclick="setDashboardTab('hold')">보류<span class="status-tab-count" id="tab-count-hold">0</span></button>
-      <button class="status-tab" data-dashboard-tab="excluded" onclick="setDashboardTab('excluded')">제외 DB<span class="status-tab-count" id="tab-count-excluded">0</span></button>
-      <button class="status-tab" data-dashboard-tab="all" onclick="setDashboardTab('all')">전체<span class="status-tab-count" id="tab-count-all">0</span></button>
     </div>
 
     <div class="toolbar">
@@ -366,7 +350,6 @@ tbody tr:hover { background: var(--pink-light); }
             <th>카테고리</th>
             <th>담당자</th>
             <th>컨택상태</th>
-            <th>검토상태</th>
             <th>마지막 액션</th>
             <th></th>
           </tr>
@@ -459,16 +442,7 @@ tbody tr:hover { background: var(--pink-light); }
 const REVIEW_STATUSES = ["미확인", "좋음", "보류", "제외", "브랜드전달"];
 const DM_STATUSES = ["미발송", "발송완료", "답장옴", "거절", "보류"];
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
-const AUTOSAVE_DELAY = 700;
-const state = {
-  candidates: [],
-  stats: null,
-  selected: null,
-  dashboardTab: "unreviewed",
-  assignees: [],
-  toastTimer: null,
-  autoSave: { timer: null, saving: false, pending: null },
-};
+const state = { candidates: [], stats: null, selected: null, assignees: [], activeAssigneeTab: "all", toastTimer: null };
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const num = (value) => Number(value || 0);
@@ -512,17 +486,9 @@ function showPage(name) {
   $(`page-${name}`).classList.add("active");
   document.querySelectorAll(".tab-btn")[name === "list" ? 0 : 1].classList.add("active");
 }
-function setDashboardTab(tab) {
-  state.dashboardTab = tab;
-  document.querySelectorAll(".status-tab").forEach((button) => {
-    button.classList.toggle("active", button.dataset.dashboardTab === tab);
-  });
-  $("dm_status").value = tab === "sent" ? "발송완료" : "";
-  $("review_status").value =
-    tab === "sendable" ? "좋음" :
-    tab === "hold" ? "보류" :
-    tab === "excluded" ? "제외" :
-    tab === "unreviewed" ? "미확인" : "";
+function setAssigneeTab(name) {
+  state.activeAssigneeTab = name;
+  document.querySelectorAll(".member-tab").forEach((button) => button.classList.toggle("active", button.dataset.assigneeTab === name));
   refresh();
 }
 function fillSelect(id, allLabel, values) {
@@ -544,19 +510,6 @@ function profileUrl(row) {
 function handle(row) {
   return (row.seller_id || row.seller_name || "").replace(/^@/, "");
 }
-function instagramIconLink(row) {
-  const url = profileUrl(row);
-  if (!url || url === "#") return "";
-  return `
-    <a class="instagram-link" href="${esc(url)}" target="_blank" rel="noopener" title="Instagram" aria-label="Open Instagram profile" onclick="event.stopPropagation()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    </a>
-  `;
-}
 function erClass(value) {
   const er = num(value);
   if (er >= 5) return "er-great";
@@ -569,13 +522,6 @@ function dmClass(value) {
   if (value === "답장옴") return "s-reply";
   if (value === "보류") return "s-wait";
   if (value === "거절" || value === "제외") return "s-exclude";
-  return "s-none";
-}
-function reviewClass(value) {
-  if (value === "좋음") return "s-reply";
-  if (value === "보류") return "s-wait";
-  if (value === "브랜드전달") return "s-dm";
-  if (value === "제외") return "s-exclude";
   return "s-none";
 }
 function splitTags(value) {
@@ -623,23 +569,6 @@ function renderStats() {
   $("s-sent").textContent = sent.toLocaleString();
   $("nav-count").textContent = `${total.toLocaleString()}명 등록`;
 }
-function renderDashboardTabCounts() {
-  const stats = state.stats || {};
-  const review = stats.byReviewStatus || {};
-  const dm = stats.byDmStatus || {};
-  const total = num(stats.total);
-  const excluded = num(review["제외"]);
-  const unreviewed = num(review["미확인"]);
-  const sendable = num(review["좋음"]);
-  const sent = num(dm["발송완료"]);
-  const hold = num(review["보류"]);
-  $("tab-count-unreviewed").textContent = unreviewed.toLocaleString();
-  $("tab-count-sendable").textContent = sendable.toLocaleString();
-  $("tab-count-sent").textContent = sent.toLocaleString();
-  $("tab-count-hold").textContent = hold.toLocaleString();
-  $("tab-count-excluded").textContent = excluded.toLocaleString();
-  $("tab-count-all").textContent = total.toLocaleString();
-}
 function renderTable() {
   const tbody = $("table-body");
   $("empty-state").style.display = state.candidates.length ? "none" : "block";
@@ -647,13 +576,12 @@ function renderTable() {
     <tr onclick="openDrawer(${row.id})">
       <td>${index + 1}</td>
       <td><strong>${esc(row.seller_name || "-")}</strong><div class="handle">${esc(row.grade || "")}</div></td>
-      <td class="handle"><span class="handle-with-link">@${esc(handle(row) || "-")}${instagramIconLink(row)}</span></td>
+      <td class="handle">@${esc(handle(row) || "-")}</td>
       <td class="followers-cell">${num(row.follower_count).toLocaleString()}</td>
       <td><span class="er-badge ${erClass(row.engagement_rate)}">${num(row.engagement_rate) ? num(row.engagement_rate).toFixed(2) : "—"}</span></td>
       <td>${esc(row.category || "-")}</td>
       <td>${row.assignee ? `<span class="status-badge s-done">${esc(row.assignee)}</span>` : `<span class="status-badge s-none">미할당</span>`}</td>
       <td><span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span></td>
-      <td><span class="status-badge ${reviewClass(row.review_status)}">${esc(row.review_status || "미확인")}</span></td>
       <td class="handle">${formatDate(row.status_updated_at || row.updated_at)}</td>
       <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${row.id})">보기</button></td>
     </tr>
@@ -661,7 +589,7 @@ function renderTable() {
 }
 function renderDrawer(row) {
   $("d-name").textContent = row.seller_name || "—";
-  $("d-handle").innerHTML = `<span class="handle-with-link">@${esc(handle(row) || "—")}${instagramIconLink(row)}</span>`;
+  $("d-handle").textContent = `@${handle(row) || "—"}`;
   $("d-profile").href = profileUrl(row);
   const tags = splitTags(row.matched_hashtags).map((tag) => `<span class="tag">${esc(tag)}</span>`).join("");
   const postLinks = splitTags(row.engagement_posts || row.sample_post_urls).slice(0, 6).map((url, i) => `<a class="action-btn" href="${esc(url)}" target="_blank" rel="noopener">post ${i + 1}</a>`).join(" ");
@@ -695,12 +623,12 @@ function renderDrawer(row) {
       <datalist id="assigneeList">${state.assignees.map((name) => `<option value="${esc(name)}"></option>`).join("")}</datalist>
       <div class="edit-field"><label>팀 메모</label><textarea id="edit_memo">${esc(row.memo || "")}</textarea></div>
       <div class="edit-actions">
-        <span class="autosave-status" id="autosave-status">변경하면 자동 저장됩니다</span>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveSelected()">저장하기</button>
+        <button class="btn btn-ghost" id="excludeBtn" onclick="excludeSelected()">제외 처리</button>
         <button class="btn btn-ghost" onclick="closeDrawerDirect()">닫기</button>
       </div>
     </div>
   `;
-  bindDrawerAutosave();
 }
 function openDrawer(id) {
   state.selected = state.candidates.find((row) => Number(row.id) === Number(id)) || null;
@@ -712,83 +640,54 @@ function closeDrawer(event) {
   if (event.target.id === "overlay") closeDrawerDirect();
 }
 function closeDrawerDirect() {
-  flushAutoSave();
   $("overlay").classList.remove("open");
 }
-function setAutoSaveStatus(text, mode = "") {
-  const el = $("autosave-status");
-  if (!el) return;
-  el.textContent = text;
-  el.className = `autosave-status ${mode}`;
-}
-function readEditPayload() {
-  return {
-    actor: identity().name || $("edit_assignee").value.trim(),
+async function saveSelected() {
+  if (!state.selected) return;
+  const actor = identity().name || $("edit_assignee").value.trim();
+  const payload = {
+    actor,
     dm_status: $("edit_dm_status").value,
     review_status: $("edit_review_status").value,
     brand_fit: $("edit_brand_fit").value,
     assignee: $("edit_assignee").value.trim(),
     memo: $("edit_memo").value,
   };
-}
-function bindDrawerAutosave() {
-  ["edit_dm_status", "edit_review_status", "edit_brand_fit", "edit_assignee", "edit_memo"].forEach((id) => {
-    const el = $(id);
-    if (!el) return;
-    el.addEventListener(el.tagName === "SELECT" ? "change" : "input", scheduleAutoSave);
-  });
-}
-function scheduleAutoSave() {
-  if (!state.selected) return;
-  state.autoSave.pending = { id: state.selected.id, payload: readEditPayload() };
-  setAutoSaveStatus("저장 대기 중...", "saving");
-  clearTimeout(state.autoSave.timer);
-  state.autoSave.timer = setTimeout(flushAutoSave, AUTOSAVE_DELAY);
-}
-async function flushAutoSave() {
-  clearTimeout(state.autoSave.timer);
-  if (state.autoSave.saving || !state.autoSave.pending) return;
-
-  const pending = state.autoSave.pending;
-  state.autoSave.pending = null;
-  state.autoSave.saving = true;
-  if (state.selected && Number(state.selected.id) === Number(pending.id)) {
-    setAutoSaveStatus("저장 중...", "saving");
-  }
-
+  $("saveBtn").disabled = true;
   try {
-    const saved = await api(`/api/candidates/${pending.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(pending.payload),
-    });
-    const updated = Array.isArray(saved) ? saved[0] : saved;
-    if (updated) {
-      const index = state.candidates.findIndex((row) => Number(row.id) === Number(updated.id));
-      if (index >= 0) state.candidates[index] = { ...state.candidates[index], ...updated };
-      if (state.selected && Number(state.selected.id) === Number(updated.id)) state.selected = { ...state.selected, ...updated };
-      if (updated.assignee && !state.assignees.includes(updated.assignee)) {
-        state.assignees = [...state.assignees, updated.assignee].sort((a, b) => a.localeCompare(b, "ko"));
-      }
-      renderTable();
-      renderStats();
-    }
-    if (state.selected && Number(state.selected.id) === Number(pending.id)) {
-      setAutoSaveStatus(`저장됨 ${new Intl.DateTimeFormat("ko-KR", { timeStyle: "short" }).format(new Date())}`, "saved");
-    }
+    await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    toast("저장 완료");
+    await refresh();
+    const next = state.candidates.find((row) => row.id === state.selected.id);
+    if (next) { state.selected = next; renderDrawer(next); }
   } catch (error) {
     toast(error.message);
-    if (state.selected && Number(state.selected.id) === Number(pending.id)) setAutoSaveStatus("저장 실패", "error");
     if (String(error.message).includes("접근")) openIdentity();
   } finally {
-    state.autoSave.saving = false;
-    if (state.autoSave.pending) flushAutoSave();
+    $("saveBtn").disabled = false;
   }
 }
-async function saveSelected() {
+async function excludeSelected() {
   if (!state.selected) return;
-  state.autoSave.pending = { id: state.selected.id, payload: readEditPayload() };
-  await flushAutoSave();
+  const actor = identity().name || $("edit_assignee").value.trim();
+  const payload = {
+    actor,
+    review_status: "제외",
+    assignee: $("edit_assignee").value.trim(),
+    memo: $("edit_memo").value,
+  };
+  $("excludeBtn").disabled = true;
+  try {
+    await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    toast("제외 처리 완료");
+    closeDrawerDirect();
+    await refresh();
+  } catch (error) {
+    toast(error.message);
+    if (String(error.message).includes("접근")) openIdentity();
+  } finally {
+    $("excludeBtn").disabled = false;
+  }
 }
 function clearForm() {
   ["f-nickname", "f-handle", "f-profile-url", "f-category", "f-followers", "f-likes", "f-comments", "f-er", "f-assignee", "f-note"].forEach((id) => $(id).value = "");
@@ -831,10 +730,8 @@ async function loadStats() {
     state.stats = await api("/api/stats");
     state.assignees = state.stats.assignees || [];
     fillSelect("assignee", "담당자 전체", state.assignees);
-    renderDashboardTabCounts();
   } catch (error) {
     state.stats = null;
-    renderDashboardTabCounts();
   }
 }
 async function loadCandidates() {
@@ -843,6 +740,15 @@ async function loadCandidates() {
     const value = $(id).value;
     if (value) params.set(id, value);
   });
+  if (state.activeAssigneeTab === "김시은" || state.activeAssigneeTab === "박민서") {
+    params.set("assignee", state.activeAssigneeTab);
+  } else if (state.activeAssigneeTab === "unassigned") {
+    params.set("review_status", "미확인");
+    params.set("unassigned", "1");
+  } else if (state.activeAssigneeTab === "excluded") {
+    params.set("review_status", "제외");
+    params.set("include_excluded", "1");
+  }
   state.candidates = await api(`/api/candidates?${params.toString()}`);
   setCloudStatus("Supabase 연결됨", "ok");
   $("setup-banner").style.display = "none";
@@ -863,32 +769,9 @@ async function refresh() {
 function bind() {
   fillSelect("dm_status", "전체 컨택상태", DM_STATUSES);
   fillSelect("review_status", "전체 검토상태", REVIEW_STATUSES);
-  $("review_status").value = "미확인";
   fillPlainSelect("f-dm-status", DM_STATUSES);
   fillPlainSelect("f-review-status", REVIEW_STATUSES);
-  ["q", "assignee"].forEach((id) => $(id).addEventListener("input", refresh));
-  $("dm_status").addEventListener("input", () => {
-    const value = $("dm_status").value;
-    state.dashboardTab = value === "발송완료" ? "sent" : "all";
-    if (value) $("review_status").value = "";
-    document.querySelectorAll(".status-tab").forEach((button) => {
-      button.classList.toggle("active", button.dataset.dashboardTab === state.dashboardTab);
-    });
-    refresh();
-  });
-  $("review_status").addEventListener("input", () => {
-    const value = $("review_status").value;
-    if (value) $("dm_status").value = "";
-    state.dashboardTab =
-      value === "좋음" ? "sendable" :
-      value === "보류" ? "hold" :
-      value === "제외" ? "excluded" :
-      value === "미확인" ? "unreviewed" : "all";
-    document.querySelectorAll(".status-tab").forEach((button) => {
-      button.classList.toggle("active", button.dataset.dashboardTab === state.dashboardTab);
-    });
-    refresh();
-  });
+  ["q", "dm_status", "review_status", "assignee"].forEach((id) => $(id).addEventListener("input", refresh));
   if (!identity().name) openIdentity();
   refresh();
 }

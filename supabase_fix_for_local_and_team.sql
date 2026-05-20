@@ -116,3 +116,15 @@ create index if not exists idx_beauty_seller_candidates_dm_status
   on public.beauty_seller_candidates (dm_status);
 create index if not exists idx_beauty_seller_candidates_assignee
   on public.beauty_seller_candidates (assignee);
+
+create table if not exists public.excluded_instagram_handles (
+  id bigserial primary key,
+  handle text not null unique,
+  reason text,
+  source text,
+  excluded_by text,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_excluded_instagram_handles_handle
+  on public.excluded_instagram_handles (handle);

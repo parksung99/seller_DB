@@ -1,14 +1,18 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { readSupabaseEnv } from "./supabase_env.mjs";
 
 const DEFAULT_HASHTAG_FILE = "hashtags.txt";
 const DEFAULT_OUTPUT_DIR = "data";
 const DEFAULT_LIMIT_PER_TAG = 50;
 const DEFAULT_DELAY_MS = 2500;
 const DEFAULT_SEARCH_DOC_ID = "26586987494245638";
+const CANDIDATES_TABLE = "beauty_seller_candidates";
+const EXCLUDED_TABLE = "excluded_instagram_handles";
 
 const SELLING_KEYWORDS = [
+  "광고",
   "공동구매",
   "공구",
   "마켓",
@@ -16,6 +20,7 @@ const SELLING_KEYWORDS = [
   "주문",
   "판매",
   "협찬",
+  "제품제공",
   "문의",
   "디엠",
   "dm",
@@ -144,6 +149,17 @@ const FORMAT_SIGNAL_HASHTAGS = new Set([
   "공감",
 ]);
 
+const REQUIRED_COMMERCIAL_TERMS = [
+  "광고",
+  "협찬",
+  "제품제공",
+  "ad",
+  "공구",
+  "공동구매",
+  "마켓",
+  "판매",
+];
+
 function parseArgs(argv) {
   const args = {
     hashtagFile: DEFAULT_HASHTAG_FILE,
@@ -154,6 +170,10 @@ function parseArgs(argv) {
     cookie: process.env.IG_COOKIE || "",
     cookieFile: "",
     searchDocId: process.env.IG_SEARCH_DOC_ID || DEFAULT_SEARCH_DOC_ID,
+    excludedHandlesFile: "",
+    skipSupabaseExclusions: false,
+    requireBeauty: false,
+    requireCommercial: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -165,10 +185,114 @@ function parseArgs(argv) {
     else if (arg === "--cookie") args.cookie = argv[++i];
     else if (arg === "--cookie-file") args.cookieFile = argv[++i];
     else if (arg === "--search-doc-id") args.searchDocId = argv[++i];
+    else if (arg === "--excluded-handles-file") args.excludedHandlesFile = argv[++i];
+    else if (arg === "--skip-supabase-exclusions") args.skipSupabaseExclusions = true;
+    else if (arg === "--require-beauty" || arg === "--beauty-only") args.requireBeauty = true;
+    else if (arg === "--require-commercial" || arg === "--commercial-only") args.requireCommercial = true;
     else if (arg === "--tag" || arg === "--hashtag") args.hashtags.push(argv[++i]);
   }
 
   return args;
+}
+
+function normalizeHandle(value) {
+  const raw = String(value || "").trim().replace(/^@/, "").replace(/\/+$/, "");
+  if (!raw) return "";
+  const match = raw.match(/instagram\.com\/(?!p\/|reel\/|tv\/|explore\/|accounts\/)([A-Za-z0-9._]+)/i);
+  return (match ? match[1] : raw).trim().replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
+}
+
+function handleFromRow(row) {
+  return normalizeHandle(row.seller_id || row.profile_url || row.seller_name || "");
+}
+
+function handlesFromCandidate(row) {
+  return [
+    normalizeHandle(row.seller_id),
+    normalizeHandle(row.seller_name),
+    normalizeHandle(row.profile_url),
+  ].filter(Boolean);
+}
+
+async function readExcludedHandlesFile(filePath) {
+  if (!filePath) return new Set();
+  const text = await fs.readFile(filePath, "utf8");
+  return new Set(
+    text
+      .split(/\r?\n/)
+      .map((line) => normalizeHandle(line.split("#")[0]))
+      .filter(Boolean)
+  );
+}
+
+async function fetchSupabaseExcludedHandles(args) {
+  if (args.skipSupabaseExclusions) return new Set();
+  const env = readSupabaseEnv();
+  if (!env.supabaseUrl || !env.serviceRoleKey) return new Set();
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/${EXCLUDED_TABLE}?select=handle&limit=10000`, {
+    headers: {
+      apikey: env.serviceRoleKey,
+      authorization: `Bearer ${env.serviceRoleKey}`,
+      accept: "application/json",
+    },
+  });
+  const text = await response.text();
+  if (response.ok) {
+    return new Set((text ? JSON.parse(text) : []).map((row) => normalizeHandle(row.handle)).filter(Boolean));
+  }
+  if (response.status === 404) return new Set();
+  throw new Error(`Failed to load excluded handles: ${response.status}: ${text}`);
+}
+
+async function fetchSupabaseExistingHandles(args) {
+  if (args.skipSupabaseExclusions) return new Set();
+  const env = readSupabaseEnv();
+  if (!env.supabaseUrl || !env.serviceRoleKey) return new Set();
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/${CANDIDATES_TABLE}?select=seller_id,seller_name,profile_url&limit=10000`, {
+    headers: {
+      apikey: env.serviceRoleKey,
+      authorization: `Bearer ${env.serviceRoleKey}`,
+      accept: "application/json",
+    },
+  });
+  const text = await response.text();
+  if (response.ok) {
+    return new Set((text ? JSON.parse(text) : []).flatMap(handlesFromCandidate));
+  }
+  if (response.status === 404) return new Set();
+  throw new Error(`Failed to load existing candidate handles: ${response.status}: ${text}`);
+}
+
+function filterExcludedRows(rows, excludedHandles) {
+  if (!excludedHandles.size) return rows;
+  return rows.filter((row) => {
+    const handle = handleFromRow(row);
+    return !handle || !excludedHandles.has(handle);
+  });
+}
+
+function filterBeautyRows(rows, requireBeauty) {
+  if (!requireBeauty) return rows;
+  return rows.filter((row) => {
+    const beautyScore = Number(row.beauty_score || 0);
+    return beautyScore > 0 || String(row.beauty_anchor_tags || "").trim();
+  });
+}
+
+function filterCommercialRows(rows, requireCommercial) {
+  if (!requireCommercial) return rows;
+  return rows.filter((row) => {
+    const commercialText = [
+      row.matched_selling_keywords,
+      row.commercial_signal_tags,
+      row.caption_hashtags,
+      row.notes,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return REQUIRED_COMMERCIAL_TERMS.some((term) => commercialText.includes(term));
+  });
 }
 
 function normalizeHashtag(tag) {
@@ -706,6 +830,13 @@ async function main() {
   }
 
   const hashtags = args.hashtags.length ? args.hashtags.map(normalizeHashtag) : await readHashtags(args.hashtagFile);
+  const supabaseExcludedHandles = await fetchSupabaseExcludedHandles(args);
+  const existingDbHandles = await fetchSupabaseExistingHandles(args);
+  const fileExcludedHandles = await readExcludedHandlesFile(args.excludedHandlesFile);
+  const excludedHandles = new Set([...supabaseExcludedHandles, ...existingDbHandles, ...fileExcludedHandles]);
+  console.log(`[instagram] excluded handles loaded: ${supabaseExcludedHandles.size}`);
+  console.log(`[instagram] existing DB handles loaded: ${existingDbHandles.size}`);
+  if (fileExcludedHandles.size) console.log(`[instagram] file excluded handles loaded: ${fileExcludedHandles.size}`);
 
   await fs.mkdir(args.outputDir, { recursive: true });
 
@@ -732,6 +863,15 @@ async function main() {
       rows = extractCandidatesFromHtml(result.text, hashtag);
     }
 
+    const beforeBeautyFilter = rows.length;
+    rows = filterBeautyRows(rows, args.requireBeauty);
+    const afterBeautyFilter = rows.length;
+    const beforeCommercialFilter = rows.length;
+    rows = filterCommercialRows(rows, args.requireCommercial);
+    const afterCommercialFilter = rows.length;
+    const beforeExclude = rows.length;
+    rows = filterExcludedRows(rows, excludedHandles);
+    const excludedRows = beforeExclude - rows.length;
     rows = rows.slice(0, args.limitPerTag);
 
     diagnostics.push({
@@ -741,6 +881,9 @@ async function main() {
       contentType: result.contentType,
       responseLength: result.text.length,
       rows: rows.length,
+      nonBeautyRows: beforeBeautyFilter - afterBeautyFilter,
+      nonCommercialRows: beforeCommercialFilter - afterCommercialFilter,
+      excludedRows,
       loginLimited:
         result.text.includes("PolarisCAAIGLoginHomepageController") ||
         result.text.includes("is_logged_out_user") ||
@@ -750,10 +893,14 @@ async function main() {
     allRows.push(...rows);
 
     console.log(`[instagram] #${hashtag} 후보 ${rows.length}건`);
+    if (excludedRows) console.log(`[instagram] #${hashtag} 기존/제외 핸들 ${excludedRows}건 제외`);
     await sleep(args.delayMs);
   }
 
-  const rows = dedupeRows(allRows);
+  const rows = filterExcludedRows(
+    filterCommercialRows(filterBeautyRows(dedupeRows(allRows), args.requireBeauty), args.requireCommercial),
+    excludedHandles
+  );
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const csvPath = path.join(args.outputDir, `instagram_hashtag_sellers_${stamp}.csv`);
   const summaryPath = path.join(args.outputDir, `instagram_beauty_seller_summary_${stamp}.csv`);

@@ -11,6 +11,9 @@ function parseArgs(argv) {
     withFallback: false,
     all: false,
     includeWithoutSellerId: false,
+    skipAssign: false,
+    assignLimit: 10000,
+    skipOutOfRangeExclude: false,
   };
 
   const rest = [];
@@ -30,6 +33,12 @@ function parseArgs(argv) {
       args.all = true;
     } else if (arg === "--include-without-seller-id") {
       args.includeWithoutSellerId = true;
+    } else if (arg === "--skip-assign") {
+      args.skipAssign = true;
+    } else if (arg === "--assign-limit") {
+      args.assignLimit = Number(argv[++i]) || args.assignLimit;
+    } else if (arg === "--skip-out-of-range-exclude") {
+      args.skipOutOfRangeExclude = true;
     } else if (arg.startsWith("--")) {
       console.log(`[warn] unknown option: ${arg}`);
     } else {
@@ -93,6 +102,15 @@ function main() {
   const refreshArgs = buildRefreshArgs(args);
   console.log(`[pipeline] refreshing engagement: ${refreshArgs.join(" ")}`);
   run("refresh_engagement_from_instagram.mjs", refreshArgs, "refresh");
+
+  if (!args.skipAssign) {
+    const assignArgs = ["--limit", String(args.assignLimit)];
+    if (args.skipOutOfRangeExclude) {
+      assignArgs.push("--skip-out-of-range-exclude");
+    }
+    console.log(`[pipeline] assigning candidates: ${assignArgs.join(" ")}`);
+    run("assign_candidates.mjs", assignArgs, "assign");
+  }
 }
 
 main();

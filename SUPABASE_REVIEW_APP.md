@@ -139,10 +139,11 @@ To prevent client/anon/authenticated users from reading any candidate rows, run 
 
 ## Auto assignment
 
-Assign already-imported candidates evenly to two teammates:
+CSV import automatically assigns unassigned, unchecked candidates to 김시은 and 박민서. To run assignment manually:
 
 ```powershell
-.\.tools\node-v22.22.3-win-x64\node.exe scripts\assign_candidates.mjs --members "팀원A,팀원B" --per-member-limit 30
+.\.tools\node-v22.22.3-win-x64\node.exe scripts\assign_candidates.mjs --dry-run
+.\.tools\node-v22.22.3-win-x64\node.exe scripts\assign_candidates.mjs
 ```
 
-Use `--dry-run` first to preview. Existing `assignee` values are preserved and skipped.
+Existing `assignee` values are preserved and skipped by default. Use `--skip-assign` on import scripts only when assignment should be delayed.

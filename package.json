@@ -8,11 +8,13 @@
     "mine:hashtags": "node scripts/instagram_seed_hashtag_miner.mjs",
     "supabase:setup": "node scripts/setup_supabase_table.mjs",
     "supabase:import": "node scripts/import_candidates_to_supabase.mjs",
+    "supabase:import:gugu": "node scripts/import_gugu_firestore_to_supabase.mjs",
+    "supabase:import:gugu:dry-run": "node scripts/import_gugu_firestore_to_supabase.mjs --dry-run",
     "supabase:import:refresh": "node scripts/import_then_refresh.mjs",
+    "supabase:crawl:import:refresh": "node scripts/crawl_import_refresh.mjs",
     "supabase:dedupe-id": "node scripts/dedupe_seller_id_rows.mjs",
     "engagement:refresh": "node scripts/refresh_engagement_from_instagram.mjs",
     "assign:candidates": "node scripts/assign_candidates.mjs",
-    "sent:dedupe": ".tools/node-v22.22.3-win-x64/node.exe scripts/mark_sent_handles_dedupe.mjs",
     "review": "node scripts/review_server.mjs",
     "start": "node scripts/review_server.mjs"
   }

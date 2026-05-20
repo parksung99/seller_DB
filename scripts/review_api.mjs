@@ -1,6 +1,7 @@
 import { readSupabaseEnv } from "./supabase_env.mjs";
 
 export const TABLE = "beauty_seller_candidates";
+export const EXCLUDED_TABLE = "excluded_instagram_handles";
 export const REVIEW_STATUSES = ["\uBBF8\uD655\uC778", "\uC88B\uC74C", "\uBCF4\uB958", "\uC81C\uC678", "\uBE0C\uB79C\uB4DC\uC804\uB2EC"];
 export const DM_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\uB2F5\uC7A5\uC634", "\uAC70\uC808", "\uBCF4\uB958"];
 export const BRAND_FITS = ["", "\uB192\uC74C", "\uC911\uAC04", "\uB0AE\uC74C"];
@@ -94,6 +95,11 @@ async function supabaseFetch(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+function isMissingRelation(error) {
+  if (!error || error.status !== 404) return false;
+  return /Could not find|does not exist|schema cache/i.test(String(error.body || error.message || ""));
+}
+
 function cleanSearch(value) {
   return String(value || "").replace(/[(),]/g, " ").trim();
 }
@@ -101,6 +107,67 @@ function cleanSearch(value) {
 function instagramHandleFromUrl(value) {
   const match = String(value || "").match(/instagram\.com\/(?!p\/|reel\/|tv\/|explore\/|accounts\/)([A-Za-z0-9._]+)/i);
   return match ? match[1].toLowerCase() : "";
+}
+
+export function normalizeInstagramHandle(value) {
+  const raw = String(value || "").trim().replace(/^@/, "").replace(/\/+$/, "");
+  if (!raw) return "";
+  const match = raw.match(/instagram\.com\/(?!p\/|reel\/|tv\/|explore\/|accounts\/)([A-Za-z0-9._]+)/i);
+  return (match ? match[1] : raw).trim().replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
+}
+
+function normalizeHandleFromRow(row) {
+  return normalizeInstagramHandle(row?.seller_id || row?.profile_url || row?.seller_name || "");
+}
+
+async function listExcludedHandles() {
+  try {
+    const rows = await supabaseFetch(`${EXCLUDED_TABLE}?select=handle&limit=10000`, {
+      headers: { accept: "application/json" },
+    });
+    return new Set((rows || []).map((row) => normalizeInstagramHandle(row.handle)).filter(Boolean));
+  } catch (error) {
+    if (isMissingRelation(error)) return new Set();
+    throw error;
+  }
+}
+
+async function isHandleExcluded(handle) {
+  const normalized = normalizeInstagramHandle(handle);
+  if (!normalized) return false;
+  try {
+    const rows = await supabaseFetch(
+      `${EXCLUDED_TABLE}?select=handle&handle=eq.${encodeURIComponent(normalized)}&limit=1`,
+      { headers: { accept: "application/json" } }
+    );
+    return Boolean(rows?.length);
+  } catch (error) {
+    if (isMissingRelation(error)) return false;
+    throw error;
+  }
+}
+
+async function upsertExcludedHandle(handle, { reason = "manual_review_excluded", source = "review_app", excludedBy = "unknown" } = {}) {
+  const normalized = normalizeInstagramHandle(handle);
+  if (!normalized) return null;
+  try {
+    return await supabaseFetch(`${EXCLUDED_TABLE}?on_conflict=handle`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify({
+        handle: normalized,
+        reason,
+        source,
+        excluded_by: excludedBy,
+      }),
+    });
+  } catch (error) {
+    if (isMissingRelation(error)) return null;
+    throw error;
+  }
 }
 
 function searchTerms(value) {
@@ -140,6 +207,10 @@ async function queryCandidates(url, options = {}) {
   const reviewStatus = options.hasOwnProperty("reviewStatus") ? options.reviewStatus : params.get("review_status");
   const dmStatus = options.hasOwnProperty("dmStatus") ? options.dmStatus : params.get("dm_status");
   const assignee = options.hasOwnProperty("assignee") ? options.assignee : params.get("assignee");
+  const unassigned = options.hasOwnProperty("unassigned") ? options.unassigned : params.get("unassigned") === "1";
+  const includeExcluded = options.hasOwnProperty("includeExcluded")
+    ? options.includeExcluded
+    : params.get("include_excluded") === "1";
 
   const selectColumns = options.selectColumns || "*";
   const queries = searchTerms(params.get("q"));
@@ -152,6 +223,7 @@ async function queryCandidates(url, options = {}) {
   if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
   if (dmStatus) apiParams.set("dm_status", `eq.${dmStatus}`);
   if (assignee) apiParams.set("assignee", `eq.${assignee}`);
+  if (unassigned) apiParams.set("assignee", "is.null");
   if (queries.length && orColumns.length) {
     const joinedOr = orColumns
       .flatMap((name) => queries.map((query) => `${name}.ilike.*${query}*`))
@@ -160,9 +232,12 @@ async function queryCandidates(url, options = {}) {
   }
 
   try {
-    return await supabaseFetch(`${TABLE}?${apiParams.toString()}`, {
+    const rows = await supabaseFetch(`${TABLE}?${apiParams.toString()}`, {
       headers: { accept: "application/json" },
     });
+    if (includeExcluded || reviewStatus === "\uC81C\uC678") return rows;
+    const excluded = await listExcludedHandles();
+    return rows.filter((row) => row.review_status !== "\uC81C\uC678" && !excluded.has(normalizeHandleFromRow(row)));
   } catch (error) {
     const missing = parseMissingColumn(error);
     if (missing) {
@@ -249,6 +324,11 @@ export async function createCandidate(patch, actor) {
     error.status = 400;
     throw error;
   }
+  if (await isHandleExcluded(sellerId || sellerName || patch.profile_url)) {
+    const error = new Error("excluded instagram handle.");
+    error.status = 409;
+    throw error;
+  }
 
   const now = new Date().toISOString();
   const body = {
@@ -298,7 +378,7 @@ export async function updateCandidate(id, patch, actor) {
     body.last_contacted_at = now;
   }
 
-  return supabaseFetch(`${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+  const updated = await supabaseFetch(`${TABLE}?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: {
       "content-type": "application/json",
@@ -306,6 +386,15 @@ export async function updateCandidate(id, patch, actor) {
     },
     body: JSON.stringify(body),
   });
+  const row = Array.isArray(updated) ? updated[0] : null;
+  if (body.review_status === "\uC81C\uC678" && row) {
+    await upsertExcludedHandle(normalizeHandleFromRow(row), {
+      reason: "manual_review_excluded",
+      source: "review_app",
+      excludedBy: body.status_updated_by,
+    });
+  }
+  return updated;
 }
 
 export async function stats() {

@@ -1,8 +1,30 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { readSupabaseEnv } from "./supabase_env.mjs";
 
 const TABLE = "beauty_seller_candidates";
+const EXCLUDED_TABLE = "excluded_instagram_handles";
+
+function parseArgs(argv) {
+  const args = {
+    csvPath: "",
+    skipExistingDb: false,
+    skipAssign: false,
+  };
+
+  const rest = [];
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--skip-existing-db") args.skipExistingDb = true;
+    else if (arg === "--skip-assign") args.skipAssign = true;
+    else if (arg.startsWith("--")) console.log(`[warn] unknown option: ${arg}`);
+    else rest.push(arg);
+  }
+
+  args.csvPath = rest[0] || "";
+  return args;
+}
 
 function parseCsvLine(line) {
   const cells = [];
@@ -43,9 +65,41 @@ function normalizeHandleFromUrl(profileUrl) {
   return match ? match[1].trim().toLowerCase() : "";
 }
 
+function normalizeHandle(value) {
+  const raw = String(value || "").trim().replace(/^@/, "").replace(/\/+$/, "");
+  if (!raw) return "";
+  if (raw.includes("instagram.com/")) return normalizeHandleFromUrl(raw);
+  return raw.toLowerCase();
+}
+
+function handlesFromCandidate(row) {
+  return [
+    normalizeHandle(row.seller_id),
+    normalizeHandle(row.seller_name),
+    normalizeHandle(row.profile_url),
+  ].filter(Boolean);
+}
+
+function handleFromMappedRow(row) {
+  return normalizeHandle(row.seller_id || row.profile_url || row.seller_name);
+}
+
 function toInteger(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.trunc(number) : 0;
+}
+
+function runAssignment() {
+  const scriptPath = path.join(process.cwd(), "scripts", "assign_candidates.mjs");
+  const result = spawnSync(process.execPath, [scriptPath], {
+    stdio: "inherit",
+    env: process.env,
+  });
+
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`assign failed (code ${result.status})`);
+  }
 }
 
 async function purgeDuplicateSellerIds(env) {
@@ -111,6 +165,41 @@ function normalizeSellerId(value) {
   return normalized;
 }
 
+async function fetchExcludedHandles(env) {
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/${EXCLUDED_TABLE}?select=handle&limit=10000`, {
+    headers: {
+      "apikey": env.serviceRoleKey,
+      "authorization": `Bearer ${env.serviceRoleKey}`,
+      accept: "application/json",
+    },
+  });
+  const text = await response.text();
+  if (response.ok) {
+    return new Set((text ? JSON.parse(text) : []).map((row) => normalizeHandle(row.handle)).filter(Boolean));
+  }
+  if (response.status === 404) {
+    console.log("[import] excluded_instagram_handles table not found. Exclusion filter skipped.");
+    return new Set();
+  }
+  throw new Error(`Failed to load excluded handles: ${response.status}: ${text}`);
+}
+
+async function fetchExistingCandidateHandles(env) {
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/${TABLE}?select=seller_id,seller_name,profile_url&limit=10000`, {
+    headers: {
+      "apikey": env.serviceRoleKey,
+      "authorization": `Bearer ${env.serviceRoleKey}`,
+      accept: "application/json",
+    },
+  });
+  const text = await response.text();
+  if (response.ok) {
+    return new Set((text ? JSON.parse(text) : []).flatMap(handlesFromCandidate));
+  }
+  if (response.status === 404) return new Set();
+  throw new Error(`Failed to load existing candidates: ${response.status}: ${text}`);
+}
+
 function resolveSellerName(row, sellerId) {
   const directName = String(row.seller_name || "").trim();
   if (directName) return directName;
@@ -152,7 +241,9 @@ function removeDuplicateSellerIds(rows) {
 }
 
 function mapRow(row, sourceFile) {
-  const sellerId = normalizeSellerId(row.seller_id || row.id || row.instagram_id || row.instagramUserId || "");
+  const sellerId = normalizeSellerId(
+    row.seller_id || row.id || row.instagram_id || row.instagramUserId || normalizeHandleFromUrl(row.profile_url) || ""
+  );
   return {
     seller_name: resolveSellerName(row, sellerId),
     seller_id: sellerId,
@@ -231,16 +322,30 @@ async function main() {
   }
   console.log(`[import] target: ${env.supabaseUrl}/rest/v1/${TABLE}`);
 
+  const args = parseArgs(process.argv.slice(2));
   const csvPath =
-    process.argv[2] ||
+    args.csvPath ||
     "data/instagram_beauty_seller_summary_2026-05-18T11-34-28-209Z.csv";
   const text = await fs.readFile(csvPath, "utf8");
   const sourceFile = path.basename(csvPath);
   const rows = parseCsv(text)
     .map((row) => mapRow(row, sourceFile))
     .filter((row) => row.seller_name);
-  const dedupedRows = removeDuplicateSellerIds(rows);
+  const excludedHandles = await fetchExcludedHandles(env);
+  const afterExcludedRows = excludedHandles.size
+    ? rows.filter((row) => !excludedHandles.has(normalizeHandle(row.seller_id || row.profile_url || row.seller_name)))
+    : rows;
+  const existingHandles = args.skipExistingDb ? await fetchExistingCandidateHandles(env) : new Set();
+  if (args.skipExistingDb) console.log(`[import] existing DB handles loaded: ${existingHandles.size}`);
+  const filteredRows = existingHandles.size
+    ? afterExcludedRows.filter((row) => !existingHandles.has(handleFromMappedRow(row)))
+    : afterExcludedRows;
+  const dedupedRows = removeDuplicateSellerIds(filteredRows);
+  const excludedSkipped = rows.length - afterExcludedRows.length;
+  const existingSkipped = afterExcludedRows.length - filteredRows.length;
   console.log(`[import] source: ${csvPath} (${rows.length} rows)`);
+  console.log(`[import] excluded rows skipped: ${excludedSkipped}`);
+  console.log(`[import] existing DB rows skipped: ${existingSkipped}`);
   console.log(`[import] deduped rows: ${dedupedRows.length} rows`);
 
   const batchSize = 100;
@@ -253,6 +358,11 @@ async function main() {
   await purgeDuplicateSellerIds(env);
 
   console.log(`[done] imported candidates: ${dedupedRows.length}. Existing review/DM status and memo were preserved.`);
+
+  if (!args.skipAssign) {
+    console.log("[import] assigning unassigned candidates.");
+    runAssignment();
+  }
 }
 
 main().catch((error) => {
