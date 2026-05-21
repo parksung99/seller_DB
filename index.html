@@ -343,14 +343,14 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-shell {
   background: var(--surface); border: 1px solid #d8dee9;
   border-radius: 0; box-shadow: none;
-  display: grid; grid-template-columns: 196px minmax(640px, 1fr) 410px;
+  display: grid; grid-template-columns: 196px minmax(0, 1fr) 380px;
   min-height: calc(100vh - 56px); width: 100%; max-width: none; margin: 0; overflow: hidden;
 }
 .campaign-shell.finder-mode { grid-template-columns: 196px minmax(0, 1fr); }
 .campaign-shell.finder-mode .campaign-preview { display: none; }
 .campaign-shell.finder-mode .campaign-body-grid { display: none; }
 .campaign-side { border-right: 1px solid #edf0f4; background: #fbfcff; padding: 14px; }
-.campaign-main { padding: 0; border-right: 1px solid #edf0f4; min-width: 0; background: #fff; }
+.campaign-main { padding: 0; border-right: 1px solid #edf0f4; min-width: 0; overflow: hidden; background: #fff; }
 .campaign-preview { padding: 0; background: #fff; min-width: 0; display: flex; flex-direction: column; }
 .campaign-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .campaign-title { font-size: 15px; font-weight: 800; color: var(--text); }
@@ -384,7 +384,7 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-actions { display: flex; align-items: center; gap: 8px; }
 .campaign-action-mini { border: none; background: transparent; color: #6b7280; font-size: 12px; font-family: inherit; cursor: pointer; }
 .campaign-next { background: #6f5bff; color: #fff; border: 0; border-radius: 4px; padding: 7px 15px; font-size: 12px; font-weight: 700; cursor: pointer; }
-.campaign-body-grid { display: grid; grid-template-columns: 1fr; }
+.campaign-body-grid { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .campaign-shell.setup-mode .campaign-body-grid { display: none; }
 .campaign-finder-view { display: none; min-height: calc(100vh - 104px); background: #fff; }
 .campaign-finder-view.active { display: block; }
@@ -397,14 +397,14 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-title { font-size:16px; font-weight:900; color:#111827; }
 .finder-sub { color:#8b909b; font-size:12px; margin-top:3px; }
 .finder-stats { display:flex; align-items:center; gap:8px; }
-.finder-subtabs { display:none; gap:6px; padding:0 22px 12px; border-bottom:1px solid #f0f1f4; }
-.finder-subtabs.active { display:flex; }
+.finder-subtabs { display:none; }
 .finder-subtab {
-  font-family:inherit; font-size:12px; font-weight:800; cursor:pointer;
-  border:1px solid #e5e7eb; background:#fff; color:#6b7280;
-  border-radius:8px; padding:7px 12px;
+  font-family:inherit; font-size:11px; font-weight:800; cursor:pointer;
+  border:0; background:transparent; color:#6b7280;
+  border-radius:4px; padding:7px 9px 7px 28px; text-align:left;
 }
-.finder-subtab.active { border-color:#c7bfff; background:#f0edff; color:#6e56e8; }
+.finder-subtabs.active { display:grid; gap:3px; margin:3px 0 8px; }
+.finder-subtab.active { background:#f0edff; color:#6e56e8; }
 .finder-table-head, .finder-row {
   display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 82px 92px 96px 96px 92px;
   gap:10px; align-items:center;
@@ -417,7 +417,7 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-row:hover { background:#fafaff; }
 .finder-list { max-height: calc(100vh - 210px); overflow:auto; }
 .campaign-step-row {
-  display: grid; grid-template-columns: 220px 1fr; border-bottom: 1px solid #f0f1f4; min-height: 260px;
+  display: grid; grid-template-columns: 220px minmax(0, 1fr); border-bottom: 1px solid #f0f1f4; min-height: 260px;
 }
 .campaign-step-aside { padding: 22px; border-right: 1px solid #f0f1f4; background: #fff; }
 .campaign-step-main { padding: 0; min-width: 0; }
@@ -433,13 +433,22 @@ tbody tr:hover { background: var(--pink-light); }
   border: 0; border-radius: 0; overflow: hidden; background: var(--surface);
   max-height: 310px; overflow-y: auto;
 }
+.campaign-candidate-head {
+  grid-template-columns: 24px minmax(240px, 1fr) minmax(220px, 320px) 28px !important;
+}
 .candidate-row {
-  display: grid; grid-template-columns: 24px minmax(180px, 1fr) 220px 28px; gap: 8px; align-items: center;
-  padding: 9px 18px; border-bottom: 1px solid #f0f1f4; min-height: 42px;
+  display: grid; grid-template-columns: 24px minmax(240px, 1fr) minmax(220px, 320px) 28px;
+  gap: 14px; align-items: center;
+  padding: 12px 22px; border-bottom: 1px solid #f0f1f4; min-height: 70px;
 }
 .candidate-row:last-child { border-bottom: none; }
 .candidate-row:hover { background: #fafaff; }
-.candidate-row input { width: 14px; height: 14px; accent-color: #6e56e8; }
+.candidate-row > input[type="checkbox"] { width: 14px; height: 14px; accent-color: #6e56e8; }
+.candidate-row .profile-mini { min-width: 0; }
+.candidate-row .profile-mini > div { min-width: 0; }
+.candidate-row .profile-mini strong,
+.candidate-row .profile-mini .handle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.candidate-row > .handle:last-child { justify-self: center; font-size: 18px; line-height: 1; }
 .campaign-email-input {
   width: 100%; border: 1px solid #e4e7ec; border-radius: 4px; padding: 6px 9px;
   font-size: 12px; color: #374151; background: #fff;
@@ -478,11 +487,14 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-type-card.active { border-color: #b8a6ff; background: #f3f0ff; color: #6e56e8; }
 .campaign-setup-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .template-tools { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; justify-content: flex-end; }
-.campaign-template-grid { display: grid; grid-template-columns: minmax(340px, 1fr) 320px; gap: 0; min-height: 410px; }
-.campaign-template-form { padding: 22px; border-right: 1px solid #f0f1f4; }
-.campaign-template-preview { padding: 22px; background: #fbfbfc; }
+.campaign-template-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 32%); gap: 0; min-width: 0; min-height: 410px; }
+.campaign-template-form { padding: 22px; min-width: 0; border-right: 1px solid #f0f1f4; }
+.campaign-template-preview {
+  padding: 22px; background: #fbfbfc; min-width: 0;
+  border-left: 1px solid #f0f1f4; margin-left: -1px;
+}
 .phone-preview {
-  width: 230px; margin: 22px auto 0; background: #fff;
+  width: min(230px, 100%); margin: 22px auto 0; background: #fff;
   border: 9px solid #eee; border-radius: 35px; min-height: 390px;
   box-shadow: 0 10px 20px rgba(0,0,0,0.06); padding: 48px 14px 18px; position: relative;
 }
@@ -544,8 +556,17 @@ tbody tr:hover { background: var(--pink-light); }
   #page-campaign { padding: 0; }
   .campaign-shell { grid-template-columns: 1fr; }
   .campaign-side, .campaign-main { border-right: none; border-bottom: 1px solid var(--border); }
-  .campaign-grid, .campaign-step-row, .campaign-template-grid, .campaign-setup-layout, .campaign-info-strip, .campaign-history-stats { grid-template-columns: 1fr; }
-  .campaign-table-head, .recipient-card, .candidate-row { grid-template-columns: 1fr; }
+  .campaign-grid, .campaign-step-row, .campaign-setup-layout, .campaign-info-strip, .campaign-history-stats { grid-template-columns: 1fr; }
+  .campaign-template-grid { grid-template-columns: minmax(0, 1fr); }
+  .campaign-template-form { border-right: 0; border-bottom: 1px solid #f0f1f4; }
+  .campaign-template-preview { border-left: 0; margin-left: 0; border-top: 1px solid #f0f1f4; }
+  .campaign-table-head, .recipient-card { grid-template-columns: 1fr; }
+  .campaign-candidate-head { display: none; }
+  .candidate-row { grid-template-columns: 24px minmax(0, 1fr) 28px; gap: 10px; padding: 12px 18px; }
+  .candidate-row > input[type="checkbox"] { grid-column: 1; grid-row: 1; }
+  .candidate-row .profile-mini { grid-column: 2 / 3; grid-row: 1; }
+  .candidate-row .campaign-email-input { grid-column: 2 / 4; }
+  .candidate-row > .handle:last-child { grid-column: 3; grid-row: 1; }
 }
 </style>
 </head>
@@ -706,6 +727,10 @@ tbody tr:hover { background: var(--pink-light); }
         <div class="side-menu-title">인플루언서</div>
         <button class="side-menu-item" data-campaign-mode-btn="find" onclick="setCampaignMode('find')">◎ 인플루언서 찾기</button>
         <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="setCampaignMode('manage')">☷ 인플루언서 관리</button>
+        <div class="finder-subtabs" id="manage-subtabs">
+          <button class="finder-subtab active" data-manage-tab="pending" onclick="setCampaignMode('manage'); setCampaignManageTab('pending')">발송전</button>
+          <button class="finder-subtab" data-manage-tab="sent" onclick="setCampaignMode('manage'); setCampaignManageTab('sent')">발송완료</button>
+        </div>
         <button class="side-menu-item" data-campaign-mode-btn="excluded" onclick="setCampaignMode('excluded')">⊘ 제외 DB</button>
         <div class="side-menu-title">캠페인</div>
         <button class="side-menu-item">✉ 메시지 관리</button>
@@ -742,10 +767,6 @@ tbody tr:hover { background: var(--pink-light); }
               <button class="action-btn" onclick="loadFinderCandidates()">새로고침</button>
               <span class="status-badge s-call" id="finder-count">0명</span>
             </div>
-          </div>
-          <div class="finder-subtabs" id="manage-subtabs">
-            <button class="finder-subtab active" data-manage-tab="pending" onclick="setCampaignManageTab('pending')">발송전</button>
-            <button class="finder-subtab" data-manage-tab="sent" onclick="setCampaignManageTab('sent')">발송완료</button>
           </div>
           <div class="finder-table-head">
             <span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>담당자</span><span>액션</span>
@@ -809,8 +830,8 @@ tbody tr:hover { background: var(--pink-light); }
               <button class="action-btn" style="margin-top:18px;" onclick="loadCampaignCandidates()">검색 후 추가하기</button>
             </div>
             <div class="campaign-step-main">
-              <div class="campaign-table-head" style="grid-template-columns:24px minmax(180px,1fr) 220px 28px;">
-                <span></span><span>계정</span><span>발송 수단</span><span></span>
+              <div class="campaign-table-head campaign-candidate-head">
+                <span></span><span>계정</span><span>이메일</span><span></span>
               </div>
               <div class="candidate-picker" id="campaign-candidates"></div>
               <div style="padding:12px 18px;border-top:1px solid #f0f1f4;text-align:right;">
