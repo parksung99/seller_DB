@@ -835,6 +835,7 @@ tbody tr:hover { background: var(--pink-light); }
             </div>
             <div class="finder-stats">
               <button class="action-btn" onclick="loadFinderCandidates()">새로고침</button>
+              <button class="action-btn" id="finder-restore-excluded-btn" style="display:none;" onclick="restoreFinderExcluded()">제외 복원</button>
               <span class="status-badge s-call" id="finder-count">0명</span>
             </div>
           </div>
@@ -1892,6 +1893,11 @@ function renderFinderCandidates() {
   const activeAssignee = campaignOwner();
   const findStatusLabel = FIND_TABS[state.campaignFindTab]?.label || "미확인";
   const manageStatusLabel = isManageRejected ? "제외" : isManageReply ? "회신완료" : isManageSent ? "발송완료" : "발송전";
+  const restoreExcludedBtn = $("finder-restore-excluded-btn");
+  if (restoreExcludedBtn) {
+    restoreExcludedBtn.style.display = state.campaignMode === "find" && state.campaignFindTab === "excluded" ? "inline-block" : "none";
+    restoreExcludedBtn.disabled = state.campaignMode === "find" && state.campaignFindTab === "excluded" && !(state.finderCandidates || []).some((row) => Number.isFinite(Number(row.id)));
+  }
   $("finder-title").textContent = isManage ? "인플루언서 관리" : isExcluded ? "제외" : "인플루언서 찾기";
   $("finder-table-head")?.classList.toggle("finder-simple", isFind);
   $("finder-table-head").innerHTML = isFind
@@ -1917,6 +1923,37 @@ function renderFinderCandidates() {
   $("finder-list").innerHTML = rows.length
     ? rows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected })).join("")
     : `<div class="empty-state" style="display:block;"><p>${esc(activeAssignee)} 담당 ${esc(fallbackLabel)}가 없습니다</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송/회신 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
+}
+async function restoreFinderExcluded() {
+  if (state.campaignMode !== "find" || state.campaignFindTab !== "excluded") return;
+  const candidateRows = (state.finderCandidates || []).filter((row) => Number.isFinite(Number(row.id)));
+  if (!candidateRows.length) {
+    toast("복원할 제외 후보가 없습니다");
+    return;
+  }
+  const ids = candidateRows.map((row) => Number(row.id));
+  const actor = identity().name || campaignOwner();
+  const button = $("finder-restore-excluded-btn");
+  if (button) button.disabled = true;
+  try {
+    await Promise.all(
+      ids.map((id) =>
+        api(`/api/candidates/${id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ actor, review_status: "좋음" }),
+        })
+      )
+    );
+    state.candidatesCache.clear();
+    state.finderCache.clear();
+    await loadFinderCandidates();
+    toast(`${ids.length}명을 발송전(좋음)으로 복원했어요`);
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected }) {
   if (isFind) {
