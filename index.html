@@ -1038,6 +1038,13 @@ const EMAIL_STATUSES = ["미발송", "발송완료", "답장옴", "미회신", "
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
 const GROUPBUY_EXPERIENCE_VALUES = ["불명", "있음", "없음"];
 const AGENCY_STATUS_VALUES = ["불명", "있음", "없음"];
+
+function normalizeDmStatus(value) {
+  const normalized = String(value || "").trim();
+  if (normalized === "DM발송") return "발송완료";
+  return DM_STATUSES.includes(normalized) ? normalized : "미발송";
+}
+
 function normalizeWithAllowed(value, allowed) {
   return allowed.includes(value) ? value : "불명";
 }
@@ -2020,6 +2027,26 @@ function finderActionCell(row, { isExcluded, isManageSent, isManageReply, isMana
 async function excludeFinderCandidate(id) {
   return updateFinderCandidateReview(id, "제외");
 }
+function findTabForReviewStatus(reviewStatus) {
+  if (reviewStatus === "보류") return "hold";
+  if (reviewStatus === "제외") return "excluded";
+  return "";
+}
+function applyReviewStatusToLocalCandidateList(nextRow, reviewStatus) {
+  if (state.campaignMode === "find") {
+    const nextFindTab = findTabForReviewStatus(reviewStatus);
+    if (state.campaignFindTab === nextFindTab) {
+      return state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item);
+    }
+    return state.finderCandidates.filter((item) => Number(item.id) !== Number(nextRow.id));
+  }
+  if (state.campaignMode === "manage") {
+    return rowMatchesCurrentManageTab(nextRow)
+      ? state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item)
+      : state.finderCandidates.filter((item) => Number(item.id) !== Number(nextRow.id));
+  }
+  return state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item);
+}
 async function updateFinderCandidateReview(id, reviewStatus) {
   const row = (state.finderCandidates || []).find((item) => Number(item.id) === Number(id));
   if (!row) return;
@@ -2028,23 +2055,8 @@ async function updateFinderCandidateReview(id, reviewStatus) {
     return;
   }
   if (row.review_status === reviewStatus) return;
-  const name = row.seller_name || row.seller_id || "이 인플루언서";
-  if (reviewStatus === "제외" && !confirm(`${name}님을 제외로 보낼까요?`)) {
-    renderFinderCandidates();
-    return;
-  }
-  const previousMode = state.campaignMode;
-  const previousFindTab = state.campaignFindTab;
-  const previousManageTab = state.campaignManageTab;
-  state.finderCandidates = state.finderCandidates.filter((item) => Number(item.id) !== Number(id));
-  if (state.campaignMode === "find" && reviewStatus === "좋음") {
-    setCampaignMode("manage", { skipFinderLoad: true });
-    setCampaignManageTab("pending", { skipFinderLoad: true });
-  } else if (state.campaignMode === "find" && reviewStatus === "보류") {
-    setCampaignFindTab("hold", { skipFinderLoad: true });
-  } else if (state.campaignMode === "find" && reviewStatus === "제외") {
-    setCampaignFindTab("excluded", { skipFinderLoad: true });
-  }
+  const nextRow = { ...row, review_status: reviewStatus };
+  state.finderCandidates = applyReviewStatusToLocalCandidateList(nextRow, reviewStatus);
   renderFinderCandidates();
   try {
     await api(`/api/candidates/${id}`, {
@@ -2052,21 +2064,16 @@ async function updateFinderCandidateReview(id, reviewStatus) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         actor: identity().name || campaignOwner(),
-        assignee: row.assignee || campaignOwner(),
-        review_status: reviewStatus,
+        assignee: nextRow.assignee || campaignOwner(),
+        review_status: nextRow.review_status,
         memo: row.memo || row.notes || "",
       }),
     });
     state.candidatesCache.clear();
     state.finderCache.clear();
-    await loadFinderCandidates();
     toast(`${reviewStatus} 처리 완료`);
   } catch (error) {
     toast(error.message);
-    setCampaignMode(previousMode, { skipFinderLoad: true });
-    if (previousMode === "find") setCampaignFindTab(previousFindTab, { skipFinderLoad: true });
-    if (previousMode === "manage") setCampaignManageTab(previousManageTab, { skipFinderLoad: true });
-    renderFinderCandidates();
     await loadFinderCandidates();
   }
 }
