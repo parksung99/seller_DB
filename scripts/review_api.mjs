@@ -81,6 +81,22 @@ function normalizeWithAllowed(value, allowed) {
   return allowed.includes(normalized) ? normalized : allowed[0];
 }
 
+function normalizeDmStatus(value) {
+  const normalized = String(value || "").trim();
+  if (normalized === "DM발송") return DM_STATUSES[1];
+  return DM_STATUSES.includes(normalized) ? normalized : DM_STATUSES[0];
+}
+
+function expandDmStatusForFilter(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+  const normalized = normalizeDmStatus(raw);
+  if (normalized === DM_STATUSES[1]) {
+    return [DM_STATUSES[1], "DM발송"]; 
+  }
+  return [normalized];
+}
+
 function normalizeAgencyStatus(value) {
   const normalized = String(value || "").trim();
   if (normalized === "개인" || normalized === "에이전시") return "있음";
@@ -278,12 +294,13 @@ function cleanSelectColumns(selectColumns) {
 }
 
 function isSentCompleteRow(row) {
-  return ["발송완료", "DM발송"].includes(row.dm_status) || ["발송완료", "미회신"].includes(row.email_status);
+  return normalizeDmStatus(row.dm_status) === DM_STATUSES[1] || ["발송완료", "미회신"].includes(row.email_status);
 }
 
 function isReplyCompleteRow(row) {
+  const normalizedDmStatus = normalizeDmStatus(row.dm_status);
   const replyStatuses = ["답장옴", "거절", "보류"];
-  return replyStatuses.includes(row.dm_status) || replyStatuses.includes(row.email_status);
+  return replyStatuses.includes(normalizedDmStatus) || replyStatuses.includes(row.email_status);
 }
 
 async function queryCandidates(url, options = {}) {
@@ -314,13 +331,18 @@ async function queryCandidates(url, options = {}) {
   if (grade) apiParams.set("grade", `eq.${grade}`);
   if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
   if (dmStatusIn) {
-    const values = String(dmStatusIn)
+    const values = [...new Set(String(dmStatusIn)
       .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
+      .flatMap((value) => expandDmStatusForFilter(value.trim()))
+      .filter(Boolean))];
     if (values.length) apiParams.set("dm_status", `in.(${values.map((value) => `"${value.replace(/"/g, '\\"')}"`).join(",")})`);
   } else if (dmStatus) {
-    apiParams.set("dm_status", `eq.${dmStatus}`);
+    const values = expandDmStatusForFilter(dmStatus);
+    if (values.length === 1) {
+      apiParams.set("dm_status", `eq.${values[0]}`);
+    } else if (values.length > 1) {
+      apiParams.set("dm_status", `in.(${values.map((value) => `"${value.replace(/"/g, '\\"')}"`).join(",")})`);
+    }
   }
   if (emailStatusIn) {
     const values = String(emailStatusIn)
@@ -481,7 +503,7 @@ export async function createCandidate(patch, actor) {
     avg_comments: toInteger(patch.avg_comments),
     engagement_rate: toNumberOrNull(patch.engagement_rate),
     review_status: patch.review_status || REVIEW_STATUSES[0],
-    dm_status: patch.dm_status || DM_STATUSES[0],
+    dm_status: normalizeDmStatus(patch.dm_status),
     email_status: patch.email_status || EMAIL_STATUSES[0],
     brand_fit: patch.brand_fit || null,
     groupbuy_experience: normalizeWithAllowed(patch.groupbuy_experience, GROUPBUY_EXPERIENCE_VALUES),
@@ -516,13 +538,22 @@ export async function updateCandidate(id, patch, actor) {
   if (Object.prototype.hasOwnProperty.call(body, "agency_status")) {
     body.agency_status = normalizeAgencyStatus(body.agency_status);
   }
+  if (Object.prototype.hasOwnProperty.call(body, "dm_status")) {
+    body.dm_status = normalizeDmStatus(body.dm_status);
+  }
+
+  const markAsExcluded = body.review_status === "제외";
+  if (markAsExcluded) {
+    body.review_status = REVIEW_STATUSES[1];
+  }
 
   if (!Object.keys(body).length) return null;
 
   const now = new Date().toISOString();
   body.status_updated_by = String(actor || "").trim() || "unknown";
   body.status_updated_at = now;
-  if (body.dm_status === DM_STATUSES[1] || body.dm_status === DM_STATUSES[2]) {
+  const normalizedDmStatus = normalizeDmStatus(body.dm_status);
+  if (normalizedDmStatus === DM_STATUSES[1] || normalizedDmStatus === DM_STATUSES[2]) {
     body.last_contacted_at = now;
   }
   if (body.email_status === EMAIL_STATUSES[1]) {
@@ -532,7 +563,7 @@ export async function updateCandidate(id, patch, actor) {
   if (body.email_status === EMAIL_STATUSES[2]) {
     body.last_contacted_at = now;
   }
-  if (body.dm_status === DM_STATUSES[2] || body.email_status === EMAIL_STATUSES[2]) {
+  if (normalizedDmStatus === DM_STATUSES[2] || body.email_status === EMAIL_STATUSES[2]) {
     body.last_replied_at = now;
   }
 
@@ -545,7 +576,7 @@ export async function updateCandidate(id, patch, actor) {
     body: JSON.stringify(body),
   });
   const row = Array.isArray(updated) ? updated[0] : null;
-  if (body.review_status === "\uC81C\uC678" && row) {
+  if (markAsExcluded && row) {
     await upsertExcludedHandle(normalizeHandleFromRow(row), {
       reason: "manual_review_excluded",
       source: "review_app",
@@ -1152,8 +1183,8 @@ export async function stats() {
   return {
     total: rows.length,
     sendable: rows.filter((row) => row.review_status === REVIEW_STATUSES[1] && (row.dm_status === DM_STATUSES[0] || row.email_status === EMAIL_STATUSES[0])).length,
-    dmSent: rows.filter((row) => row.dm_status === DM_STATUSES[1]).length,
-    dmReplies: rows.filter((row) => row.dm_status === DM_STATUSES[2]).length,
+    dmSent: rows.filter((row) => normalizeDmStatus(row.dm_status) === DM_STATUSES[1]).length,
+    dmReplies: rows.filter((row) => normalizeDmStatus(row.dm_status) === DM_STATUSES[2]).length,
     emailSent: rows.filter((row) => row.email_status === EMAIL_STATUSES[1]).length,
     emailReplies: rows.filter((row) => row.email_status === EMAIL_STATUSES[2]).length,
     byGrade: countBy("grade"),

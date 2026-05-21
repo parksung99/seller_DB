@@ -655,7 +655,6 @@ tbody tr:hover { background: var(--pink-light); }
       <button class="member-tab" data-assignee-tab="kim-db" onclick="setAssigneeTab('kim-db')">김시은 발송DB</button>
       <button class="member-tab" data-assignee-tab="kim-sent-complete" onclick="setAssigneeTab('kim-sent-complete')">김시은 발송완료</button>
       <button class="member-tab" data-assignee-tab="kim-wait" onclick="setAssigneeTab('kim-wait')">김시은 보류</button>
-      <button class="member-tab" data-assignee-tab="kim-excluded" onclick="setAssigneeTab('kim-excluded')">김시은 제외</button>
       <button class="member-tab" data-assignee-tab="kim-dm-sent" onclick="setAssigneeTab('kim-dm-sent')">김시은 DM 발송완료</button>
       <button class="member-tab" data-assignee-tab="kim-dm-reply" onclick="setAssigneeTab('kim-dm-reply')">김시은 DM 회신</button>
       <button class="member-tab" data-assignee-tab="kim-email-sent" onclick="setAssigneeTab('kim-email-sent')">김시은 이메일 발송완료</button>
@@ -665,7 +664,6 @@ tbody tr:hover { background: var(--pink-light); }
       <button class="member-tab" data-assignee-tab="park-db" onclick="setAssigneeTab('park-db')">박민서 발송DB</button>
       <button class="member-tab" data-assignee-tab="park-sent-complete" onclick="setAssigneeTab('park-sent-complete')">박민서 발송완료</button>
       <button class="member-tab" data-assignee-tab="park-wait" onclick="setAssigneeTab('park-wait')">박민서 보류</button>
-      <button class="member-tab" data-assignee-tab="park-excluded" onclick="setAssigneeTab('park-excluded')">박민서 제외</button>
       <button class="member-tab" data-assignee-tab="park-dm-sent" onclick="setAssigneeTab('park-dm-sent')">박민서 DM 발송완료</button>
       <button class="member-tab" data-assignee-tab="park-dm-reply" onclick="setAssigneeTab('park-dm-reply')">박민서 DM 회신</button>
       <button class="member-tab" data-assignee-tab="park-email-sent" onclick="setAssigneeTab('park-email-sent')">박민서 이메일 발송완료</button>
@@ -1038,11 +1036,25 @@ const EMAIL_STATUSES = ["미발송", "발송완료", "답장옴", "미회신", "
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
 const GROUPBUY_EXPERIENCE_VALUES = ["불명", "있음", "없음"];
 const AGENCY_STATUS_VALUES = ["불명", "있음", "없음"];
+const DM_SENT_VALUES = [DM_STATUSES[1]];
 
 function normalizeDmStatus(value) {
   const normalized = String(value || "").trim();
   if (normalized === "DM발송") return "발송완료";
   return DM_STATUSES.includes(normalized) ? normalized : "미발송";
+}
+
+function normalizeEmailStatus(value) {
+  const normalized = String(value || "").trim();
+  return EMAIL_STATUSES.includes(normalized) ? normalized : "미발송";
+}
+
+function isDmStatusSent(value) {
+  return DM_SENT_VALUES.includes(normalizeDmStatus(value));
+}
+
+function isDmStatusReply(value) {
+  return normalizeDmStatus(value) === "답장옴";
 }
 
 function normalizeWithAllowed(value, allowed) {
@@ -1057,8 +1069,7 @@ const ASSIGNEE_TABS = {
   "kim-db": { assignee: "김시은", review_status: "좋음", dm_status: "미발송", title: "김시은 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
   "kim-sent-complete": { assignee: "김시은", sent_complete: "1", include_excluded: "1", title: "김시은 발송완료", copy: "DM 또는 이메일 발송이 완료된 인플루언서입니다.", pill: "발송완료" },
   "kim-wait": { assignee: "김시은", review_status: "보류", title: "김시은 보류", copy: "추가 확인이 필요해 잠시 멈춘 인플루언서입니다.", pill: "보류" },
-  "kim-excluded": { assignee: "김시은", review_status: "제외", include_excluded: "1", title: "김시은 제외", copy: "제외 처리되어 일반 DB에서는 빠지는 인플루언서입니다.", pill: "제외 목록" },
-  "kim-dm-sent": { assignee: "김시은", dm_status: "발송완료", dm_status_in: "발송완료,DM발송", include_excluded: "1", title: "김시은 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
+  "kim-dm-sent": { assignee: "김시은", dm_status: "발송완료", dm_status_in: "발송완료", include_excluded: "1", title: "김시은 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
   "kim-dm-reply": { assignee: "김시은", dm_status: "답장옴", include_excluded: "1", title: "김시은 DM 회신", copy: "DM으로 회신이 온 인플루언서입니다.", pill: "DM 회신" },
   "kim-email-sent": { assignee: "김시은", email_status: "발송완료", include_excluded: "1", title: "김시은 이메일 발송완료", copy: "이메일 발송완료로 저장된 인플루언서입니다.", pill: "이메일 발송" },
   "kim-email-reply": { assignee: "김시은", email_status: "답장옴", include_excluded: "1", title: "김시은 이메일 회신", copy: "이메일로 회신이 온 인플루언서입니다.", pill: "이메일 회신" },
@@ -1067,8 +1078,7 @@ const ASSIGNEE_TABS = {
   "park-db": { assignee: "박민서", review_status: "좋음", dm_status: "미발송", title: "박민서 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
   "park-sent-complete": { assignee: "박민서", sent_complete: "1", include_excluded: "1", title: "박민서 발송완료", copy: "DM 또는 이메일 발송이 완료된 인플루언서입니다.", pill: "발송완료" },
   "park-wait": { assignee: "박민서", review_status: "보류", title: "박민서 보류", copy: "추가 확인이 필요해 잠시 멈춘 인플루언서입니다.", pill: "보류" },
-  "park-excluded": { assignee: "박민서", review_status: "제외", include_excluded: "1", title: "박민서 제외", copy: "제외 처리되어 일반 DB에서는 빠지는 인플루언서입니다.", pill: "제외 목록" },
-  "park-dm-sent": { assignee: "박민서", dm_status: "발송완료", dm_status_in: "발송완료,DM발송", include_excluded: "1", title: "박민서 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
+  "park-dm-sent": { assignee: "박민서", dm_status: "발송완료", dm_status_in: "발송완료", include_excluded: "1", title: "박민서 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
   "park-dm-reply": { assignee: "박민서", dm_status: "답장옴", include_excluded: "1", title: "박민서 DM 회신", copy: "DM으로 회신이 온 인플루언서입니다.", pill: "DM 회신" },
   "park-email-sent": { assignee: "박민서", email_status: "발송완료", include_excluded: "1", title: "박민서 이메일 발송완료", copy: "이메일 발송완료로 저장된 인플루언서입니다.", pill: "이메일 발송" },
   "park-email-reply": { assignee: "박민서", email_status: "답장옴", include_excluded: "1", title: "박민서 이메일 회신", copy: "이메일로 회신이 온 인플루언서입니다.", pill: "이메일 회신" },
@@ -1338,11 +1348,22 @@ function erClass(value) {
   return "er-low";
 }
 function dmClass(value) {
-  if (value === "발송완료") return "s-dm";
-  if (value === "답장옴") return "s-reply";
-  if (value === "미회신") return "s-call";
-  if (value === "보류") return "s-wait";
-  if (value === "거절" || value === "제외") return "s-exclude";
+  const normalized = normalizeDmStatus(value);
+  if (normalized === "발송완료") return "s-dm";
+  if (normalized === "답장옴") return "s-reply";
+  if (normalized === "미회신") return "s-call";
+  if (normalized === "보류") return "s-wait";
+  if (normalized === "거절" || normalized === "제외") return "s-exclude";
+  return "s-none";
+}
+
+function emailClass(value) {
+  const normalized = normalizeEmailStatus(value);
+  if (normalized === "발송완료") return "s-dm";
+  if (normalized === "답장옴") return "s-reply";
+  if (normalized === "미회신") return "s-call";
+  if (normalized === "보류") return "s-wait";
+  if (normalized === "거절") return "s-exclude";
   return "s-none";
 }
 function reviewClass(value) {
@@ -1357,7 +1378,8 @@ function hasDmContact(row) {
 }
 function sendMethodCell(row) {
   const hasEmail = Boolean(String(row.profile_email || "").trim());
-  const dmSent = ["발송완료", "DM발송", "답장옴"].includes(row.dm_status);
+  const dmStatus = normalizeDmStatus(row.dm_status);
+  const dmSent = dmStatus === "발송완료" || dmStatus === "답장옴";
   const dmOn = hasDmContact(row) || dmSent;
   const dmTitle = row.dm_available ? `DM ${row.dm_available}` : "DM 가능 여부";
   const emailTitle = hasEmail ? `이메일 있음: ${row.profile_email}` : "이메일 없음";
@@ -1369,10 +1391,11 @@ function sendMethodCell(row) {
   `;
 }
 function isSentComplete(row) {
-  return ["발송완료", "DM발송"].includes(row.dm_status) || ["발송완료", "미회신"].includes(row.email_status);
+  return isDmStatusSent(row.dm_status) || ["발송완료", "미회신"].includes(row.email_status);
 }
 function isReplyComplete(row) {
-  return row.dm_status === "답장옴" || row.email_status === "답장옴" || row.dm_status === "거절" || row.email_status === "거절" || row.dm_status === "보류" || row.email_status === "보류";
+  const normalizedDmStatus = normalizeDmStatus(row.dm_status);
+  return isDmStatusReply(row.dm_status) || row.email_status === "답장옴" || normalizedDmStatus === "거절" || row.email_status === "거절" || normalizedDmStatus === "보류" || row.email_status === "보류";
 }
 function isRejectedComplete(row) {
   return row.review_status === "제외";
@@ -1479,8 +1502,8 @@ function renderStats() {
   setStat("s-total", tab.title || "현재 탭", rows.length, "현재 조회");
   setStat("s-assigned", "메일 있음", count((row) => row.profile_email), "현재 탭");
   setStat("s-sendable", "검토 좋음", tab.review_status === "좋음" ? rows.length : count((row) => row.review_status === "좋음"), "현재 탭");
-  setStat("s-dm-sent", "DM 발송완료", scopedCount("dm_status", "발송완료", (row) => row.dm_status === "발송완료" || row.dm_status === "DM발송"), "현재 탭");
-  setStat("s-dm-reply", "DM 회신", scopedCount("dm_status", "답장옴", (row) => row.dm_status === "답장옴"), "현재 탭");
+  setStat("s-dm-sent", "DM 발송완료", scopedCount("dm_status", "발송완료", (row) => isDmStatusSent(row.dm_status)), "현재 탭");
+  setStat("s-dm-reply", "DM 회신", scopedCount("dm_status", "답장옴", (row) => isDmStatusReply(row.dm_status)), "현재 탭");
   setStat("s-email-sent", "이메일 발송완료", scopedCount("email_status", "발송완료", (row) => row.email_status === "발송완료"), "현재 탭");
   setStat("s-email-reply", "이메일 회신", scopedCount("email_status", "답장옴", (row) => row.email_status === "답장옴"), "현재 탭");
   $("nav-count").textContent = `${num(stats.total || state.candidates.length).toLocaleString()}명 등록`;
@@ -1508,6 +1531,8 @@ function renderTable() {
   empty.querySelector("small").textContent = state.loadingCandidates ? "잠시만 기다려주세요" : "검색어나 필터를 조정해보세요";
   empty.style.display = state.candidates.length ? "none" : "block";
   tbody.innerHTML = state.candidates.map((row, index) => {
+    const normalizedDmStatus = normalizeDmStatus(row.dm_status);
+    const normalizedEmailStatus = normalizeEmailStatus(row.email_status);
     const normalizedRowId = row.id == null ? "" : String(row.id).trim();
     const safeRowId =
       normalizedRowId && Number.isFinite(Number(normalizedRowId)) ? Number(normalizedRowId) : JSON.stringify(normalizedRowId);
@@ -1522,8 +1547,8 @@ function renderTable() {
       <td>${renderTagPreview(row)}</td>
       <td>${row.profile_email ? `<a class="handle" href="mailto:${esc(row.profile_email)}" onclick="event.stopPropagation();">${esc(row.profile_email)}</a>` : `<span class="handle">—</span>`}</td>
       <td>${row.assignee ? `<span class="status-badge s-done">${esc(row.assignee)}</span>` : `<span class="status-badge s-none">미할당</span>`}</td>
-      <td><span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span></td>
-      <td><span class="status-badge ${dmClass(row.email_status)}">${esc(row.email_status || "미발송")}</span></td>
+      <td><span class="status-badge ${dmClass(normalizedDmStatus)}">${esc(normalizedDmStatus || "미발송")}</span></td>
+      <td><span class="status-badge ${emailClass(normalizedEmailStatus)}">${esc(normalizedEmailStatus || "미발송")}</span></td>
       <td class="handle">${formatDate(row.status_updated_at || row.updated_at)}</td>
       <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${safeRowId})">보기</button></td>
     </tr>
@@ -1540,6 +1565,8 @@ function renderDrawer(row) {
   const personas = splitTags(row.prospect_personas).map((item) => `<span class="status-badge s-call">${esc(item)}</span>`).join(" ");
   const prospectKeywords = splitTags(row.matched_prospect_keywords).slice(0, 12).map(renderTag).join("");
   const postLinks = splitTags(row.engagement_posts || row.sample_post_urls).slice(0, 6).map((url, i) => `<a class="action-btn" href="${esc(url)}" target="_blank" rel="noopener">post ${i + 1}</a>`).join(" ");
+  const drawerDmStatus = normalizeDmStatus(row.dm_status);
+  const drawerEmailStatus = normalizeEmailStatus(row.email_status);
   const groupbuyExperience = normalizeWithAllowed(row.groupbuy_experience, GROUPBUY_EXPERIENCE_VALUES);
   const agencyStatus = normalizeAgencyStatusValue(row.agency_status);
   $("drawer-body").innerHTML = `
@@ -1571,8 +1598,8 @@ function renderDrawer(row) {
       <div class="detail-section">
         <div class="detail-section-title">EDIT</div>
         <div class="edit-grid-2">
-          <div class="edit-field"><label>DM 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${row.dm_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
-          <div class="edit-field"><label>이메일 상태</label><select id="edit_email_status">${EMAIL_STATUSES.map((item) => `<option ${row.email_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>DM 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${drawerDmStatus === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>이메일 상태</label><select id="edit_email_status">${EMAIL_STATUSES.map((item) => `<option ${drawerEmailStatus === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
           <div class="edit-field"><label>검토 상태</label><select id="edit_review_status">${REVIEW_STATUSES.map((item) => `<option ${row.review_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
           <div class="edit-field"><label>브랜드 적합도</label><select id="edit_brand_fit">${BRAND_FITS.map((item) => `<option value="${esc(item)}" ${row.brand_fit === item ? "selected" : ""}>${esc(item || "선택")}</option>`).join("")}</select></div>
           <div class="edit-field"><label>공구경험</label><select id="edit_groupbuy_experience">${GROUPBUY_EXPERIENCE_VALUES.map((item) => `<option value="${esc(item)}" ${groupbuyExperience === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
@@ -1606,7 +1633,7 @@ async function saveSelected() {
   const actor = identity().name || $("edit_assignee").value.trim();
   const payload = {
     actor,
-    dm_status: $("edit_dm_status").value,
+    dm_status: normalizeDmStatus($("edit_dm_status").value),
     email_status: $("edit_email_status").value,
     review_status: $("edit_review_status").value,
     brand_fit: $("edit_brand_fit").value,
@@ -1620,17 +1647,18 @@ async function saveSelected() {
     await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
     state.candidatesCache.clear();
     toast("저장 완료");
-    if (payload.email_status === "답장옴" || payload.dm_status === "답장옴" || payload.email_status === "발송완료" || payload.dm_status === "발송완료" || payload.review_status === "좋음") {
+    const nextDmStatus = normalizeDmStatus(payload.dm_status);
+    if (payload.email_status === "답장옴" || nextDmStatus === "답장옴" || payload.email_status === "발송완료" || nextDmStatus === "발송완료" || payload.review_status === "좋음") {
       const ownerPrefix = payload.assignee === "박민서" ? "park" : payload.assignee === "김시은" ? "kim" : "";
       const nextTab = !ownerPrefix
         ? state.activeAssigneeTab
         : payload.email_status === "답장옴"
           ? `${ownerPrefix}-email-reply`
-          : payload.dm_status === "답장옴"
+          : nextDmStatus === "답장옴"
             ? `${ownerPrefix}-dm-reply`
             : payload.email_status === "발송완료"
               ? `${ownerPrefix}-email-sent`
-              : payload.dm_status === "발송완료"
+              : nextDmStatus === "발송완료"
                 ? `${ownerPrefix}-dm-sent`
                 : `${ownerPrefix}-db`;
       state.activeAssigneeTab = nextTab;
@@ -1763,7 +1791,7 @@ function switchCampaignFinderTab(mode, tab) {
   const requestedMode = mode === "find" ? "find" : "manage";
   const requestedFindTab = requestedMode === "find" ? FIND_TABS[tab] ? tab : "unchecked" : state.campaignFindTab;
   const requestedManageTab = requestedMode === "manage" ? tab : state.campaignManageTab;
-  const validManageTabs = ["pending", "sent", "replied", "excluded", "rejected"];
+  const validManageTabs = ["pending", "sent", "replied"];
   const nextManageTab = validManageTabs.includes(requestedManageTab) ? requestedManageTab : "pending";
   const previousMode = state.campaignMode;
   if (requestedMode === previousMode && (requestedMode === "find" ? state.campaignFindTab === requestedFindTab : state.campaignManageTab === nextManageTab) && state.finderCandidates.length) {
@@ -1992,9 +2020,12 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
   `;
 }
 function finderStatusSelect(row, field, options) {
-  const value = row[field] || (field === "groupbuy_experience" || field === "agency_status" ? "불명" : "미발송");
+  const value = field === "dm_status"
+    ? normalizeDmStatus(row.dm_status)
+    : row[field] || (field === "groupbuy_experience" || field === "agency_status" ? "불명" : "미발송");
+  const className = field === "email_status" ? emailClass(value) : field === "dm_status" ? dmClass(value) : "";
   return `
-    <select class="finder-status-select ${dmClass(value)}" onchange="updateFinderCandidateStatus(${Number(row.id)}, '${field}', this.value)">
+    <select class="finder-status-select ${className}" onchange="updateFinderCandidateStatus(${Number(row.id)}, '${field}', this.value)">
       ${options.map((item) => `<option value="${esc(item)}" ${value === item ? "selected" : ""}>${esc(item)}</option>`).join("")}
     </select>
   `;
@@ -2033,6 +2064,7 @@ function findTabForReviewStatus(reviewStatus) {
   return "";
 }
 function applyReviewStatusToLocalCandidateList(nextRow, reviewStatus) {
+  const reviewAffectRow = reviewStatus === "\uc81c\uc678" ? { ...nextRow, review_status: "제외" } : nextRow;
   if (state.campaignMode === "find") {
     const nextFindTab = findTabForReviewStatus(reviewStatus);
     if (state.campaignFindTab === nextFindTab) {
@@ -2041,8 +2073,8 @@ function applyReviewStatusToLocalCandidateList(nextRow, reviewStatus) {
     return state.finderCandidates.filter((item) => Number(item.id) !== Number(nextRow.id));
   }
   if (state.campaignMode === "manage") {
-    return rowMatchesCurrentManageTab(nextRow)
-      ? state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item)
+    return rowMatchesCurrentManageTab(reviewAffectRow)
+      ? state.finderCandidates.map((item) => Number(item.id) === Number(reviewAffectRow.id) ? nextRow : item)
       : state.finderCandidates.filter((item) => Number(item.id) !== Number(nextRow.id));
   }
   return state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item);
@@ -2055,7 +2087,8 @@ async function updateFinderCandidateReview(id, reviewStatus) {
     return;
   }
   if (row.review_status === reviewStatus) return;
-  const nextRow = { ...row, review_status: reviewStatus };
+  const nextReviewStatus = reviewStatus === "\uc81c\uc678" ? "좋음" : reviewStatus;
+  const nextRow = { ...row, review_status: nextReviewStatus };
   state.finderCandidates = applyReviewStatusToLocalCandidateList(nextRow, reviewStatus);
   renderFinderCandidates();
   try {
@@ -2655,7 +2688,7 @@ function candidateParams() {
   return params;
 }
 function isExcludedAssigneeTab() {
-  return ["kim-excluded", "park-excluded"].includes(state.activeAssigneeTab);
+  return false;
 }
 function excludedParams() {
   const params = new URLSearchParams();
