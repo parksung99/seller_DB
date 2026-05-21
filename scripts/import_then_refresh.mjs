@@ -95,7 +95,7 @@ function main() {
   }
 
   console.log(`[pipeline] importing: ${args.csvPath}`);
-  const importArgs = [args.csvPath];
+  const importArgs = [args.csvPath, "--skip-assign"];
   run("import_candidates_to_supabase.mjs", importArgs, "import");
 
   const refreshArgs = buildRefreshArgs(args);
@@ -103,7 +103,7 @@ function main() {
   run("refresh_engagement_from_instagram.mjs", refreshArgs, "refresh");
 
   if (!args.skipAssign) {
-    const assignArgs = ["--limit", String(args.assignLimit)];
+    const assignArgs = ["--limit", String(args.assignLimit), "--unassign-out-of-range"];
     console.log(`[pipeline] assigning candidates: ${assignArgs.join(" ")}`);
     run("assign_candidates.mjs", assignArgs, "assign");
   }

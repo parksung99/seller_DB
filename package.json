@@ -14,6 +14,7 @@
     "supabase:crawl:import:refresh": "node scripts/crawl_import_refresh.mjs",
     "supabase:dedupe-id": "node scripts/dedupe_seller_id_rows.mjs",
     "engagement:refresh": "node scripts/refresh_engagement_from_instagram.mjs",
+    "followers:apify": "node scripts/refresh_followers_from_apify.mjs",
     "profile-emails:refresh": "node scripts/refresh_profile_emails_from_instagram.mjs",
     "assign:candidates": "node scripts/assign_candidates.mjs",
     "review": "node scripts/review_server.mjs",
