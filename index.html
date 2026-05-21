@@ -800,7 +800,6 @@ tbody tr:hover { background: var(--pink-light); }
           <button class="finder-subtab active" data-manage-tab="pending" onclick="switchCampaignFinderTab('manage', 'pending')">발송전</button>
           <button class="finder-subtab" data-manage-tab="sent" onclick="switchCampaignFinderTab('manage', 'sent')">발송완료</button>
           <button class="finder-subtab" data-manage-tab="replied" onclick="switchCampaignFinderTab('manage', 'replied')">회신완료</button>
-          <button class="finder-subtab" data-manage-tab="excluded" onclick="switchCampaignFinderTab('manage', 'excluded')">제외</button>
         </div>
         <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
         <div class="side-menu-title">캠페인</div>
@@ -1824,13 +1823,13 @@ function filterFinderCandidates(rows, owner, findTab, manageTab) {
   }
   if (state.campaignMode === "manage") {
     if (manageTab === "replied") {
-      return list.filter((row) => row.review_status === "좋음" && isReplyComplete(row));
+      return list.filter((row) => !isRejectedComplete(row) && isReplyComplete(row));
     }
     if (manageTab === "rejected" || manageTab === "excluded") {
       return list.filter((row) => isRejectedComplete(row));
     }
     if (manageTab === "sent") {
-      return list.filter((row) => row.review_status === "좋음" && isSentComplete(row) && !isReplyComplete(row));
+      return list.filter((row) => !isRejectedComplete(row) && isSentComplete(row) && !isReplyComplete(row));
     }
     return list.filter((row) => row.review_status === "좋음" && !isContactedComplete(row));
   }
@@ -1856,11 +1855,13 @@ async function loadFinderCandidates() {
     params.set("assignee", requestedOwner);
     if (requestedMode === "manage") {
       params.set("include_excluded", "1");
-      if (requestedManageTab === "rejected" || requestedManageTab === "excluded") params.set("review_status", "제외");
-      else params.set("review_status", "좋음");
+      if (requestedManageTab === "rejected" || requestedManageTab === "excluded") {
+        params.set("review_status", "제외");
+      } else if (requestedManageTab === "pending") {
+        params.set("review_status", "좋음");
+      }
       if (requestedManageTab === "sent") params.set("sent_complete", "1");
       if (requestedManageTab === "replied") params.set("reply_complete", "1");
-      if (requestedManageTab === "rejected" || requestedManageTab === "excluded") params.set("include_excluded", "1");
     } else if (requestedMode === "find") {
       params.set("review_status", FIND_TABS[requestedFindTab]?.review_status || "미확인");
     }
@@ -2034,9 +2035,9 @@ async function updateFinderCandidateReview(id, reviewStatus) {
 }
 function rowMatchesCurrentManageTab(row) {
   if (state.campaignMode !== "manage") return true;
-  if (state.campaignManageTab === "replied") return row.review_status === "좋음" && isReplyComplete(row);
+  if (state.campaignManageTab === "replied") return !isRejectedComplete(row) && isReplyComplete(row);
   if (state.campaignManageTab === "rejected" || state.campaignManageTab === "excluded") return isRejectedComplete(row);
-  if (state.campaignManageTab === "sent") return row.review_status === "좋음" && isSentComplete(row) && !isReplyComplete(row);
+  if (state.campaignManageTab === "sent") return !isRejectedComplete(row) && isSentComplete(row) && !isReplyComplete(row);
   return row.review_status === "좋음" && !isContactedComplete(row);
 }
 async function updateFinderCandidateStatus(id, field, value) {
