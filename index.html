@@ -1845,7 +1845,7 @@ function finderCacheKey({ mode, owner, query, tab }) {
     ? tab === "rejected" || tab === "excluded"
       ? "excluded"
       : "good"
-    : tab || "";
+    : "all";
   return `${mode}::${owner || ""}::${normalizedTab}::${query || ""}`;
 }
 function getFinderCache() {
@@ -1857,7 +1857,7 @@ function getFinderCache() {
   return state.finderCache.get(key);
 }
 function setFinderCache(rows, requestedMode, requestedOwner, requestedQuery) {
-  const tab = requestedMode === "find" ? state.campaignFindTab : state.campaignManageTab;
+  const tab = requestedMode === "find" ? "all" : state.campaignManageTab;
   const key = finderCacheKey({ mode: requestedMode, owner: requestedOwner, tab, query: requestedQuery });
   state.finderCache.set(key, rows || []);
 }
@@ -1913,8 +1913,10 @@ async function loadFinderCandidates() {
       }
       params.set("manage_tab", requestedManageTab);
     } else if (requestedMode === "find") {
-      params.set("review_status", FIND_TABS[requestedFindTab]?.review_status || "미확인");
+      params.set("review_status_in", "미확인,보류,제외");
+      params.set("row_limit", "2000");
       params.delete("manage_tab");
+      params.delete("review_status");
     }
     const rows = await api(`/api/candidates?${params.toString()}`);
     if (seq !== state.finderRequestSeq || requestedMode !== state.campaignMode || requestedFindTab !== state.campaignFindTab || requestedManageTab !== state.campaignManageTab) return;

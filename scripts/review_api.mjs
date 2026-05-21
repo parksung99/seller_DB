@@ -309,6 +309,7 @@ async function queryCandidates(url, options = {}) {
   const order = options.order || "grade.desc,combination_score.desc,beauty_score.desc,total_comments.desc";
   const grade = options.hasOwnProperty("grade") ? options.grade : params.get("grade");
   const reviewStatus = options.hasOwnProperty("reviewStatus") ? options.reviewStatus : params.get("review_status");
+  const reviewStatusIn = options.hasOwnProperty("reviewStatusIn") ? options.reviewStatusIn : params.get("review_status_in");
   const dmStatus = options.hasOwnProperty("dmStatus") ? options.dmStatus : params.get("dm_status");
   const dmStatusIn = options.hasOwnProperty("dmStatusIn") ? options.dmStatusIn : params.get("dm_status_in");
   const emailStatus = options.hasOwnProperty("emailStatus") ? options.emailStatus : params.get("email_status");
@@ -335,7 +336,27 @@ async function queryCandidates(url, options = {}) {
   const fallbackLimit = sentComplete || replyComplete ? 2000 : 500;
   apiParams.set("limit", Number.isFinite(parsedRowLimit) && parsedRowLimit > 0 ? String(Math.round(parsedRowLimit)) : String(fallbackLimit));
   if (grade) apiParams.set("grade", `eq.${grade}`);
-  if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
+  const normalizedReviewStatuses = (() => {
+    const values = String(reviewStatusIn || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .filter((value) => REVIEW_STATUSES.includes(value));
+    if (values.length) return values;
+    return reviewStatus ? [reviewStatus] : [];
+  })();
+  if (normalizedReviewStatuses.length) {
+    if (normalizedReviewStatuses.length === 1) {
+      apiParams.set("review_status", `eq.${normalizedReviewStatuses[0]}`);
+    } else {
+      apiParams.set(
+        "review_status",
+        `in.(${normalizedReviewStatuses.map((value) => `"${value.replace(/"/g, '\\"')}"`).join(",")})`
+      );
+    }
+  } else if (reviewStatus) {
+    apiParams.set("review_status", `eq.${reviewStatus}`);
+  }
   if (dmStatusIn) {
     const values = [...new Set(String(dmStatusIn)
       .split(",")
@@ -382,12 +403,18 @@ async function queryCandidates(url, options = {}) {
     const filteredRows = isManageTab && !isExcludedManageTab && reviewStatus !== REVIEW_STATUSES[3]
       ? visibleRows.filter((row) => row.review_status === REVIEW_STATUSES[1])
       : visibleRows;
+    const hasExcludedInFilter = normalizedReviewStatuses.includes(REVIEW_STATUSES[3]);
+    const nonExcludedRows = hasExcludedInFilter
+      ? filteredRows
+      : filteredRows.filter((row) => row.review_status !== REVIEW_STATUSES[3]);
 
-    const nonExcludedRows = reviewStatus === "\uC81C\uC678" ? filteredRows : filteredRows.filter((row) => row.review_status !== "\uC81C\uC678");
-
-    if (!includeExcluded && reviewStatus !== "\uC81C\uC678") {
+    if (!includeExcluded) {
       const excluded = await listExcludedHandles();
-      return nonExcludedRows.filter((row) => !excluded.has(normalizeHandleFromRow(row)));
+      return nonExcludedRows.filter((row) =>
+        hasExcludedInFilter && row.review_status === REVIEW_STATUSES[3]
+          ? true
+          : !excluded.has(normalizeHandleFromRow(row))
+      );
     }
 
     return nonExcludedRows;
@@ -400,6 +427,9 @@ async function queryCandidates(url, options = {}) {
       }
       if (missing === "review_status" && reviewStatus) {
         return queryCandidates(url, { ...options, reviewStatus: null });
+      }
+      if (missing === "review_status" && reviewStatusIn) {
+        return queryCandidates(url, { ...options, reviewStatusIn: null });
       }
       if (missing === "dm_status" && (dmStatus || dmStatusIn)) {
         return queryCandidates(url, { ...options, dmStatus: null, dmStatusIn: null });
