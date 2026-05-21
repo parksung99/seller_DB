@@ -148,4 +148,4 @@ CSV import automatically assigns every unassigned, unchecked candidate to 김시
 .\.tools\node-v22.22.3-win-x64\node.exe scripts\assign_candidates.mjs
 ```
 
-Existing `assignee` values are preserved and skipped by default. Follower ranges are used as a first preference, and rows outside those ranges are still balanced between 김시은 and 박민서 instead of being excluded. Use `--skip-assign` on import scripts only when assignment should be delayed.
+Existing `assignee` values are preserved and skipped by default. Follower ranges are enforced for automatic assignment: rows outside every member's range are added to `excluded_instagram_handles` with `reason=out_of_follower_range`, so later imports/crawls skip them. Rows with missing follower counts stay unassigned unless `--include-out-of-range` is passed. Use `--unassign-out-of-range` to clear only unchecked rows that were previously assigned outside the current member ranges. Use `--skip-trash-out-of-range` only when you want to inspect out-of-range rows before adding them to the excluded handle list. Use `--skip-assign` on import scripts only when assignment should be delayed.

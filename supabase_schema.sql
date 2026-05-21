@@ -44,6 +44,8 @@ create table if not exists public.beauty_seller_candidates (
   dm_status text default U&'\BBF8\BC1C\C1A1',
   email_status text default U&'\BBF8\BC1C\C1A1',
   brand_fit text,
+  groupbuy_experience text default U&'\BD88\BA85',
+  agency_status text default U&'\BD88\BA85',
   assignee text,
   memo text,
   status_updated_by text,
@@ -77,6 +79,8 @@ alter table public.beauty_seller_candidates
   add column if not exists last_engagement_refresh_at timestamptz,
   add column if not exists engagement_refresh_error text,
   add column if not exists brand_fit text,
+  add column if not exists groupbuy_experience text default U&'\BD88\BA85',
+  add column if not exists agency_status text default U&'\BD88\BA85',
   add column if not exists memo text,
   add column if not exists prospect_score integer default 0,
   add column if not exists prospect_noise_score integer default 0,
@@ -88,7 +92,9 @@ alter table public.beauty_seller_candidates
 alter table public.beauty_seller_candidates
   alter column review_status set default U&'\BBF8\D655\C778',
   alter column dm_status set default U&'\BBF8\BC1C\C1A1',
-  alter column email_status set default U&'\BBF8\BC1C\C1A1';
+  alter column email_status set default U&'\BBF8\BC1C\C1A1',
+  alter column groupbuy_experience set default U&'\BD88\BA85',
+  alter column agency_status set default U&'\BD88\BA85';
 
 update public.beauty_seller_candidates
 set review_status = U&'\BBF8\D655\C778'
@@ -101,6 +107,14 @@ where dm_status is null or dm_status in ('', 'DM');
 update public.beauty_seller_candidates
 set email_status = U&'\BBF8\BC1C\C1A1'
 where email_status is null or email_status = '';
+
+update public.beauty_seller_candidates
+set groupbuy_experience = U&'\BD88\BA85'
+where groupbuy_experience is null or groupbuy_experience = '';
+
+update public.beauty_seller_candidates
+set agency_status = U&'\BD88\BA85'
+where agency_status is null or agency_status = '';
 
 -- 중복 seller_id 정리(동일 seller_id가 2개 이상이면 가장 최신 행만 남김)
 WITH ranked AS (

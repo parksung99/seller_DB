@@ -4,6 +4,7 @@ const TABLE = "beauty_seller_candidates";
 const EXCLUDED_TABLE = "excluded_instagram_handles";
 const DEFAULT_MEMBERS = ["김시은", "박민서"];
 const REVIEW_UNCHECKED = "미확인";
+const TRASH_REASON_OUT_OF_RANGE = "out_of_follower_range";
 
 const MEMBER_RULES = {
   "김시은": { min: 5000, max: 100000 },
@@ -16,6 +17,9 @@ function parseArgs(argv) {
     limit: 10000,
     dryRun: false,
     includeAssigned: false,
+    includeOutOfRange: false,
+    unassignOutOfRange: false,
+    skipTrashOutOfRange: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -30,9 +34,16 @@ function parseArgs(argv) {
     } else if (arg === "--dry-run") {
       args.dryRun = true;
     } else if (arg === "--skip-out-of-range-exclude") {
-      // Kept as a no-op for older pipeline commands. Assignment no longer excludes out-of-range rows.
+      // Kept as a no-op for older pipeline commands.
     } else if (arg === "--include-assigned") {
       args.includeAssigned = true;
+    } else if (arg === "--include-out-of-range") {
+      args.includeOutOfRange = true;
+    } else if (arg === "--unassign-out-of-range") {
+      args.unassignOutOfRange = true;
+      args.includeAssigned = true;
+    } else if (arg === "--skip-trash-out-of-range") {
+      args.skipTrashOutOfRange = true;
     }
   }
 
@@ -139,7 +150,26 @@ async function patchAssignee(env, row, assignee) {
   });
 }
 
-function buildAssignments(rows, members, excludedHandles) {
+async function upsertTrashHandle(env, row) {
+  const handle = handleFromRow(row);
+  if (!handle) return;
+  const followers = followerCount(row);
+  await supabaseJson(env, `${EXCLUDED_TABLE}?on_conflict=handle`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      prefer: "resolution=merge-duplicates,return=minimal",
+    },
+    body: JSON.stringify({
+      handle,
+      reason: TRASH_REASON_OUT_OF_RANGE,
+      source: `assign_candidates:follower_count=${followers}`,
+      excluded_by: "assign_candidates",
+    }),
+  });
+}
+
+function buildAssignments(rows, members, excludedHandles, args = {}) {
   const seen = new Set();
   const counts = Object.fromEntries(members.map((name) => [name, 0]));
   const assignments = [];
@@ -161,8 +191,10 @@ function buildAssignments(rows, members, excludedHandles) {
     const eligible = members.filter((member) => canAssign(member, row));
     if (!followerCount(row)) {
       missingFollowers.push(row);
+      if (!args.includeOutOfRange) continue;
     } else if (!eligible.length) {
       outOfRange.push(row);
+      if (!args.includeOutOfRange) continue;
     }
     eligibleItems.push({ row, eligible: eligible.length ? eligible : members });
   }
@@ -186,6 +218,27 @@ function buildAssignments(rows, members, excludedHandles) {
   return { assignments, counts, outOfRange, missingFollowers };
 }
 
+function buildTrashRows(outOfRange, excludedHandles) {
+  const seen = new Set();
+  return outOfRange.filter((row) => {
+    const handle = handleFromRow(row);
+    if (!handle || seen.has(handle) || excludedHandles.has(handle)) return false;
+    seen.add(handle);
+    return true;
+  });
+}
+
+function buildUnassignments(rows, members, excludedHandles) {
+  const seen = new Set();
+  return rows.filter((row) => {
+    const handle = handleFromRow(row);
+    if (!row.assignee || !members.includes(row.assignee)) return false;
+    if (!handle || seen.has(handle) || excludedHandles.has(handle)) return false;
+    seen.add(handle);
+    return Boolean(followerCount(row)) && !canAssign(row.assignee, row);
+  });
+}
+
 async function main() {
   const env = readSupabaseEnv();
   if (!env.supabaseUrl || !env.serviceRoleKey) {
@@ -199,17 +252,28 @@ async function main() {
 
   const rows = await fetchCandidates(env, args);
   const excludedHandles = await fetchExcludedHandles(env);
-  const { assignments, counts, outOfRange, missingFollowers } = buildAssignments(rows, args.members, excludedHandles);
+  const { assignments, counts, outOfRange, missingFollowers } = buildAssignments(rows, args.members, excludedHandles, args);
+  const unassignments = args.unassignOutOfRange ? buildUnassignments(rows, args.members, excludedHandles) : [];
+  const previouslyAssignedOutOfRange = unassignments.filter((row) => followerCount(row) && !canAssign(row.assignee, row));
+  const trashRows = args.skipTrashOutOfRange || args.includeOutOfRange
+    ? []
+    : buildTrashRows([...outOfRange, ...previouslyAssignedOutOfRange], excludedHandles);
 
   console.log(`[assign] loaded=${rows.length} excluded_handles=${excludedHandles.size} planned=${assignments.length}`);
   for (const member of args.members) {
     console.log(`[assign] ${member}: ${counts[member]}`);
   }
-  console.log(`[assign] missing_followers=${missingFollowers.length} out_of_range=${outOfRange.length}`);
+  console.log(`[assign] missing_followers=${missingFollowers.length} out_of_range=${outOfRange.length} trash_out_of_range=${trashRows.length} unassign_out_of_range=${unassignments.length}`);
 
   if (args.dryRun) {
     assignments.slice(0, 30).forEach(({ row, assignee }, index) => {
       console.log(`[dry-run] ${index + 1}. @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${assignee}`);
+    });
+    trashRows.slice(0, 30).forEach((row, index) => {
+      console.log(`[dry-run:trash] ${index + 1}. @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${TRASH_REASON_OUT_OF_RANGE}`);
+    });
+    unassignments.slice(0, 30).forEach((row, index) => {
+      console.log(`[dry-run:unassign] ${index + 1}. @${row.seller_name || row.seller_id} (${followerCount(row)}) was ${row.assignee}`);
     });
     console.log("[assign] dry-run only. Supabase was not modified.");
     return;
@@ -218,6 +282,16 @@ async function main() {
   for (const { row, assignee } of assignments) {
     await patchAssignee(env, row, assignee);
     console.log(`[assign] @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${assignee}`);
+  }
+
+  for (const row of trashRows) {
+    await upsertTrashHandle(env, row);
+    console.log(`[trash] @${row.seller_name || row.seller_id} (${followerCount(row)}) -> ${TRASH_REASON_OUT_OF_RANGE}`);
+  }
+
+  for (const row of unassignments) {
+    await patchAssignee(env, row, null);
+    console.log(`[unassign] @${row.seller_name || row.seller_id} (${followerCount(row)}) was ${row.assignee}`);
   }
 
   console.log("[assign] done.");

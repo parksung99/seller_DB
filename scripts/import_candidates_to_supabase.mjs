@@ -5,6 +5,7 @@ import { readSupabaseEnv } from "./supabase_env.mjs";
 
 const TABLE = "beauty_seller_candidates";
 const EXCLUDED_TABLE = "excluded_instagram_handles";
+const UNKNOWN = "불명";
 
 function parseArgs(argv) {
   const args = {
@@ -295,6 +296,8 @@ function mapRow(row, sourceFile) {
     format_signal_tags: row.format_signal_tags,
     dm_available: row.dm_available,
     email_status: row.email_status || "미발송",
+    groupbuy_experience: row.groupbuy_experience || row.groupbuy || row.groupbuy_history || UNKNOWN,
+    agency_status: row.agency_status || row.agency || UNKNOWN,
     sample_post_urls: row.sample_post_urls,
     notes: [prospectNote, row.notes].filter(Boolean).join("\n"),
     source_file: sourceFile,

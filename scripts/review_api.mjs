@@ -9,6 +9,8 @@ export const REVIEW_STATUSES = ["\uBBF8\uD655\uC778", "\uC88B\uC74C", "\uBCF4\uB
 export const DM_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\uB2F5\uC7A5\uC634", "\uAC70\uC808", "\uBCF4\uB958"];
 export const EMAIL_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\uB2F5\uC7A5\uC634", "\uBBF8\uD68C\uC2E0", "\uAC70\uC808", "\uBCF4\uB958"];
 export const BRAND_FITS = ["", "\uB192\uC74C", "\uC911\uAC04", "\uB0AE\uC74C"];
+export const GROUPBUY_EXPERIENCE_VALUES = ["\uBD88\uBA85", "\uC788\uC74C", "\uC5C6\uC74C"];
+export const AGENCY_STATUS_VALUES = ["\uBD88\uBA85", "\uAC1C\uC778", "\uC5D0\uC774\uC804\uC2DC"];
 
 const env = readSupabaseEnv();
 const missingColumns = new Set();
@@ -157,6 +159,7 @@ async function deleteExcludedHandle(handle) {
 export async function listExcludedDb(url) {
   const query = cleanSearch(url.searchParams.get("q"));
   const assignee = url.searchParams.get("assignee");
+  const reason = cleanSearch(url.searchParams.get("reason"));
   const includesQuery = (row) => {
     if (!query) return true;
     const text = [row.handle, row.seller_name, row.seller_id, row.profile_url, row.reason, row.source, row.excluded_by, row.assignee]
@@ -185,8 +188,11 @@ export async function listExcludedDb(url) {
     headers: { accept: "application/json" },
   });
 
-  const candidateHandles = new Set((excludedCandidates || []).map((row) => normalizeHandleFromRow(row)).filter(Boolean));
+  const scopedExcludedCandidates = reason ? [] : (excludedCandidates || []);
+  const candidateHandles = new Set(scopedExcludedCandidates.map((row) => normalizeHandleFromRow(row)).filter(Boolean));
   const handleRows = (handles || [])
+    .filter((row) => reason || row.reason !== "out_of_follower_range")
+    .filter((row) => !reason || row.reason === reason)
     .filter((row) => !candidateHandles.has(normalizeInstagramHandle(row.handle)))
     .map((row) => ({
       id: `excluded-${row.id}`,
@@ -206,7 +212,7 @@ export async function listExcludedDb(url) {
     }));
 
   return [
-    ...(excludedCandidates || []).map((row) => ({
+    ...scopedExcludedCandidates.map((row) => ({
       ...row,
       excluded_reason: row.memo || row.notes || "candidate_review_excluded",
       excluded_source: "beauty_seller_candidates",
@@ -382,7 +388,7 @@ export async function listCandidates(url) {
     return await queryCandidates(url, {
       order: "grade.desc,prospect_score.desc,combination_score.desc,beauty_score.desc,total_comments.desc",
       orColumns: initialOrColumns,
-      selectColumns: "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,grade,matched_hashtags,category,beauty_score,selling_score,negative_score,combination_score,prospect_score,prospect_noise_score,prospect_personas,prospect_signal_tags,matched_prospect_keywords,prospect_noise_keywords,total_likes,total_comments,avg_likes,avg_comments,follower_count,beauty_anchor_tags,commercial_signal_tags,format_signal_tags,engagement_rate,engagement_post_count,engagement_posts,engagement_refresh_error,last_engagement_refresh_at,review_status,dm_available,dm_status,email_status,brand_fit,assignee,memo,sample_post_urls,notes,status_updated_by,status_updated_at,last_contacted_at,last_emailed_at,last_replied_at,updated_at",
+      selectColumns: "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,grade,matched_hashtags,category,beauty_score,selling_score,negative_score,combination_score,prospect_score,prospect_noise_score,prospect_personas,prospect_signal_tags,matched_prospect_keywords,prospect_noise_keywords,total_likes,total_comments,avg_likes,avg_comments,follower_count,beauty_anchor_tags,commercial_signal_tags,format_signal_tags,engagement_rate,engagement_post_count,engagement_posts,engagement_refresh_error,last_engagement_refresh_at,review_status,dm_available,dm_status,email_status,brand_fit,groupbuy_experience,agency_status,assignee,memo,sample_post_urls,notes,status_updated_by,status_updated_at,last_contacted_at,last_emailed_at,last_replied_at,updated_at",
     });
   } catch (error) {
     const missing = parseMissingColumn(error);
@@ -446,6 +452,8 @@ export async function createCandidate(patch, actor) {
     dm_status: patch.dm_status || DM_STATUSES[0],
     email_status: patch.email_status || EMAIL_STATUSES[0],
     brand_fit: patch.brand_fit || null,
+    groupbuy_experience: patch.groupbuy_experience || GROUPBUY_EXPERIENCE_VALUES[0],
+    agency_status: patch.agency_status || AGENCY_STATUS_VALUES[0],
     assignee: patch.assignee || null,
     memo: patch.memo || null,
     notes: patch.notes || null,
@@ -516,7 +524,7 @@ function templateContext(row) {
   const personalized = row?.personalized_context && typeof row.personalized_context === "object" ? row.personalized_context : {};
   return {
     account,
-    name: String(row?.seller_name || account || "").trim(),
+    name: String(personalized.name || row?.seller_name || account || "").trim(),
     email: String(row?.profile_email || row?.email || "").trim(),
     profile_url: row?.profile_url || (account ? `https://www.instagram.com/${account}/` : ""),
     product_name: personalized.product_name || row?.product_name || "",
@@ -524,16 +532,26 @@ function templateContext(row) {
     fit_reason: personalized.fit_reason || row?.fit_reason || "",
     custom_note: personalized.custom_note || row?.custom_note || "",
     reply_deadline: personalized.reply_deadline || row?.reply_deadline || "",
+    launch_date: personalized.launch_date || row?.launch_date || "",
     offer: personalized.offer || row?.offer || "",
     schedule: personalized.schedule || row?.schedule || "",
   };
 }
 
+function containsHtml(value) {
+  return /<\/?[a-z][\s\S]*>/i.test(String(value || ""));
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
 function renderTemplate(template, row, extraContext = {}) {
   const context = { ...templateContext(row), ...extraContext };
+  const htmlMode = containsHtml(template);
   return String(template || "").replace(
-    /\{\{\s*(account|name|email|profile_url|product_name|recent_content_note|fit_reason|custom_note|reply_deadline|offer|schedule)\s*\}\}/g,
-    (_, key) => context[key] || ""
+    /\{\{\s*(account|name|email|profile_url|product_name|recent_content_note|fit_reason|custom_note|reply_deadline|launch_date|offer|schedule)\s*\}\}/g,
+    (_, key) => htmlMode ? escapeHtml(context[key] || "") : context[key] || ""
   );
 }
 
@@ -544,11 +562,13 @@ function defaultPersonalizedContext(row) {
     row?.matched_prospect_keywords,
   ].filter(Boolean);
   return {
+    name: String(row?.seller_name || "").trim(),
     product_name: "",
     recent_content_note: "",
     fit_reason: signals.slice(0, 2).join(" · "),
     custom_note: row?.memo || row?.notes || "",
     reply_deadline: "",
+    launch_date: "6월 20일",
     offer: "",
   };
 }
@@ -624,7 +644,6 @@ export async function createCampaign(patch, actor) {
         sender_name: patch.sender_name || env.gmailSenderName || null,
         subject_template: patch.subject_template || "",
         body_template: patch.body_template || "",
-        schedule_template: patch.schedule_template || "",
         status: patch.status || "draft",
         created_by: String(actor || patch.created_by || "").trim() || "unknown",
         created_at: now,
@@ -662,7 +681,7 @@ export async function getCampaign(id) {
 }
 
 export async function updateCampaign(id, patch) {
-  const allowed = new Set(["name", "sender_email", "sender_name", "subject_template", "body_template", "schedule_template", "status"]);
+  const allowed = new Set(["name", "sender_email", "sender_name", "subject_template", "body_template", "status"]);
   const body = Object.fromEntries(Object.entries(patch).filter(([key]) => allowed.has(key)));
   if (!Object.keys(body).length) return getCampaign(id);
   try {
@@ -702,7 +721,7 @@ async function fetchCandidatesByIds(ids) {
     const batch = ids.slice(i, i + 120).map((id) => Number(id)).filter(Boolean);
     if (!batch.length) continue;
     const rows = await supabaseFetch(
-      `${TABLE}?select=id,seller_name,seller_id,profile_url,profile_email,profile_image_url,email_status,review_status,assignee&id=in.(${batch.join(",")})&limit=500`,
+      `${TABLE}?select=id,seller_name,seller_id,profile_url,profile_email,profile_image_url,email_status,review_status,groupbuy_experience,agency_status,assignee&id=in.(${batch.join(",")})&limit=500`,
       { headers: { accept: "application/json" } }
     );
     chunks.push(...(rows || []));
@@ -891,12 +910,13 @@ function mailAddress(name, email) {
 }
 
 async function sendGmailMessage(gmail, { fromName, fromEmail, to, subject, body }) {
+  const isHtml = containsHtml(body);
   const raw = [
     `From: ${mailAddress(fromName, fromEmail)}`,
     `To: ${to}`,
     `Subject: ${encodeMimeWord(subject)}`,
     "MIME-Version: 1.0",
-    "Content-Type: text/plain; charset=UTF-8",
+    `Content-Type: ${isHtml ? "text/html" : "text/plain"}; charset=UTF-8`,
     "Content-Transfer-Encoding: 8bit",
     "",
     body,
