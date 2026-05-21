@@ -21,14 +21,14 @@ Sensitive local files such as `.env`, `ig_cookie.txt`, `.tools/`, and `data/*.cs
 .\.tools\node-v22.22.3-win-x64\node.exe scripts\review_server.mjs
 ```
 
-Open `http://localhost:4317`.
+Open `http://localhost:4320`.
 
 ## Vercel environment variables
 
 ```text
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your Supabase service_role key
-GMAIL_CLIENT_ID=your Gmail OAuth client id
+GMAIL_CLIENT_ID=767562922806-a9iq080abdc349nlf6pm7p19tbkfmou8.apps.googleusercontent.com
 GMAIL_CLIENT_SECRET=your Gmail OAuth client secret
 GMAIL_REFRESH_TOKEN=your Gmail OAuth refresh token
 GMAIL_SENDER_EMAIL=sender@example.com

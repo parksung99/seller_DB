@@ -12,6 +12,9 @@ const DEFAULT_SEARCH_DOC_ID = "26586987494245638";
 const WEB_PROFILE_ENDPOINT = "https://i.instagram.com/api/v1/users/web_profile_info/";
 const CANDIDATES_TABLE = "beauty_seller_candidates";
 const EXCLUDED_TABLE = "excluded_instagram_handles";
+const EXCLUDED_REASON_BEAUTY = "crawler_beauty_filter";
+const EXCLUDED_REASON_COMMERCIAL = "crawler_commercial_filter";
+const EXCLUDED_REASON_EXCLUDED_HANDLE = "crawler_existing_excluded";
 
 const SELLING_KEYWORDS = [
   "광고",
@@ -316,6 +319,65 @@ function handlesFromCandidate(row) {
     normalizeHandle(row.seller_name),
     normalizeHandle(row.profile_url),
   ].filter(Boolean);
+}
+
+function dedupeByHandle(rows) {
+  const seen = new Set();
+  return rows.filter((row) => {
+    const handle = handleFromRow(row);
+    if (!handle || seen.has(handle)) return false;
+    seen.add(handle);
+    return true;
+  });
+}
+
+function droppedRows(beforeRows, afterRows) {
+  if (!beforeRows.length) return [];
+  const afterHandleSet = new Set(afterRows.map((row) => handleFromRow(row)).filter(Boolean));
+  return beforeRows.filter((row) => {
+    const handle = handleFromRow(row);
+    if (!handle) return false;
+    return !afterHandleSet.has(handle);
+  });
+}
+
+function buildExcludedRows(rows, reason, source = "instagram_hashtag_crawler", excludedBy = "crawler") {
+  return dedupeByHandle(rows)
+    .map((row) => ({
+      handle: handleFromRow(row),
+      reason,
+      source,
+      excluded_by: excludedBy,
+    }))
+    .filter((row) => row.handle);
+}
+
+async function upsertExcludedRows(env, rows) {
+  if (!rows.length) return;
+  if (!env.supabaseUrl || !env.serviceRoleKey) return;
+
+  const uniqueRows = [...new Map(rows.map((row) => [row.handle, row])).values()];
+  const chunks = [];
+  for (let i = 0; i < uniqueRows.length; i += 100) {
+    chunks.push(uniqueRows.slice(i, i + 100));
+  }
+
+  for (const chunk of chunks) {
+    const response = await fetch(`${env.supabaseUrl}/rest/v1/${EXCLUDED_TABLE}?on_conflict=handle`, {
+      method: "POST",
+      headers: {
+        apikey: env.serviceRoleKey,
+        authorization: `Bearer ${env.serviceRoleKey}`,
+        "content-type": "application/json",
+        prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify(chunk),
+    });
+    const text = await response.text();
+    if (response.ok) continue;
+    if (response.status === 404) return;
+    throw new Error(`Failed to upsert excluded handles: ${response.status}: ${text}`);
+  }
 }
 
 async function readExcludedHandlesFile(filePath) {
@@ -1137,6 +1199,7 @@ async function main() {
   if (args.cookieFile && !args.cookie) {
     args.cookie = (await fs.readFile(args.cookieFile, "utf8")).trim();
   }
+  const env = readSupabaseEnv();
 
   const hashtags = args.hashtags.length ? args.hashtags.map(normalizeHashtag) : await readHashtags(args.hashtagFile);
   const supabaseExcludedHandles = await fetchSupabaseExcludedHandles(args);
@@ -1153,6 +1216,12 @@ async function main() {
 
   const allRows = [];
   const diagnostics = [];
+  const excludedRowsBuffer = [];
+  const exclusionDiagnostics = {
+    beauty: 0,
+    commercial: 0,
+    excludedHandle: 0,
+  };
 
   for (const hashtag of hashtags) {
     const htmlUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag)}/`;
@@ -1175,13 +1244,34 @@ async function main() {
     }
 
     const beforeBeautyFilter = rows.length;
-    rows = filterBeautyRows(rows, args.requireBeauty);
-    const afterBeautyFilter = rows.length;
+    const beautyRows = filterBeautyRows(rows, args.requireBeauty);
+    const beautyDroppedCount = args.requireBeauty ? beforeBeautyFilter - beautyRows.length : 0;
+    if (args.requireBeauty) {
+      const rejected = droppedRows(rows, beautyRows);
+      excludedRowsBuffer.push(...buildExcludedRows(rejected, EXCLUDED_REASON_BEAUTY));
+      exclusionDiagnostics.beauty += rejected.length;
+    }
+    rows = beautyRows;
+
     const beforeCommercialFilter = rows.length;
-    rows = filterCommercialRows(rows, args.requireCommercial);
-    const afterCommercialFilter = rows.length;
+    const commercialRows = filterCommercialRows(rows, args.requireCommercial);
+    const commercialDroppedCount = args.requireCommercial ? beforeCommercialFilter - commercialRows.length : 0;
+    if (args.requireCommercial) {
+      const rejected = droppedRows(rows, commercialRows);
+      excludedRowsBuffer.push(...buildExcludedRows(rejected, EXCLUDED_REASON_COMMERCIAL));
+      exclusionDiagnostics.commercial += rejected.length;
+    }
+    rows = commercialRows;
+
     const beforeExclude = rows.length;
-    rows = filterExcludedRows(rows, excludedHandles);
+    const excludedHandleRows = filterExcludedRows(rows, excludedHandles);
+    const excluded = droppedRows(rows, excludedHandleRows);
+    const excludedHandleDroppedCount = beforeExclude - excludedHandleRows.length;
+    if (excluded.length) {
+      excludedRowsBuffer.push(...buildExcludedRows(excluded, EXCLUDED_REASON_EXCLUDED_HANDLE));
+      exclusionDiagnostics.excludedHandle += excluded.length;
+    }
+    rows = excludedHandleRows;
     const excludedRows = beforeExclude - rows.length;
     rows = rows.slice(0, args.limitPerTag);
 
@@ -1192,9 +1282,14 @@ async function main() {
       contentType: result.contentType,
       responseLength: result.text.length,
       rows: rows.length,
-      nonBeautyRows: beforeBeautyFilter - afterBeautyFilter,
-      nonCommercialRows: beforeCommercialFilter - afterCommercialFilter,
+      nonBeautyRows: beautyDroppedCount,
+      nonCommercialRows: commercialDroppedCount,
       excludedRows,
+      excludedRowBreakdown: {
+        beauty: beautyDroppedCount,
+        commercial: commercialDroppedCount,
+        excludedHandle: excludedHandleDroppedCount,
+      },
       loginLimited:
         result.text.includes("PolarisCAAIGLoginHomepageController") ||
         result.text.includes("is_logged_out_user") ||
@@ -1212,6 +1307,7 @@ async function main() {
     filterCommercialRows(filterBeautyRows(dedupeRows(allRows), args.requireBeauty), args.requireCommercial),
     excludedHandles
   );
+  await upsertExcludedRows(env, excludedRowsBuffer);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const csvPath = path.join(args.outputDir, `instagram_hashtag_sellers_${stamp}.csv`);
   const summaryPath = path.join(args.outputDir, `instagram_beauty_seller_summary_${stamp}.csv`);
@@ -1262,6 +1358,9 @@ async function main() {
   console.log(`[done] diagnostics: ${jsonPath}`);
   console.log(`[done] total unique rows: ${rows.length}`);
   console.log(`[done] total unique sellers: ${enrichedSellerSummary.length}`);
+  console.log(
+    `[done] excluded rows collected: beauty=${exclusionDiagnostics.beauty}, commercial=${exclusionDiagnostics.commercial}, existing_excluded=${exclusionDiagnostics.excludedHandle}`
+  );
 
     if (!rows.length) {
     console.log("");

@@ -79,7 +79,7 @@ If you only want to clean duplicates without import:
 Open:
 
 ```text
-http://localhost:4317
+http://localhost:4320
 ```
 
 Local API calls are available without a team access code.

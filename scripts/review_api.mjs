@@ -10,7 +10,7 @@ export const DM_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\
 export const EMAIL_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\uB2F5\uC7A5\uC634", "\uBBF8\uD68C\uC2E0", "\uAC70\uC808", "\uBCF4\uB958"];
 export const BRAND_FITS = ["", "\uB192\uC74C", "\uC911\uAC04", "\uB0AE\uC74C"];
 export const GROUPBUY_EXPERIENCE_VALUES = ["\uBD88\uBA85", "\uC788\uC74C", "\uC5C6\uC74C"];
-export const AGENCY_STATUS_VALUES = ["\uBD88\uBA85", "\uAC1C\uC778", "\uC5D0\uC774\uC804\uC2DC"];
+export const AGENCY_STATUS_VALUES = ["\uBD88\uBA85", "\uC788\uC74C", "\uC5C6\uC74C"];
 
 const env = readSupabaseEnv();
 const missingColumns = new Set();
@@ -159,6 +159,7 @@ async function deleteExcludedHandle(handle) {
 export async function listExcludedDb(url) {
   const query = cleanSearch(url.searchParams.get("q"));
   const assignee = url.searchParams.get("assignee");
+  const assigneeFilter = String(assignee || "").trim();
   const reason = cleanSearch(url.searchParams.get("reason"));
   const includesQuery = (row) => {
     if (!query) return true;
@@ -193,6 +194,11 @@ export async function listExcludedDb(url) {
   const handleRows = (handles || [])
     .filter((row) => reason || row.reason !== "out_of_follower_range")
     .filter((row) => !reason || row.reason === reason)
+    .filter((row) => {
+      if (!assigneeFilter) return true;
+      const excludedBy = String(row.excluded_by || "").trim();
+      return excludedBy === assigneeFilter || !excludedBy || excludedBy === "crawler" || excludedBy.startsWith("crawler_");
+    })
     .filter((row) => !candidateHandles.has(normalizeInstagramHandle(row.handle)))
     .map((row) => ({
       id: `excluded-${row.id}`,

@@ -20,7 +20,7 @@ import {
   updateCandidate,
 } from "./review_api.mjs";
 
-const PORT = Number(process.env.PORT || 4317);
+const PORT = Number(process.env.PORT || 4320);
 
 const server = http.createServer(async (request, response) => {
   try {

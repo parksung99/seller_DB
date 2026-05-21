@@ -655,6 +655,7 @@ tbody tr:hover { background: var(--pink-light); }
       <button class="member-tab" data-assignee-tab="kim-db" onclick="setAssigneeTab('kim-db')">김시은 발송DB</button>
       <button class="member-tab" data-assignee-tab="kim-sent-complete" onclick="setAssigneeTab('kim-sent-complete')">김시은 발송완료</button>
       <button class="member-tab" data-assignee-tab="kim-wait" onclick="setAssigneeTab('kim-wait')">김시은 보류</button>
+      <button class="member-tab" data-assignee-tab="kim-excluded" onclick="setAssigneeTab('kim-excluded')">김시은 제외</button>
       <button class="member-tab" data-assignee-tab="kim-dm-sent" onclick="setAssigneeTab('kim-dm-sent')">김시은 DM 발송완료</button>
       <button class="member-tab" data-assignee-tab="kim-dm-reply" onclick="setAssigneeTab('kim-dm-reply')">김시은 DM 회신</button>
       <button class="member-tab" data-assignee-tab="kim-email-sent" onclick="setAssigneeTab('kim-email-sent')">김시은 이메일 발송완료</button>
@@ -664,6 +665,7 @@ tbody tr:hover { background: var(--pink-light); }
       <button class="member-tab" data-assignee-tab="park-db" onclick="setAssigneeTab('park-db')">박민서 발송DB</button>
       <button class="member-tab" data-assignee-tab="park-sent-complete" onclick="setAssigneeTab('park-sent-complete')">박민서 발송완료</button>
       <button class="member-tab" data-assignee-tab="park-wait" onclick="setAssigneeTab('park-wait')">박민서 보류</button>
+      <button class="member-tab" data-assignee-tab="park-excluded" onclick="setAssigneeTab('park-excluded')">박민서 제외</button>
       <button class="member-tab" data-assignee-tab="park-dm-sent" onclick="setAssigneeTab('park-dm-sent')">박민서 DM 발송완료</button>
       <button class="member-tab" data-assignee-tab="park-dm-reply" onclick="setAssigneeTab('park-dm-reply')">박민서 DM 회신</button>
       <button class="member-tab" data-assignee-tab="park-email-sent" onclick="setAssigneeTab('park-email-sent')">박민서 이메일 발송완료</button>
@@ -783,18 +785,18 @@ tbody tr:hover { background: var(--pink-light); }
         <div class="workspace-logo"><span class="workspace-mark">피</span><span id="workspace-title">피처링 워크스페이스</span></div>
         <input class="side-search" id="campaign-q" placeholder="계정 및 채널 검색" />
         <div class="side-menu-title">인플루언서</div>
-        <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
         <button class="side-menu-item" data-campaign-mode-btn="find" onclick="setCampaignMode('find')">◎ 인플루언서 찾기</button>
         <div class="finder-subtabs" id="find-subtabs">
-          <button class="finder-subtab active" data-find-tab="unchecked" onclick="setCampaignMode('find'); setCampaignFindTab('unchecked')">미확인</button>
-          <button class="finder-subtab" data-find-tab="hold" onclick="setCampaignMode('find'); setCampaignFindTab('hold')">보류</button>
+          <button class="finder-subtab active" data-find-tab="unchecked" onclick="switchCampaignFinderTab('find', 'unchecked')">미확인</button>
+          <button class="finder-subtab" data-find-tab="hold" onclick="switchCampaignFinderTab('find', 'hold')">보류</button>
+          <button class="finder-subtab" data-find-tab="excluded" onclick="switchCampaignFinderTab('find', 'excluded')">제외</button>
         </div>
         <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="setCampaignMode('manage')">☷ 인플루언서 관리</button>
         <div class="finder-subtabs" id="manage-subtabs">
-          <button class="finder-subtab active" data-manage-tab="pending" onclick="setCampaignMode('manage'); setCampaignManageTab('pending')">발송전</button>
-          <button class="finder-subtab" data-manage-tab="sent" onclick="setCampaignMode('manage'); setCampaignManageTab('sent')">발송완료</button>
-          <button class="finder-subtab" data-manage-tab="replied" onclick="setCampaignMode('manage'); setCampaignManageTab('replied')">회신완료</button>
-          <button class="finder-subtab" data-manage-tab="rejected" onclick="setCampaignMode('manage'); setCampaignManageTab('rejected')">거절</button>
+          <button class="finder-subtab active" data-manage-tab="pending" onclick="switchCampaignFinderTab('manage', 'pending')">발송전</button>
+          <button class="finder-subtab" data-manage-tab="sent" onclick="switchCampaignFinderTab('manage', 'sent')">발송완료</button>
+          <button class="finder-subtab" data-manage-tab="replied" onclick="switchCampaignFinderTab('manage', 'replied')">회신완료</button>
+          <button class="finder-subtab" data-manage-tab="excluded" onclick="switchCampaignFinderTab('manage', 'excluded')">제외</button>
         </div>
         <div class="side-menu-title">캠페인</div>
         <button class="side-menu-item">✉ 메시지 관리</button>
@@ -811,6 +813,7 @@ tbody tr:hover { background: var(--pink-light); }
           <input id="campaign-name" placeholder="예) 6월 앰플 협찬 캠페인" />
         </div>
         <div class="campaign-list" id="campaign-list"></div>
+        <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
       </aside>
       <main class="campaign-main">
         <div class="campaign-workspace-head">
@@ -1030,7 +1033,7 @@ const DM_STATUSES = ["미발송", "발송완료", "답장옴", "거절", "보류
 const EMAIL_STATUSES = ["미발송", "발송완료", "답장옴", "미회신", "거절", "보류"];
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
 const GROUPBUY_EXPERIENCE_VALUES = ["불명", "있음", "없음"];
-const AGENCY_STATUS_VALUES = ["불명", "개인", "에이전시"];
+const AGENCY_STATUS_VALUES = ["불명", "있음", "없음"];
 const ASSIGNEE_TABS = {
   "kim-unchecked": { assignee: "김시은", review_status: "미확인", dm_status: "미발송", title: "김시은 할당", copy: "미확인이고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "검토 시작" },
   "kim-db": { assignee: "김시은", review_status: "좋음", dm_status: "미발송", title: "김시은 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
@@ -1070,6 +1073,7 @@ const state = {
   selectedCampaign: null,
   campaignCandidates: [],
   finderCandidates: [],
+  finderCache: new Map(),
   campaignMode: "send",
   campaignFindTab: "unchecked",
   campaignManageTab: "pending",
@@ -1083,6 +1087,7 @@ const TEAM_MEMBERS = ["김시은", "박민서"];
 const FIND_TABS = {
   unchecked: { label: "미확인", review_status: "미확인" },
   hold: { label: "보류", review_status: "보류" },
+  excluded: { label: "제외", review_status: "제외" },
 };
 const CAMPAIGN_PRESETS = {
   gugu: {
@@ -1349,10 +1354,10 @@ function isSentComplete(row) {
   return ["발송완료", "DM발송"].includes(row.dm_status) || ["발송완료", "미회신"].includes(row.email_status);
 }
 function isReplyComplete(row) {
-  return row.dm_status === "답장옴" || row.email_status === "답장옴";
+  return row.dm_status === "답장옴" || row.email_status === "답장옴" || row.dm_status === "거절" || row.email_status === "거절" || row.dm_status === "보류" || row.email_status === "보류";
 }
 function isRejectedComplete(row) {
-  return row.dm_status === "거절" || row.email_status === "거절";
+  return row.review_status === "제외";
 }
 function isContactedComplete(row) {
   return isSentComplete(row) || isReplyComplete(row) || isRejectedComplete(row);
@@ -1484,8 +1489,12 @@ function renderTable() {
   empty.querySelector("p").textContent = state.loadingCandidates ? "불러오는 중이에요" : "조회된 인플루언서가 없어요";
   empty.querySelector("small").textContent = state.loadingCandidates ? "잠시만 기다려주세요" : "검색어나 필터를 조정해보세요";
   empty.style.display = state.candidates.length ? "none" : "block";
-  tbody.innerHTML = state.candidates.map((row, index) => `
-    <tr onclick="openDrawer(${row.id})">
+  tbody.innerHTML = state.candidates.map((row, index) => {
+    const normalizedRowId = row.id == null ? "" : String(row.id).trim();
+    const safeRowId =
+      normalizedRowId && Number.isFinite(Number(normalizedRowId)) ? Number(normalizedRowId) : JSON.stringify(normalizedRowId);
+    return `
+    <tr onclick="openDrawer(${safeRowId})">
       <td>${index + 1}</td>
       <td><div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div class="handle">${esc(row.grade || "")}</div></div></div></td>
       <td>${profileLink(row)}</td>
@@ -1498,9 +1507,9 @@ function renderTable() {
       <td><span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span></td>
       <td><span class="status-badge ${dmClass(row.email_status)}">${esc(row.email_status || "미발송")}</span></td>
       <td class="handle">${formatDate(row.status_updated_at || row.updated_at)}</td>
-      <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${row.id})">보기</button></td>
+      <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${safeRowId})">보기</button></td>
     </tr>
-  `).join("");
+  `;}).join("");
 }
 function renderDrawer(row) {
   $("d-name").textContent = row.seller_name || "—";
@@ -1513,6 +1522,8 @@ function renderDrawer(row) {
   const personas = splitTags(row.prospect_personas).map((item) => `<span class="status-badge s-call">${esc(item)}</span>`).join(" ");
   const prospectKeywords = splitTags(row.matched_prospect_keywords).slice(0, 12).map(renderTag).join("");
   const postLinks = splitTags(row.engagement_posts || row.sample_post_urls).slice(0, 6).map((url, i) => `<a class="action-btn" href="${esc(url)}" target="_blank" rel="noopener">post ${i + 1}</a>`).join(" ");
+  const groupbuyExperience = GROUPBUY_EXPERIENCE_VALUES.includes(row.groupbuy_experience) ? row.groupbuy_experience : "불명";
+  const agencyStatus = AGENCY_STATUS_VALUES.includes(row.agency_status) ? row.agency_status : "불명";
   $("drawer-body").innerHTML = `
     <div class="detail-section">
       <div class="detail-section-title">PROFILE</div>
@@ -1539,17 +1550,17 @@ function renderDrawer(row) {
       <div class="detail-note">${esc(row.notes || row.memo || "-")}</div>
       ${row.engagement_refresh_error ? `<div class="detail-note" style="margin-top:8px;color:var(--red);">${esc(row.engagement_refresh_error)}</div>` : ""}
     </div>
-    <div class="detail-section">
-      <div class="detail-section-title">EDIT</div>
-      <div class="edit-grid-2">
-        <div class="edit-field"><label>DM 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${row.dm_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
-        <div class="edit-field"><label>이메일 상태</label><select id="edit_email_status">${EMAIL_STATUSES.map((item) => `<option ${row.email_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
-        <div class="edit-field"><label>검토 상태</label><select id="edit_review_status">${REVIEW_STATUSES.map((item) => `<option ${row.review_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
-        <div class="edit-field"><label>브랜드 적합도</label><select id="edit_brand_fit">${BRAND_FITS.map((item) => `<option value="${esc(item)}" ${row.brand_fit === item ? "selected" : ""}>${esc(item || "선택")}</option>`).join("")}</select></div>
-        <div class="edit-field"><label>공구 경험</label><select id="edit_groupbuy_experience">${GROUPBUY_EXPERIENCE_VALUES.map((item) => `<option ${((row.groupbuy_experience || "불명") === item) ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
-        <div class="edit-field"><label>에이전시 여부</label><select id="edit_agency_status">${AGENCY_STATUS_VALUES.map((item) => `<option ${((row.agency_status || "불명") === item) ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
-        <div class="edit-field"><label>담당자</label><input id="edit_assignee" value="${esc(row.assignee || identity().name)}" list="assigneeList" /></div>
-      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">EDIT</div>
+        <div class="edit-grid-2">
+          <div class="edit-field"><label>DM 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${row.dm_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>이메일 상태</label><select id="edit_email_status">${EMAIL_STATUSES.map((item) => `<option ${row.email_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>검토 상태</label><select id="edit_review_status">${REVIEW_STATUSES.map((item) => `<option ${row.review_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>브랜드 적합도</label><select id="edit_brand_fit">${BRAND_FITS.map((item) => `<option value="${esc(item)}" ${row.brand_fit === item ? "selected" : ""}>${esc(item || "선택")}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>공구경험</label><select id="edit_groupbuy_experience">${GROUPBUY_EXPERIENCE_VALUES.map((item) => `<option value="${esc(item)}" ${groupbuyExperience === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>에이전시 여부</label><select id="edit_agency_status">${AGENCY_STATUS_VALUES.map((item) => `<option value="${esc(item)}" ${agencyStatus === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>담당자</label><input id="edit_assignee" value="${esc(row.assignee || identity().name)}" list="assigneeList" /></div>
+        </div>
       <datalist id="assigneeList">${state.assignees.map((name) => `<option value="${esc(name)}"></option>`).join("")}</datalist>
       <div class="edit-field"><label>팀 메모</label><textarea id="edit_memo">${esc(row.memo || "")}</textarea></div>
       <div class="edit-actions">
@@ -1581,8 +1592,8 @@ async function saveSelected() {
     email_status: $("edit_email_status").value,
     review_status: $("edit_review_status").value,
     brand_fit: $("edit_brand_fit").value,
-    groupbuy_experience: $("edit_groupbuy_experience").value,
-    agency_status: $("edit_agency_status").value,
+    groupbuy_experience: $("edit_groupbuy_experience")?.value || "불명",
+    agency_status: $("edit_agency_status")?.value || "불명",
     assignee: $("edit_assignee").value.trim(),
     memo: $("edit_memo").value,
   };
@@ -1666,6 +1677,8 @@ async function saveInfluencer() {
     dm_status: $("f-dm-status").value,
     email_status: $("f-email-status").value,
     review_status: $("f-review-status").value,
+    groupbuy_experience: "불명",
+    agency_status: "불명",
     assignee: $("f-assignee").value.trim() || campaignOwner(),
     notes: $("f-note").value,
   };
@@ -1674,10 +1687,11 @@ async function saveInfluencer() {
   try {
     await api("/api/candidates", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
     state.candidatesCache.clear();
+    state.finderCache.clear();
     toast("저장 완료");
     clearForm();
-    setCampaignMode("manage");
-    setCampaignManageTab("pending");
+    setCampaignMode("manage", { skipFinderLoad: true });
+    setCampaignManageTab("pending", { skipFinderLoad: true });
     await loadFinderCandidates();
   } catch (error) {
     toast(error.message);
@@ -1705,7 +1719,7 @@ function campaignStatusClass(value) {
 function selectedCampaignId() {
   return state.selectedCampaign?.id;
 }
-function setCampaignMode(mode) {
+function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   state.campaignMode = mode;
   const listMode = mode === "find" || mode === "manage" || mode === "excluded";
   const setupMode = mode === "setup";
@@ -1719,23 +1733,93 @@ function setCampaignMode(mode) {
   document.querySelectorAll("[data-campaign-mode-btn]").forEach((button) => {
     button.classList.toggle("active", button.dataset.campaignModeBtn === mode);
   });
-  if (listMode) loadFinderCandidates();
+  if (listMode && !skipFinderLoad) loadFinderCandidates();
   if (setupMode) renderCampaignSetup();
   if (addMode && $("f-assignee") && !$("f-assignee").value.trim()) $("f-assignee").value = campaignOwner();
 }
-function setCampaignFindTab(name) {
+function switchCampaignFinderTab(mode, tab) {
+  const requestedMode = mode === "find" ? "find" : "manage";
+  const requestedFindTab = requestedMode === "find" ? FIND_TABS[tab] ? tab : "unchecked" : state.campaignFindTab;
+  const requestedManageTab = requestedMode === "manage" ? tab : state.campaignManageTab;
+  const validManageTabs = ["pending", "sent", "replied", "excluded", "rejected"];
+  const nextManageTab = validManageTabs.includes(requestedManageTab) ? requestedManageTab : "pending";
+  const previousMode = state.campaignMode;
+  if (requestedMode === previousMode && (requestedMode === "find" ? state.campaignFindTab === requestedFindTab : state.campaignManageTab === nextManageTab) && state.finderCandidates.length) {
+    return;
+  }
+  setCampaignMode(requestedMode, { skipFinderLoad: true });
+  state.finderCandidates = [];
+  if (requestedMode === "find") {
+    setCampaignFindTab(requestedFindTab, { skipFinderLoad: true });
+  } else {
+    setCampaignManageTab(nextManageTab, { skipFinderLoad: true });
+  }
+  renderFinderCandidates();
+  loadFinderCandidates();
+}
+function setCampaignFindTab(name, { skipFinderLoad = false } = {}) {
   state.campaignFindTab = FIND_TABS[name] ? name : "unchecked";
   document.querySelectorAll("[data-find-tab]").forEach((button) => {
     button.classList.toggle("active", button.dataset.findTab === state.campaignFindTab);
   });
-  loadFinderCandidates();
+  const cached = getFinderCache();
+  if (cached) {
+    const owner = campaignOwner();
+    state.finderCandidates = filterFinderCandidates(cached, owner, "find", state.campaignFindTab);
+    renderFinderCandidates();
+    return;
+  }
+  if (!skipFinderLoad) loadFinderCandidates();
 }
-function setCampaignManageTab(name) {
+function setCampaignManageTab(name, { skipFinderLoad = false } = {}) {
   state.campaignManageTab = name;
   document.querySelectorAll("[data-manage-tab]").forEach((button) => {
     button.classList.toggle("active", button.dataset.manageTab === name);
   });
-  loadFinderCandidates();
+  const cached = getFinderCache();
+  if (cached) {
+    const owner = campaignOwner();
+    state.finderCandidates = filterFinderCandidates(cached, owner, null, state.campaignManageTab);
+    renderFinderCandidates();
+    return;
+  }
+  if (!skipFinderLoad) loadFinderCandidates();
+}
+function finderCacheKey({ mode, owner, query, tab }) {
+  return `${mode}::${owner || ""}::${tab || ""}::${query || ""}`;
+}
+function getFinderCache() {
+  const mode = state.campaignMode;
+  const owner = campaignOwner();
+  const query = $("campaign-q")?.value?.trim() || "";
+  const tab = mode === "find" ? state.campaignFindTab : state.campaignManageTab;
+  const key = finderCacheKey({ mode, owner, tab, query });
+  return state.finderCache.get(key);
+}
+function setFinderCache(rows, requestedMode, requestedOwner, requestedQuery) {
+  const tab = requestedMode === "find" ? state.campaignFindTab : state.campaignManageTab;
+  const key = finderCacheKey({ mode: requestedMode, owner: requestedOwner, tab, query: requestedQuery });
+  state.finderCache.set(key, rows || []);
+}
+function filterFinderCandidates(rows, owner, findTab, manageTab) {
+  const list = Array.isArray(rows) ? rows : [];
+  if (state.campaignMode === "find") {
+    const expectedStatus = FIND_TABS[findTab]?.review_status || "미확인";
+    return list.filter((row) => normalizeTeamMember(row.assignee) === owner && row.review_status === expectedStatus);
+  }
+  if (state.campaignMode === "manage") {
+    if (manageTab === "replied") {
+      return list.filter((row) => row.review_status === "좋음" && isReplyComplete(row));
+    }
+    if (manageTab === "rejected" || manageTab === "excluded") {
+      return list.filter((row) => isRejectedComplete(row));
+    }
+    if (manageTab === "sent") {
+      return list.filter((row) => row.review_status === "좋음" && isSentComplete(row) && !isReplyComplete(row));
+    }
+    return list.filter((row) => row.review_status === "좋음" && !isContactedComplete(row));
+  }
+  return list.filter((row) => normalizeTeamMember(row.assignee) === owner);
 }
 async function loadFinderCandidates() {
   renderCampaignOwnerUi();
@@ -1747,35 +1831,32 @@ async function loadFinderCandidates() {
   const params = new URLSearchParams();
   const query = $("campaign-q")?.value?.trim();
   if (query) params.set("q", query);
+  const cached = getFinderCache();
+  if (cached) {
+    state.finderCandidates = filterFinderCandidates(cached, requestedOwner, requestedFindTab, requestedManageTab);
+    renderFinderCandidates();
+    return;
+  }
   try {
     params.set("assignee", requestedOwner);
     if (requestedMode === "manage") {
       params.set("include_excluded", "1");
-      params.set("review_status", "좋음");
+      if (requestedManageTab === "rejected" || requestedManageTab === "excluded") params.set("review_status", "제외");
+      else params.set("review_status", "좋음");
       if (requestedManageTab === "sent") params.set("sent_complete", "1");
       if (requestedManageTab === "replied") params.set("reply_complete", "1");
-      if (requestedManageTab === "rejected") params.set("include_excluded", "1");
+      if (requestedManageTab === "rejected" || requestedManageTab === "excluded") params.set("include_excluded", "1");
     } else if (requestedMode === "find") {
       params.set("review_status", FIND_TABS[requestedFindTab]?.review_status || "미확인");
     }
     const rows = await api(`/api/candidates?${params.toString()}`);
     if (seq !== state.finderRequestSeq || requestedMode !== state.campaignMode || requestedFindTab !== state.campaignFindTab || requestedManageTab !== state.campaignManageTab) return;
+    setFinderCache(rows, requestedMode, requestedOwner, query || "");
     if (requestedMode === "find") {
       const expectedStatus = FIND_TABS[requestedFindTab]?.review_status || "미확인";
-      state.finderCandidates = rows.filter((row) =>
-        normalizeTeamMember(row.assignee) === requestedOwner &&
-        row.review_status === expectedStatus
-      );
+      state.finderCandidates = filterFinderCandidates(rows, requestedOwner, requestedFindTab, requestedManageTab);
     } else if (requestedMode === "manage") {
-      if (requestedManageTab === "replied") {
-        state.finderCandidates = rows.filter(isReplyComplete);
-      } else if (requestedManageTab === "rejected") {
-        state.finderCandidates = rows.filter(isRejectedComplete);
-      } else if (requestedManageTab === "sent") {
-        state.finderCandidates = rows.filter((row) => isSentComplete(row) && !isReplyComplete(row) && !isRejectedComplete(row));
-      } else {
-        state.finderCandidates = rows.filter((row) => !isContactedComplete(row));
-      }
+      state.finderCandidates = filterFinderCandidates(rows, requestedOwner, requestedFindTab, requestedManageTab);
     } else {
       state.finderCandidates = rows;
     }
@@ -1791,7 +1872,7 @@ function renderFinderCandidates() {
   const isExcluded = state.campaignMode === "excluded";
   const isManageSent = isManage && state.campaignManageTab === "sent";
   const isManageReply = isManage && state.campaignManageTab === "replied";
-  const isManageRejected = isManage && state.campaignManageTab === "rejected";
+  const isManageRejected = isManage && (state.campaignManageTab === "rejected" || state.campaignManageTab === "excluded");
   $("finder-title").textContent = isManage ? "인플루언서 관리" : isExcluded ? "제외" : "인플루언서 찾기";
   $("finder-table-head")?.classList.toggle("finder-simple", isFind);
   $("finder-table-head").innerHTML = isFind
@@ -1808,12 +1889,12 @@ function renderFinderCandidates() {
   $("finder-count").textContent = `${rows.length.toLocaleString()}명`;
   $("finder-sub").textContent = isManage
     ? isManageRejected
-      ? `${campaignOwner()} 담당 거절 상태 인플루언서입니다. DM/이메일 상태 셀렉트에서 다시 변경할 수 있습니다.`
+      ? `${campaignOwner()} 담당 제외 상태 인플루언서입니다. DM/이메일 상태 셀렉트에서 다시 변경할 수 있습니다.`
       : `${campaignOwner()} 담당 검토 좋음 명단 중 ${isManageReply ? "DM 또는 이메일 회신이 완료된" : isManageSent ? "DM 또는 이메일 발송 후 아직 회신 전인" : "아직 발송 전인"} 인플루언서입니다.`
     : isExcluded
       ? `크롤링 제외와 검토 제외 처리된 인플루언서입니다.`
     : `${campaignOwner()} 담당 ${FIND_TABS[state.campaignFindTab]?.label || "미확인"} 인플루언서입니다. 검토 상태를 선택하면 해당 탭으로 바로 이동합니다.`;
-  $("finder-list").innerHTML = rows.length ? rows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected })).join("") : `<div class="empty-state" style="display:block;"><p>${esc(isExcluded ? "제외" : campaignOwner())} ${isExcluded ? "가 없습니다" : isManage ? `${isManageRejected ? "거절" : isManageReply ? "회신완료" : isManageSent ? "발송완료" : "발송전"} 명단이 없습니다` : "담당 크롤링 명단이 없습니다"}</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송/회신 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
+  $("finder-list").innerHTML = rows.length ? rows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected })).join("") : `<div class="empty-state" style="display:block;"><p>${esc(isExcluded ? "제외" : campaignOwner())} ${isExcluded ? "가 없습니다" : isManage ? `${isManageRejected ? "제외" : isManageReply ? "회신완료" : isManageSent ? "발송완료" : "발송전"} 명단이 없습니다` : "담당 크롤링 명단이 없습니다"}</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송/회신 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
 }
 function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected }) {
   if (isFind) {
@@ -1863,7 +1944,12 @@ function finderReviewCell(row, editable) {
 }
 function finderActionCell(row, { isExcluded, isManageSent, isManageReply, isManageRejected }) {
   if (isExcluded) return `<span class="handle">${esc(row.excluded_reason || row.excluded_source || "제외")}</span>`;
-  if (isManageRejected) return `<span class="handle">상태 변경 가능</span>`;
+  if (isManageRejected) {
+    return `
+      <button class="finder-review-btn good" onclick="updateFinderCandidateReview(${Number(row.id)}, '좋음')">제외 해제</button>
+      <button class="finder-review-btn hold" onclick="updateFinderCandidateReview(${Number(row.id)}, '보류')">보류로</button>
+    `;
+  }
   if (isManageReply) return `<span class="status-badge s-reply">회신완료</span>`;
   if (isManageSent) return `<span class="status-badge s-dm">발송됨</span>`;
   if (state.campaignMode === "find") return `<span class="handle">검토 선택</span>`;
@@ -1885,6 +1971,19 @@ async function updateFinderCandidateReview(id, reviewStatus) {
     renderFinderCandidates();
     return;
   }
+  const previousMode = state.campaignMode;
+  const previousFindTab = state.campaignFindTab;
+  const previousManageTab = state.campaignManageTab;
+  state.finderCandidates = state.finderCandidates.filter((item) => Number(item.id) !== Number(id));
+  if (state.campaignMode === "find" && reviewStatus === "좋음") {
+    setCampaignMode("manage", { skipFinderLoad: true });
+    setCampaignManageTab("pending", { skipFinderLoad: true });
+  } else if (state.campaignMode === "find" && reviewStatus === "보류") {
+    setCampaignFindTab("hold", { skipFinderLoad: true });
+  } else if (state.campaignMode === "find" && reviewStatus === "제외") {
+    setCampaignFindTab("excluded", { skipFinderLoad: true });
+  }
+  renderFinderCandidates();
   try {
     await api(`/api/candidates/${id}`, {
       method: "PATCH",
@@ -1897,29 +1996,24 @@ async function updateFinderCandidateReview(id, reviewStatus) {
       }),
     });
     state.candidatesCache.clear();
-    if (state.campaignMode === "find" && reviewStatus === "보류") {
-      state.campaignFindTab = "hold";
-      await loadFinderCandidates();
-    } else if (state.campaignMode === "find" && reviewStatus === "좋음") {
-      state.campaignMode = "manage";
-      state.campaignManageTab = "pending";
-      await loadFinderCandidates();
-    } else {
-      state.finderCandidates = state.finderCandidates.filter((item) => Number(item.id) !== Number(id));
-      renderFinderCandidates();
-    }
+    state.finderCache.clear();
+    await loadFinderCandidates();
     toast(`${reviewStatus} 처리 완료`);
   } catch (error) {
     toast(error.message);
+    setCampaignMode(previousMode, { skipFinderLoad: true });
+    if (previousMode === "find") setCampaignFindTab(previousFindTab, { skipFinderLoad: true });
+    if (previousMode === "manage") setCampaignManageTab(previousManageTab, { skipFinderLoad: true });
     renderFinderCandidates();
+    await loadFinderCandidates();
   }
 }
 function rowMatchesCurrentManageTab(row) {
   if (state.campaignMode !== "manage") return true;
-  if (state.campaignManageTab === "replied") return isReplyComplete(row);
-  if (state.campaignManageTab === "rejected") return isRejectedComplete(row);
-  if (state.campaignManageTab === "sent") return isSentComplete(row) && !isReplyComplete(row) && !isRejectedComplete(row);
-  return !isContactedComplete(row);
+  if (state.campaignManageTab === "replied") return row.review_status === "좋음" && isReplyComplete(row);
+  if (state.campaignManageTab === "rejected" || state.campaignManageTab === "excluded") return isRejectedComplete(row);
+  if (state.campaignManageTab === "sent") return row.review_status === "좋음" && isSentComplete(row) && !isReplyComplete(row);
+  return row.review_status === "좋음" && !isContactedComplete(row);
 }
 async function updateFinderCandidateStatus(id, field, value) {
   const row = (state.finderCandidates || []).find((item) => Number(item.id) === Number(id));
@@ -1938,6 +2032,7 @@ async function updateFinderCandidateStatus(id, field, value) {
         [field]: value,
       }),
     });
+    state.finderCache.clear();
     state.candidatesCache.clear();
     toast("상태 저장 완료");
   } catch (error) {
@@ -2490,9 +2585,23 @@ function candidateParams() {
   }
   return params;
 }
+function isExcludedAssigneeTab() {
+  return ["kim-excluded", "park-excluded"].includes(state.activeAssigneeTab);
+}
+function excludedParams() {
+  const params = new URLSearchParams();
+  ["q"].forEach((id) => {
+    const value = $(id).value;
+    if (value) params.set(id, value);
+  });
+  const tab = ASSIGNEE_TABS[state.activeAssigneeTab] || ASSIGNEE_TABS["kim-unchecked"];
+  if (tab.assignee) params.set("assignee", tab.assignee);
+  return params;
+}
 async function loadCandidates() {
   const seq = ++state.requestSeq;
-  const params = candidateParams();
+  const isExcludedTab = isExcludedAssigneeTab();
+  const params = isExcludedTab ? excludedParams() : candidateParams();
   const cacheKey = params.toString();
   const cached = state.candidatesCache.get(cacheKey);
 
@@ -2508,7 +2617,8 @@ async function loadCandidates() {
     renderTable();
   }
 
-  const rows = await api(`/api/candidates?${cacheKey}`);
+  const endpoint = isExcludedTab ? "/api/excluded" : "/api/candidates";
+  const rows = await api(`${endpoint}?${cacheKey}`);
   if (seq !== state.requestSeq) return;
   state.candidatesCache.set(cacheKey, rows);
   state.loadingCandidates = false;
