@@ -39,7 +39,11 @@ export function readSupabaseEnv() {
     serviceRoleKey,
     secret,
     accessToken,
-    teamAccessCode: env.TEAM_ACCESS_CODE || entries.team_access_code || "",
     instagramCookie: env.IG_COOKIE || entries.ig_cookie || entries.instagram_cookie || instagramCookieFile || "",
+    gmailClientId: env.GMAIL_CLIENT_ID || entries.gmail_client_id || "",
+    gmailClientSecret: env.GMAIL_CLIENT_SECRET || entries.gmail_client_secret || "",
+    gmailRefreshToken: env.GMAIL_REFRESH_TOKEN || entries.gmail_refresh_token || "",
+    gmailSenderEmail: env.GMAIL_SENDER_EMAIL || entries.gmail_sender_email || "",
+    gmailSenderName: env.GMAIL_SENDER_NAME || entries.gmail_sender_name || "",
   };
 }

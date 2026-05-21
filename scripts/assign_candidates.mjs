@@ -109,9 +109,18 @@ async function fetchExcludedHandles(env) {
     });
     return new Set((rows || []).map((row) => normalizeHandle(row.handle)).filter(Boolean));
   } catch (error) {
-    if (error.status === 404) return new Set();
+    if (error.status === 404) return fetchCandidateExcludedHandles(env);
     throw error;
   }
+}
+
+async function fetchCandidateExcludedHandles(env) {
+  const rows = await supabaseJson(
+    env,
+    `${TABLE}?select=seller_id,seller_name,profile_url&review_status=eq.%EC%A0%9C%EC%99%B8&limit=10000`,
+    { headers: { accept: "application/json" } }
+  );
+  return new Set((rows || []).map(handleFromRow).filter(Boolean));
 }
 
 async function patchAssignee(env, row, assignee) {

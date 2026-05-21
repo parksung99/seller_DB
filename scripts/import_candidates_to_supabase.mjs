@@ -178,10 +178,25 @@ async function fetchExcludedHandles(env) {
     return new Set((text ? JSON.parse(text) : []).map((row) => normalizeHandle(row.handle)).filter(Boolean));
   }
   if (response.status === 404) {
-    console.log("[import] excluded_instagram_handles table not found. Exclusion filter skipped.");
-    return new Set();
+    console.log("[import] excluded_instagram_handles table not found. Falling back to candidate review_status=제외.");
+    return fetchCandidateExcludedHandles(env);
   }
   throw new Error(`Failed to load excluded handles: ${response.status}: ${text}`);
+}
+
+async function fetchCandidateExcludedHandles(env) {
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/${TABLE}?select=seller_id,seller_name,profile_url&review_status=eq.%EC%A0%9C%EC%99%B8&limit=10000`, {
+    headers: {
+      "apikey": env.serviceRoleKey,
+      "authorization": `Bearer ${env.serviceRoleKey}`,
+      accept: "application/json",
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`Failed to load candidate exclusions: ${response.status}: ${text}`);
+  }
+  return new Set((text ? JSON.parse(text) : []).flatMap(handlesFromCandidate));
 }
 
 async function fetchExistingCandidateHandles(env) {
@@ -244,11 +259,14 @@ function mapRow(row, sourceFile) {
   const sellerId = normalizeSellerId(
     row.seller_id || row.id || row.instagram_id || row.instagramUserId || normalizeHandleFromUrl(row.profile_url) || ""
   );
+  const prospectNote = buildProspectNote(row);
   return {
     seller_name: resolveSellerName(row, sellerId),
     seller_id: sellerId,
     channel: row.channel || "instagram",
     profile_url: row.profile_url || (sellerId ? `https://www.instagram.com/${sellerId}/` : ""),
+    profile_email: row.profile_email || row.email || row.public_email || "",
+    profile_image_url: row.profile_image_url || row.profile_pic_url || row.profile_picture_url || "",
     grade: row.grade,
     matched_hashtags_count: toInteger(row.matched_hashtags_count),
     matched_hashtags: row.matched_hashtags,
@@ -258,6 +276,12 @@ function mapRow(row, sourceFile) {
     negative_score: toInteger(row.negative_score),
     combination_score: toInteger(row.combination_score),
     combination_grades: row.combination_grades,
+    prospect_score: toInteger(row.prospect_score),
+    prospect_noise_score: toInteger(row.prospect_noise_score),
+    prospect_personas: row.prospect_personas,
+    prospect_signal_tags: row.prospect_signal_tags,
+    matched_prospect_keywords: row.matched_prospect_keywords,
+    prospect_noise_keywords: row.prospect_noise_keywords,
     total_likes: toInteger(row.total_likes),
     total_comments: toInteger(row.total_comments),
     avg_likes: toInteger(row.avg_likes),
@@ -270,14 +294,37 @@ function mapRow(row, sourceFile) {
     commercial_signal_tags: row.commercial_signal_tags,
     format_signal_tags: row.format_signal_tags,
     dm_available: row.dm_available,
+    email_status: row.email_status || "미발송",
     sample_post_urls: row.sample_post_urls,
-    notes: row.notes,
+    notes: [prospectNote, row.notes].filter(Boolean).join("\n"),
     source_file: sourceFile,
   };
 }
 
+function buildProspectNote(row) {
+  const parts = [
+    row.prospect_score ? `욕망점수:${row.prospect_score}` : "",
+    row.prospect_personas ? `페르소나:${row.prospect_personas}` : "",
+    row.prospect_signal_tags ? `욕망태그:${row.prospect_signal_tags}` : "",
+    row.matched_prospect_keywords ? `욕망키워드:${row.matched_prospect_keywords}` : "",
+  ].filter(Boolean);
+  return parts.length ? `[prospect] ${parts.join(" / ")}` : "";
+}
+
 function parseConflictError(text) {
   return /on_conflict|conflict/i.test(text || "");
+}
+
+function parseMissingColumn(text) {
+  return String(text || "").match(/Could not find the '([^']+)' column/i)?.[1] || "";
+}
+
+function removeColumnFromRows(rows, column) {
+  return rows.map((row) => {
+    const next = { ...row };
+    delete next[column];
+    return next;
+  });
 }
 
 async function upsertBatch(env, rows) {
@@ -306,6 +353,11 @@ async function upsertBatch(env, rows) {
     if (response.ok) return;
 
     lastError = `Supabase upsert failed (${response.status}, on_conflict=${conflictTarget}): ${text}`;
+    const missingColumn = parseMissingColumn(text);
+    if (missingColumn) {
+      console.log(`[import] column not found in DB, retrying without: ${missingColumn}`);
+      return upsertBatch(env, removeColumnFromRows(rows, missingColumn));
+    }
     if (parseConflictError(text)) {
       continue;
     }

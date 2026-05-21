@@ -96,6 +96,19 @@ body {
 }
 .member-tab:hover { border-color: var(--pink-mid); color: var(--pink); }
 .member-tab.active { background: var(--pink-light); color: var(--pink); border-color: var(--pink-mid); }
+.workflow-hint {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 12px; margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.workflow-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.workflow-copy { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.workflow-pill {
+  font-size: 11px; font-weight: 700; color: var(--pink);
+  background: var(--pink-light); border: 1px solid var(--pink-mid);
+  border-radius: 999px; padding: 4px 9px; white-space: nowrap;
+}
 .search-wrap { position: relative; flex: 1; min-width: 200px; }
 .search-wrap svg {
   position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
@@ -115,7 +128,7 @@ body {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 9px 12px; outline: none; cursor: pointer;
 }
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.stats-row { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .stat-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
@@ -127,7 +140,7 @@ body {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: auto;
 }
-table { width: 100%; border-collapse: collapse; min-width: 940px; }
+table { width: 100%; border-collapse: collapse; min-width: 1120px; }
 thead { background: var(--surface2); }
 th {
   padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700;
@@ -142,6 +155,35 @@ tr:last-child td { border-bottom: none; }
 tbody tr { transition: background 0.1s; cursor: pointer; }
 tbody tr:hover { background: var(--pink-light); }
 .handle { color: var(--text3); font-size: 12px; }
+.profile-mini { display: flex; align-items: center; gap: 9px; min-width: 180px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
+  background: var(--pink-light); border: 1px solid var(--border); flex-shrink: 0;
+}
+.avatar-fallback {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--pink); font-size: 12px; font-weight: 800;
+}
+.handle-link {
+  display: inline-flex; align-items: center; gap: 6px; color: var(--text3);
+  font-size: 12px; text-decoration: none;
+}
+.handle-link:hover { color: var(--pink); }
+.ig-icon {
+  width: 18px; height: 18px; border-radius: 6px; color: var(--pink);
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, transform 0.12s;
+}
+.ig-icon svg { width: 16px; height: 16px; display: block; }
+.handle-link:hover .ig-icon, .ig-icon-link:hover {
+  background: var(--pink-light); color: var(--pink-dark); transform: translateY(-1px);
+}
+.ig-icon-link {
+  border: 1px solid var(--pink-mid); background: var(--pink-light); color: var(--pink);
+  width: 30px; height: 30px; border-radius: 8px; display: inline-flex;
+  align-items: center; justify-content: center; text-decoration: none; transition: all 0.15s;
+}
+.ig-icon-link svg { width: 17px; height: 17px; display: block; }
 .followers-cell { font-weight: 600; color: var(--text); }
 .er-badge {
   display: inline-block; padding: 3px 8px; border-radius: 20px;
@@ -275,6 +317,13 @@ tbody tr:hover { background: var(--pink-light); }
 }
 .auth-card h3 { font-size: 18px; margin-bottom: 6px; }
 .auth-card p { color: var(--text2); font-size: 13px; margin-bottom: 14px; }
+.member-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.member-choice {
+  font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+  border-radius: 8px; padding: 10px 12px;
+}
+.member-choice:hover { border-color: #b8a6ff; background: #f0edff; color: #6e56e8; }
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
   background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
@@ -283,6 +332,199 @@ tbody tr:hover { background: var(--pink-light); }
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .tag { display: inline-block; padding: 2px 7px; border-radius: 999px; background: var(--surface2); color: var(--text2); font-size: 11px; margin: 0 4px 4px 0; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; max-width: 220px; }
+.tag-list .tag { margin: 0; }
+.tag-more { color: var(--text3); font-size: 11px; white-space: nowrap; }
+#page-campaign {
+  max-width: none; width: 100%; min-height: calc(100vh - 56px);
+  margin: 0; padding: 0; background: #dfeaff;
+}
+#page-campaign > .section-title, #page-campaign > .section-sub { display: none; }
+.campaign-shell {
+  background: var(--surface); border: 1px solid #d8dee9;
+  border-radius: 0; box-shadow: none;
+  display: grid; grid-template-columns: 196px minmax(640px, 1fr) 410px;
+  min-height: calc(100vh - 56px); width: 100%; max-width: none; margin: 0; overflow: hidden;
+}
+.campaign-shell.finder-mode { grid-template-columns: 196px minmax(0, 1fr); }
+.campaign-shell.finder-mode .campaign-preview { display: none; }
+.campaign-shell.finder-mode .campaign-body-grid { display: none; }
+.campaign-side { border-right: 1px solid #edf0f4; background: #fbfcff; padding: 14px; }
+.campaign-main { padding: 0; border-right: 1px solid #edf0f4; min-width: 0; background: #fff; }
+.campaign-preview { padding: 0; background: #fff; min-width: 0; display: flex; flex-direction: column; }
+.campaign-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.campaign-title { font-size: 15px; font-weight: 800; color: var(--text); }
+.campaign-list { display: grid; gap: 6px; margin-top: 12px; }
+.campaign-item {
+  border: 1px solid transparent; background: transparent; border-radius: 4px;
+  padding: 8px 9px; cursor: pointer; text-align: left; font-family: inherit; color: var(--text);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%;
+}
+.campaign-item.active { border-color: #ddd8ff; background: #f0edff; color: #6e56e8; }
+.campaign-item strong { display: block; font-size: 13px; margin-bottom: 3px; }
+.campaign-item span { color: var(--text2); font-size: 11px; }
+.campaign-item-main { min-width: 0; }
+.campaign-delete {
+  border: 0; background: transparent; color: #a0a5af; border-radius: 4px;
+  padding: 5px 6px; font-family: inherit; font-size: 11px; font-weight: 800;
+  cursor: pointer; opacity: 0; transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+.campaign-item:hover .campaign-delete, .campaign-item.active .campaign-delete { opacity: 1; }
+.campaign-delete:hover { background: #fff; color: var(--red); }
+.step-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #6e56e8; background: #f1efff; border: 1px solid #dcd7ff;
+  border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 800; margin-right: 8px;
+}
+.campaign-workspace-head {
+  height: 48px; border-bottom: 1px solid #edf0f4; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 22px; background: #fff;
+}
+.campaign-date { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #30323a; }
+.campaign-actions { display: flex; align-items: center; gap: 8px; }
+.campaign-action-mini { border: none; background: transparent; color: #6b7280; font-size: 12px; font-family: inherit; cursor: pointer; }
+.campaign-next { background: #6f5bff; color: #fff; border: 0; border-radius: 4px; padding: 7px 15px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.campaign-body-grid { display: grid; grid-template-columns: 1fr; }
+.campaign-shell.setup-mode .campaign-body-grid { display: none; }
+.campaign-finder-view { display: none; min-height: calc(100vh - 104px); background: #fff; }
+.campaign-finder-view.active { display: block; }
+.campaign-setup-view { display: none; min-height: calc(100vh - 104px); background: #fff; }
+.campaign-setup-view.active { display: block; }
+.finder-header {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:18px 22px; border-bottom:1px solid #edf0f4;
+}
+.finder-title { font-size:16px; font-weight:900; color:#111827; }
+.finder-sub { color:#8b909b; font-size:12px; margin-top:3px; }
+.finder-stats { display:flex; align-items:center; gap:8px; }
+.finder-table-head, .finder-row {
+  display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 82px 92px 96px 96px 92px;
+  gap:10px; align-items:center;
+}
+.finder-table-head {
+  padding:10px 22px; background:#fafafa; border-bottom:1px solid #edf0f4;
+  color:#6b7280; font-size:11px; font-weight:900;
+}
+.finder-row { padding:12px 22px; border-bottom:1px solid #f0f1f4; font-size:12px; }
+.finder-row:hover { background:#fafaff; }
+.finder-list { max-height: calc(100vh - 210px); overflow:auto; }
+.campaign-step-row {
+  display: grid; grid-template-columns: 220px 1fr; border-bottom: 1px solid #f0f1f4; min-height: 260px;
+}
+.campaign-step-aside { padding: 22px; border-right: 1px solid #f0f1f4; background: #fff; }
+.campaign-step-main { padding: 0; min-width: 0; }
+.campaign-step-title { font-size: 12px; font-weight: 800; color: #2d2f36; margin-bottom: 4px; }
+.campaign-step-copy { font-size: 11px; color: #8b909b; line-height: 1.5; }
+.campaign-load-option {
+  display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid #f0f1f4;
+  font-size: 12px; color: #4b5563; font-weight: 700;
+}
+.campaign-load-icon { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; color:#6e56e8; }
+.campaign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.candidate-picker {
+  border: 0; border-radius: 0; overflow: hidden; background: var(--surface);
+  max-height: 310px; overflow-y: auto;
+}
+.candidate-row {
+  display: grid; grid-template-columns: 24px minmax(180px, 1fr) 220px 28px; gap: 8px; align-items: center;
+  padding: 9px 18px; border-bottom: 1px solid #f0f1f4; min-height: 42px;
+}
+.candidate-row:last-child { border-bottom: none; }
+.candidate-row:hover { background: #fafaff; }
+.candidate-row input { width: 14px; height: 14px; accent-color: #6e56e8; }
+.campaign-email-input {
+  width: 100%; border: 1px solid #e4e7ec; border-radius: 4px; padding: 6px 9px;
+  font-size: 12px; color: #374151; background: #fff;
+}
+.finder-email-input {
+  height: 31px; background: #fbfbfc; color: #374151;
+}
+.finder-send-methods {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+}
+.method-option {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #4b5563; font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.method-dot {
+  width: 10px; height: 10px; border-radius: 50%; border: 1px solid #cfd4dc; background: #fff;
+  box-shadow: inset 0 0 0 2px #fff; flex-shrink: 0;
+}
+.method-option.is-on .method-dot { background: #6f5bff; border-color: #6f5bff; }
+.method-option.is-muted { color: #b0b5be; }
+.method-option.is-muted .method-dot { background: #eef0f4; border-color: #d8dce3; }
+.method-status {
+  max-width: 72px; overflow: hidden; text-overflow: ellipsis;
+}
+.campaign-setup-layout {
+  display: grid; grid-template-columns: minmax(340px, 1fr) 320px; min-height: calc(100vh - 170px);
+}
+.campaign-setup-form { padding: 22px; border-right: 1px solid #f0f1f4; }
+.campaign-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 18px; }
+.campaign-type-card {
+  border: 1px solid #e4e7ec; background: #fff; border-radius: 6px; padding: 12px;
+  font-family: inherit; text-align: left; cursor: pointer; color: var(--text);
+}
+.campaign-type-card strong { display: block; font-size: 13px; margin-bottom: 4px; }
+.campaign-type-card span { color: #8b909b; font-size: 11px; line-height: 1.4; }
+.campaign-type-card.active { border-color: #b8a6ff; background: #f3f0ff; color: #6e56e8; }
+.campaign-setup-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.template-tools { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; justify-content: flex-end; }
+.campaign-template-grid { display: grid; grid-template-columns: minmax(340px, 1fr) 320px; gap: 0; min-height: 410px; }
+.campaign-template-form { padding: 22px; border-right: 1px solid #f0f1f4; }
+.campaign-template-preview { padding: 22px; background: #fbfbfc; }
+.phone-preview {
+  width: 230px; margin: 22px auto 0; background: #fff;
+  border: 9px solid #eee; border-radius: 35px; min-height: 390px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.06); padding: 48px 14px 18px; position: relative;
+}
+.phone-preview::before {
+  content: ""; position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  width: 82px; height: 8px; border-radius: 99px; background: #d6d3cd;
+}
+.message-bubble {
+  background: #f4f4f5; border-radius: 12px; padding: 13px; font-size: 12px; line-height: 1.65;
+  white-space: pre-wrap; color: var(--text); word-break: break-word;
+}
+.campaign-history-tabs {
+  display: flex; align-items: center; gap: 20px; height: 46px; padding: 0 22px; border-bottom: 1px solid #edf0f4;
+}
+.campaign-history-tab { border: 0; background: transparent; height: 46px; font-family: inherit; font-size: 12px; font-weight: 800; color: #6b7280; cursor: pointer; }
+.campaign-history-tab.active { color: #111827; border-bottom: 2px solid #6e56e8; }
+.campaign-info-strip {
+  display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid #edf0f4; min-height: 112px;
+}
+.campaign-info-block { padding: 20px 22px; }
+.campaign-info-label { font-size: 12px; font-weight: 800; color: #2d2f36; margin-bottom: 14px; }
+.campaign-info-muted { font-size: 11px; color: #a0a5af; margin-bottom: 4px; }
+.campaign-info-value { font-size: 13px; font-weight: 800; color: #2d2f36; margin-bottom: 13px; }
+.campaign-history-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid #edf0f4; }
+.campaign-history-stat { padding: 18px 22px; border-right: 1px solid #f0f1f4; }
+.campaign-history-stat:last-child { border-right: 0; }
+.campaign-history-stat small { display:block; color:#8b909b; font-size:11px; margin-bottom:6px; }
+.campaign-history-stat strong { font-size:20px; color:#111827; }
+.campaign-table-head, .recipient-card {
+  display: grid; grid-template-columns: minmax(130px,1fr) minmax(150px,1.2fr) 90px 80px 80px;
+  align-items: center; gap: 10px;
+}
+.campaign-table-head { padding: 10px 22px; background: #fafafa; border-bottom: 1px solid #edf0f4; color: #6b7280; font-size: 11px; font-weight: 800; }
+.recipient-list { display: grid; gap: 0; max-height: 320px; overflow-y: auto; }
+.recipient-card {
+  background: var(--surface); border: 0; border-bottom: 1px solid #f0f1f4; border-radius: 0;
+  padding: 12px 22px; font-size: 12px;
+}
+.recipient-head { display: contents; }
+.campaign-thread-head { height: 40px; padding: 0 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #edf0f4; font-size:12px; font-weight:800; }
+.message-log { display: grid; gap: 12px; padding: 16px; overflow-y: auto; flex: 1; background:#fff; align-content:start; }
+.message-log-item { border-left: 4px solid #e5e7eb; padding: 14px 16px; background: #fff; border-radius: 0; font-size: 12px; color: var(--text2); box-shadow: 0 0 0 1px #eef0f3; }
+.message-log-item.sent { border-left-color: var(--blue); }
+.message-log-item.received { border-left-color: var(--green); }
+.workspace-logo { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; margin-bottom:16px; }
+.workspace-mark { width:18px; height:18px; border-radius:4px; background:#b8a6ff; color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; }
+.side-search { width:100%; border:1px solid #e5e7eb; border-radius:4px; padding:8px 9px; font-size:12px; margin-bottom:14px; }
+.side-menu-title { color:#a0a5af; font-size:10px; font-weight:800; margin:18px 0 8px; }
+.side-menu-item { display:flex; align-items:center; gap:8px; width:100%; border:0; background:transparent; border-radius:4px; padding:8px 9px; font-family:inherit; font-size:12px; font-weight:700; color:#4b5563; text-align:left; }
+.side-menu-item.active { background:#f0edff; color:#6e56e8; }
 @media (max-width: 720px) {
   .nav { padding: 0 12px; }
   .page { padding: 16px; }
@@ -291,6 +533,11 @@ tbody tr:hover { background: var(--pink-light); }
   td, th { padding: 10px; }
   .edit-grid-2 { grid-template-columns: 1fr; }
   .engagement-row { display: grid; grid-template-columns: 1fr; }
+  #page-campaign { padding: 0; }
+  .campaign-shell { grid-template-columns: 1fr; }
+  .campaign-side, .campaign-main { border-right: none; border-bottom: 1px solid var(--border); }
+  .campaign-grid, .campaign-step-row, .campaign-template-grid, .campaign-setup-layout, .campaign-info-strip, .campaign-history-stats { grid-template-columns: 1fr; }
+  .campaign-table-head, .recipient-card, .candidate-row { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -303,6 +550,7 @@ tbody tr:hover { background: var(--pink-light); }
     </div>
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="showPage('list')">📋 전체보기</button>
+      <button class="tab-btn" onclick="showPage('campaign')">✉️ 캠페인</button>
       <button class="tab-btn" onclick="showPage('add')">＋ 추가하기</button>
     </div>
     <div style="display:flex;align-items:center;gap:0;">
@@ -312,24 +560,42 @@ tbody tr:hover { background: var(--pink-light); }
   </nav>
 
   <div class="page active" id="page-list">
-    <div class="setup-banner" id="setup-banner">Supabase 환경변수 또는 접근 코드가 필요합니다. 우측 상단 상태와 접근 설정을 확인하세요.</div>
+    <div class="setup-banner" id="setup-banner">Supabase 환경변수가 필요합니다. 로컬 설정을 확인하세요.</div>
     <div class="member-tabs">
       <button class="member-tab active" data-assignee-tab="kim-unchecked" onclick="setAssigneeTab('kim-unchecked')">김시은 할당</button>
-      <button class="member-tab" data-assignee-tab="kim-db" onclick="setAssigneeTab('kim-db')">김시은 DB</button>
+      <button class="member-tab" data-assignee-tab="kim-db" onclick="setAssigneeTab('kim-db')">김시은 발송DB</button>
       <button class="member-tab" data-assignee-tab="kim-wait" onclick="setAssigneeTab('kim-wait')">김시은 보류</button>
-      <button class="member-tab" data-assignee-tab="kim-sent" onclick="setAssigneeTab('kim-sent')">김시은 발송완료</button>
       <button class="member-tab" data-assignee-tab="kim-excluded" onclick="setAssigneeTab('kim-excluded')">김시은 제외</button>
+      <button class="member-tab" data-assignee-tab="kim-dm-sent" onclick="setAssigneeTab('kim-dm-sent')">김시은 DM 발송완료</button>
+      <button class="member-tab" data-assignee-tab="kim-dm-reply" onclick="setAssigneeTab('kim-dm-reply')">김시은 DM 회신</button>
+      <button class="member-tab" data-assignee-tab="kim-email-sent" onclick="setAssigneeTab('kim-email-sent')">김시은 이메일 발송완료</button>
+      <button class="member-tab" data-assignee-tab="kim-email-reply" onclick="setAssigneeTab('kim-email-reply')">김시은 이메일 회신</button>
+      <button class="member-tab" data-assignee-tab="kim-email-no-reply" onclick="setAssigneeTab('kim-email-no-reply')">김시은 미회신</button>
       <button class="member-tab" data-assignee-tab="park-unchecked" onclick="setAssigneeTab('park-unchecked')">박민서 할당</button>
-      <button class="member-tab" data-assignee-tab="park-db" onclick="setAssigneeTab('park-db')">박민서 DB</button>
+      <button class="member-tab" data-assignee-tab="park-db" onclick="setAssigneeTab('park-db')">박민서 발송DB</button>
       <button class="member-tab" data-assignee-tab="park-wait" onclick="setAssigneeTab('park-wait')">박민서 보류</button>
-      <button class="member-tab" data-assignee-tab="park-sent" onclick="setAssigneeTab('park-sent')">박민서 발송완료</button>
       <button class="member-tab" data-assignee-tab="park-excluded" onclick="setAssigneeTab('park-excluded')">박민서 제외</button>
+      <button class="member-tab" data-assignee-tab="park-dm-sent" onclick="setAssigneeTab('park-dm-sent')">박민서 DM 발송완료</button>
+      <button class="member-tab" data-assignee-tab="park-dm-reply" onclick="setAssigneeTab('park-dm-reply')">박민서 DM 회신</button>
+      <button class="member-tab" data-assignee-tab="park-email-sent" onclick="setAssigneeTab('park-email-sent')">박민서 이메일 발송완료</button>
+      <button class="member-tab" data-assignee-tab="park-email-reply" onclick="setAssigneeTab('park-email-reply')">박민서 이메일 회신</button>
+      <button class="member-tab" data-assignee-tab="park-email-no-reply" onclick="setAssigneeTab('park-email-no-reply')">박민서 미회신</button>
+    </div>
+    <div class="workflow-hint">
+      <div>
+        <div class="workflow-title" id="workflow-title">김시은 할당</div>
+        <div class="workflow-copy" id="workflow-copy">미확인이고 아직 DM을 보내지 않은 인플루언서입니다.</div>
+      </div>
+      <div class="workflow-pill" id="workflow-pill">검토 시작</div>
     </div>
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">전체</div><div class="stat-val" id="s-total">0</div><div class="stat-sub">인플루언서</div></div>
-      <div class="stat-card"><div class="stat-label">평균 ER</div><div class="stat-val" id="s-er">—</div><div class="stat-sub">인게이지먼트율</div></div>
-      <div class="stat-card"><div class="stat-label">할당완료</div><div class="stat-val" id="s-assigned">0</div><div class="stat-sub">명</div></div>
-      <div class="stat-card"><div class="stat-label">DM 발송완료</div><div class="stat-val" id="s-sent">0</div><div class="stat-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-total-label">현재 탭</div><div class="stat-val" id="s-total">0</div><div class="stat-sub" id="s-total-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-assigned-label">메일 있음</div><div class="stat-val" id="s-assigned">0</div><div class="stat-sub" id="s-assigned-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-sendable-label">검토 좋음</div><div class="stat-val" id="s-sendable">0</div><div class="stat-sub" id="s-sendable-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-dm-sent-label">DM 발송완료</div><div class="stat-val" id="s-dm-sent">0</div><div class="stat-sub" id="s-dm-sent-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-dm-reply-label">DM 회신</div><div class="stat-val" id="s-dm-reply">0</div><div class="stat-sub" id="s-dm-reply-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-email-sent-label">이메일 발송완료</div><div class="stat-val" id="s-email-sent">0</div><div class="stat-sub" id="s-email-sent-sub">명</div></div>
+      <div class="stat-card"><div class="stat-label" id="s-email-reply-label">이메일 회신</div><div class="stat-val" id="s-email-reply">0</div><div class="stat-sub" id="s-email-reply-sub">명</div></div>
     </div>
 
     <div class="toolbar">
@@ -338,9 +604,10 @@ tbody tr:hover { background: var(--pink-light); }
         <input type="text" class="search-input" id="q" placeholder="인스타그램 URL, 닉네임 또는 핸들(@), 해시태그, 메모 검색…" />
       </div>
       <select class="filter-select" id="dm_status"></select>
+      <select class="filter-select" id="email_status"></select>
       <select class="filter-select" id="review_status"></select>
       <select class="filter-select" id="assignee"></select>
-      <button class="action-btn" onclick="openIdentity()">이름 / 코드 변경</button>
+      <button class="action-btn" onclick="openIdentity()">이름 변경</button>
     </div>
 
     <div class="table-wrap">
@@ -353,8 +620,11 @@ tbody tr:hover { background: var(--pink-light); }
             <th>팔로워</th>
             <th>ER(%)</th>
             <th>카테고리</th>
+            <th>해시태그</th>
+            <th>메일</th>
             <th>담당자</th>
-            <th>컨택상태</th>
+            <th>DM</th>
+            <th>이메일</th>
             <th>마지막 액션</th>
             <th></th>
           </tr>
@@ -397,8 +667,12 @@ tbody tr:hover { background: var(--pink-light); }
       <div class="form-section">
         <div class="form-section-title">컨택 & 관리</div>
         <div class="form-row triple" style="margin-bottom:12px;">
-          <div class="field"><label>컨택 상태</label><select id="f-dm-status"></select></div>
+          <div class="field"><label>DM 상태</label><select id="f-dm-status"></select></div>
+          <div class="field"><label>이메일 상태</label><select id="f-email-status"></select></div>
           <div class="field"><label>검토 상태</label><select id="f-review-status"></select></div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field"><label>프로필 이메일</label><input type="email" id="f-profile-email" placeholder="예) hello@example.com" /></div>
           <div class="field"><label>담당자</label><input type="text" id="f-assignee" placeholder="예) 팀원A" /></div>
         </div>
         <div class="form-row solo">
@@ -411,6 +685,207 @@ tbody tr:hover { background: var(--pink-light); }
       </div>
     </div>
   </div>
+
+  <div class="page" id="page-campaign">
+    <p class="section-title">DM/이메일 발송</p>
+    <p class="section-sub">이메일 있는 인플루언서를 캠페인에 담고, 변수 제안서를 Gmail로 발송한 뒤 회신까지 확인합니다.</p>
+    <div class="campaign-shell">
+      <aside class="campaign-side">
+        <div class="workspace-logo"><span class="workspace-mark">피</span><span id="workspace-title">피처링 워크스페이스</span></div>
+        <input class="side-search" id="campaign-q" placeholder="계정 및 채널 검색" />
+        <div class="side-menu-title">인플루언서</div>
+        <button class="side-menu-item" data-campaign-mode-btn="find" onclick="setCampaignMode('find')">◎ 인플루언서 찾기</button>
+        <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="setCampaignMode('manage')">☷ 인플루언서 관리</button>
+        <button class="side-menu-item" data-campaign-mode-btn="excluded" onclick="setCampaignMode('excluded')">⊘ 제외 DB</button>
+        <button class="side-menu-item">♕ 인플루언서 랭킹</button>
+        <button class="side-menu-item">✦ AI 리스트업</button>
+        <div class="side-menu-title">캠페인</div>
+        <button class="side-menu-item">▱ 캠페인 관리</button>
+        <button class="side-menu-item">✉ 메시지 관리</button>
+        <button class="side-menu-item active" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">▷ DM/이메일 발송</button>
+        <div class="campaign-top">
+          <div>
+            <div class="campaign-title">캠페인</div>
+            <div class="handle"><span id="campaign-owner-label">담당자</span> · <span id="campaign-count">0개</span></div>
+          </div>
+          <button class="action-btn" onclick="openCampaignSetup()">새 캠페인</button>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>캠페인명</label>
+          <input id="campaign-name" placeholder="예) 6월 앰플 협찬 캠페인" />
+        </div>
+        <div class="campaign-list" id="campaign-list"></div>
+      </aside>
+      <main class="campaign-main">
+        <div class="campaign-workspace-head">
+          <div class="campaign-date"><span id="campaign-date-title">2025-01-10</span><span>✎</span></div>
+          <div class="campaign-actions">
+            <button class="campaign-action-mini" onclick="saveCampaignTemplate()">↻ 자동 저장</button>
+            <button class="campaign-action-mini" onclick="showPage('list')">나가기</button>
+            <button class="campaign-next" onclick="sendSelectedCampaign()">다음</button>
+          </div>
+        </div>
+        <div class="campaign-finder-view" id="campaign-finder-view">
+          <div class="finder-header">
+            <div>
+              <div class="finder-title">인플루언서 찾기</div>
+              <div class="finder-sub" id="finder-sub">크롤링해서 DB에 들어온 인플루언서 명단입니다.</div>
+            </div>
+            <div class="finder-stats">
+              <button class="action-btn" onclick="loadFinderCandidates()">새로고침</button>
+              <span class="status-badge s-call" id="finder-count">0명</span>
+            </div>
+          </div>
+          <div class="finder-table-head">
+            <span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>담당자</span><span>액션</span>
+          </div>
+          <div class="finder-list" id="finder-list"></div>
+        </div>
+        <div class="campaign-setup-view" id="campaign-setup-view">
+          <div class="finder-header">
+            <div>
+              <div class="finder-title">새 캠페인 설정</div>
+              <div class="finder-sub">캠페인 목적에 따라 제목과 제안서 템플릿을 먼저 고릅니다.</div>
+            </div>
+            <button class="action-btn" onclick="setCampaignMode('send')">닫기</button>
+          </div>
+          <div class="campaign-setup-layout">
+            <div class="campaign-setup-form">
+              <div class="field" style="margin-bottom:16px;">
+                <label>캠페인명 *</label>
+                <input id="setup-campaign-name" placeholder="예) 초기전략 캠페인" oninput="renderCampaignSetupPreview()" />
+              </div>
+              <div class="field">
+                <label>캠페인 유형</label>
+                <div class="campaign-type-grid" id="campaign-type-grid"></div>
+              </div>
+              <div class="template-tools" style="justify-content:flex-start;">
+                <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{account}}')">계정명</button>
+                <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{name}}')">이름</button>
+                <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{email}}')">이메일</button>
+                <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{profile_url}}')">프로필</button>
+              </div>
+              <div class="field" style="margin-bottom:14px;">
+                <label>제목 *</label>
+                <textarea id="setup-campaign-subject" style="min-height:58px;" oninput="renderCampaignSetupPreview()"></textarea>
+              </div>
+              <div class="field">
+                <label>내용 *</label>
+                <textarea id="setup-campaign-body" style="min-height:220px;" oninput="renderCampaignSetupPreview()"></textarea>
+              </div>
+              <div class="campaign-setup-actions">
+                <button class="btn btn-ghost" onclick="setCampaignMode('send')">취소</button>
+                <button class="btn btn-primary" id="create-campaign-btn" onclick="createCampaignFromSetup()">캠페인 생성</button>
+              </div>
+            </div>
+            <div class="campaign-template-preview">
+              <div class="campaign-title">템플릿 미리보기</div>
+              <div class="phone-preview">
+                <div class="handle" style="margin-bottom:8px;" id="setup-preview-subject">제목 미리보기</div>
+                <div class="message-bubble" id="setup-preview-body">유형을 선택하면 템플릿이 표시됩니다.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="campaign-body-grid">
+          <div class="campaign-step-row">
+            <div class="campaign-step-aside">
+              <div><span class="step-label">STEP 1</span><span class="campaign-step-title">수신인 추가</span></div>
+              <div class="campaign-step-copy">체크한 인플루언서만 캠페인 수신인으로 담깁니다. 아직 발송되지는 않습니다.</div>
+              <div style="height:22px;"></div>
+              <div class="campaign-load-option"><span class="campaign-load-icon">☷</span>그룹/캠페인 불러오기</div>
+              <div class="campaign-load-option"><span class="campaign-load-icon">↗</span>계정 링크 일괄 추가하기</div>
+              <button class="action-btn" style="margin-top:18px;" onclick="loadCampaignCandidates()">검색 후 추가하기</button>
+            </div>
+            <div class="campaign-step-main">
+              <div class="campaign-table-head" style="grid-template-columns:24px minmax(180px,1fr) 220px 28px;">
+                <span></span><span>계정</span><span>발송 수단</span><span></span>
+              </div>
+              <div class="candidate-picker" id="campaign-candidates"></div>
+              <div style="padding:12px 18px;border-top:1px solid #f0f1f4;text-align:right;">
+                <button class="btn btn-primary" id="add-recipients-btn" onclick="addSelectedRecipients()">선택한 대상 담기</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="campaign-step-row" style="min-height:440px;">
+            <div class="campaign-step-aside">
+              <div><span class="step-label">STEP 2</span><span class="campaign-step-title">보낼 제안서 세팅</span></div>
+              <div class="campaign-step-copy">계정명은 변수로 추가해 수신인마다 다르게 발송합니다.</div>
+              <div class="template-tools">
+                <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{account}}')">계정명</button>
+                <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{name}}')">이름</button>
+                <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{email}}')">이메일</button>
+                <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{profile_url}}')">프로필</button>
+              </div>
+              <button class="btn btn-primary" id="save-campaign-btn" onclick="saveCampaignTemplate()">제안서 저장</button>
+            </div>
+            <div class="campaign-template-grid">
+              <div class="campaign-template-form">
+                <div class="field" style="margin-bottom:18px;">
+                  <label>제목 *</label>
+                  <textarea id="campaign-subject" style="min-height:58px;" placeholder="[피처링] PDRN 앰플 협찬 캠페인 제안" oninput="renderCampaignPreview()"></textarea>
+                </div>
+                <div class="field">
+                  <label>내용 *</label>
+                  <textarea id="campaign-body" style="min-height:250px;" oninput="renderCampaignPreview()" placeholder="안녕하세요 {{account}}님,&#10;&#10;협업 제안을 드리고 싶어 연락드립니다."></textarea>
+                </div>
+              </div>
+              <div class="campaign-template-preview">
+                <div class="campaign-title">미리보기</div>
+                <div class="handle" style="margin-top:4px;" id="preview-sample-note">샘플 계정으로 변수 치환을 보여줍니다.</div>
+                <div class="phone-preview">
+                  <div class="handle" style="margin-bottom:8px;" id="preview-subject">제목 미리보기</div>
+                  <div class="message-bubble" id="preview-body">내용을 입력하면 미리보기가 표시됩니다.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <section class="campaign-preview">
+        <div class="campaign-thread-head">
+          <span>메일 목록</span>
+          <div style="display:flex;gap:6px;">
+            <button class="action-btn" onclick="syncCampaignReplies()">회신 체크</button>
+            <button class="btn btn-primary" id="send-campaign-btn" onclick="sendSelectedCampaign()">이메일 발송</button>
+          </div>
+        </div>
+        <div class="campaign-info-strip">
+          <div class="campaign-info-block">
+            <div class="campaign-info-label">기본 정보</div>
+            <div class="campaign-info-muted">DM 발송 모드</div>
+            <div class="campaign-info-value">Safe 모드</div>
+            <div class="campaign-info-muted">예상 발송 완료 일시</div>
+            <div class="campaign-info-value" id="campaign-estimated-at">—</div>
+          </div>
+          <div class="campaign-info-block">
+            <div class="campaign-info-label">&nbsp;</div>
+            <div class="campaign-info-muted">발송 시작 일시</div>
+            <div class="campaign-info-value" id="campaign-started-at">—</div>
+            <div class="campaign-info-muted">발송 완료 일시</div>
+            <div class="campaign-info-value" id="campaign-finished-at">—</div>
+          </div>
+          <div class="campaign-info-block">
+            <div class="campaign-info-label">발신 계정</div>
+            <div class="campaign-info-value">✉ <span id="campaign-sender-email">—</span></div>
+          </div>
+        </div>
+        <div class="campaign-history-tabs">
+          <button class="campaign-history-tab active">발송 내역</button>
+          <button class="campaign-history-tab">발송 내용</button>
+        </div>
+        <div class="campaign-history-stats">
+          <div class="campaign-history-stat"><small>전체</small><strong id="c-total">0</strong> <span class="handle">명</span></div>
+          <div class="campaign-history-stat"><small>발송 성공</small><strong id="c-sent">0</strong> <span class="handle">명</span></div>
+          <div class="campaign-history-stat"><small>회신</small><strong id="c-replied">0</strong> <span class="handle">명</span></div>
+        </div>
+        <div class="campaign-table-head"><span>계정</span><span>수신 계정</span><span>발송 상태</span><span>발송 수단</span><span>회신</span></div>
+        <div class="recipient-list" id="recipient-list"></div>
+        <div class="message-log" id="message-log"></div>
+      </section>
+    </div>
+  </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeDrawer(event)">
@@ -421,7 +896,7 @@ tbody tr:hover { background: var(--pink-light); }
         <div class="drawer-handle" id="d-handle">—</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <a class="drawer-edit-btn" id="d-profile" href="#" target="_blank" rel="noopener">Instagram</a>
+        <a class="ig-icon-link" id="d-profile" href="#" target="_blank" rel="noopener" aria-label="Instagram 열기"></a>
         <button class="close-btn" onclick="closeDrawerDirect()">✕</button>
       </div>
     </div>
@@ -431,9 +906,12 @@ tbody tr:hover { background: var(--pink-light); }
 
 <div class="auth" id="auth">
   <div class="auth-card">
-    <h3>접근 설정</h3>
-    <p>팀 공용 코드와 이름을 입력하세요. 코드가 없는 로컬 환경이면 이름만 입력해도 됩니다.</p>
-    <div class="field" style="margin-bottom:10px;"><label>TEAM_ACCESS_CODE</label><input id="accessCode" autocomplete="off" /></div>
+    <h3>이름 설정</h3>
+    <p>저장 기록에 남길 이름을 입력하세요.</p>
+    <div class="member-choice-row">
+      <button class="member-choice" onclick="chooseIdentity('김시은')">김시은으로 입장</button>
+      <button class="member-choice" onclick="chooseIdentity('박민서')">박민서로 입장</button>
+    </div>
     <div class="field"><label>이름(기록자)</label><input id="memberName" autocomplete="name" /></div>
     <div class="form-actions" style="padding:14px 0 0;background:transparent;">
       <button class="btn btn-primary" onclick="saveIdentity()">확인</button>
@@ -446,31 +924,124 @@ tbody tr:hover { background: var(--pink-light); }
 <script>
 const REVIEW_STATUSES = ["미확인", "좋음", "보류", "제외", "브랜드전달"];
 const DM_STATUSES = ["미발송", "발송완료", "답장옴", "거절", "보류"];
+const EMAIL_STATUSES = ["미발송", "발송완료", "답장옴", "미회신", "거절", "보류"];
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
 const ASSIGNEE_TABS = {
-  "kim-unchecked": { assignee: "김시은", review_status: "미확인" },
-  "kim-db": { assignee: "김시은", review_status: "좋음" },
-  "kim-wait": { assignee: "김시은", review_status: "보류" },
-  "kim-sent": { assignee: "김시은", dm_status: "발송완료" },
-  "kim-excluded": { assignee: "김시은", review_status: "제외", include_excluded: "1" },
-  "park-unchecked": { assignee: "박민서", review_status: "미확인" },
-  "park-db": { assignee: "박민서", review_status: "좋음" },
-  "park-wait": { assignee: "박민서", review_status: "보류" },
-  "park-sent": { assignee: "박민서", dm_status: "발송완료" },
-  "park-excluded": { assignee: "박민서", review_status: "제외", include_excluded: "1" },
+  "kim-unchecked": { assignee: "김시은", review_status: "미확인", dm_status: "미발송", title: "김시은 할당", copy: "미확인이고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "검토 시작" },
+  "kim-db": { assignee: "김시은", review_status: "좋음", dm_status: "미발송", title: "김시은 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
+  "kim-wait": { assignee: "김시은", review_status: "보류", title: "김시은 보류", copy: "추가 확인이 필요해 잠시 멈춘 인플루언서입니다.", pill: "보류" },
+  "kim-excluded": { assignee: "김시은", review_status: "제외", include_excluded: "1", title: "김시은 제외", copy: "제외 처리되어 일반 DB에서는 빠지는 인플루언서입니다.", pill: "제외 목록" },
+  "kim-dm-sent": { assignee: "김시은", dm_status: "발송완료", dm_status_in: "발송완료,DM발송", include_excluded: "1", title: "김시은 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
+  "kim-dm-reply": { assignee: "김시은", dm_status: "답장옴", include_excluded: "1", title: "김시은 DM 회신", copy: "DM으로 회신이 온 인플루언서입니다.", pill: "DM 회신" },
+  "kim-email-sent": { assignee: "김시은", email_status: "발송완료", include_excluded: "1", title: "김시은 이메일 발송완료", copy: "이메일 발송완료로 저장된 인플루언서입니다.", pill: "이메일 발송" },
+  "kim-email-reply": { assignee: "김시은", email_status: "답장옴", include_excluded: "1", title: "김시은 이메일 회신", copy: "이메일로 회신이 온 인플루언서입니다.", pill: "이메일 회신" },
+  "kim-email-no-reply": { assignee: "김시은", email_status: "미회신", include_excluded: "1", title: "김시은 미회신", copy: "이메일 발송 후 아직 회신이 없는 인플루언서입니다.", pill: "미회신" },
+  "park-unchecked": { assignee: "박민서", review_status: "미확인", dm_status: "미발송", title: "박민서 할당", copy: "미확인이고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "검토 시작" },
+  "park-db": { assignee: "박민서", review_status: "좋음", dm_status: "미발송", title: "박민서 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
+  "park-wait": { assignee: "박민서", review_status: "보류", title: "박민서 보류", copy: "추가 확인이 필요해 잠시 멈춘 인플루언서입니다.", pill: "보류" },
+  "park-excluded": { assignee: "박민서", review_status: "제외", include_excluded: "1", title: "박민서 제외", copy: "제외 처리되어 일반 DB에서는 빠지는 인플루언서입니다.", pill: "제외 목록" },
+  "park-dm-sent": { assignee: "박민서", dm_status: "발송완료", dm_status_in: "발송완료,DM발송", include_excluded: "1", title: "박민서 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
+  "park-dm-reply": { assignee: "박민서", dm_status: "답장옴", include_excluded: "1", title: "박민서 DM 회신", copy: "DM으로 회신이 온 인플루언서입니다.", pill: "DM 회신" },
+  "park-email-sent": { assignee: "박민서", email_status: "발송완료", include_excluded: "1", title: "박민서 이메일 발송완료", copy: "이메일 발송완료로 저장된 인플루언서입니다.", pill: "이메일 발송" },
+  "park-email-reply": { assignee: "박민서", email_status: "답장옴", include_excluded: "1", title: "박민서 이메일 회신", copy: "이메일로 회신이 온 인플루언서입니다.", pill: "이메일 회신" },
+  "park-email-no-reply": { assignee: "박민서", email_status: "미회신", include_excluded: "1", title: "박민서 미회신", copy: "이메일 발송 후 아직 회신이 없는 인플루언서입니다.", pill: "미회신" },
 };
-const state = { candidates: [], stats: null, selected: null, assignees: [], activeAssigneeTab: "kim-unchecked", toastTimer: null };
+const state = {
+  candidates: [],
+  stats: null,
+  selected: null,
+  assignees: [],
+  activeAssigneeTab: "kim-unchecked",
+  toastTimer: null,
+  candidatesCache: new Map(),
+  requestSeq: 0,
+  statsLoaded: false,
+  statsLoading: false,
+  loadingCandidates: false,
+  campaigns: [],
+  selectedCampaign: null,
+  campaignCandidates: [],
+  finderCandidates: [],
+  campaignMode: "send",
+  campaignSetupPreset: "initial",
+};
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const num = (value) => Number(value || 0);
-const idToPayload = (code) => `b64:${btoa(unescape(encodeURIComponent(code || "")))}`;
+const TEAM_MEMBERS = ["김시은", "박민서"];
+const CAMPAIGN_PRESETS = {
+  initial: {
+    label: "초기전략",
+    copy: "처음 협업을 제안하고 반응을 확인합니다.",
+    name: "초기전략 캠페인",
+    subject: "[초기전략] {{account}}님께 협업 제안드립니다",
+    body: "안녕하세요 {{account}}님,\n\n브랜드 협업 제안을 드리고 싶어 연락드립니다.\n계정 분위기와 콘텐츠 결이 잘 맞아 초기 파트너 후보로 검토하고 있습니다.\n\n관심 있으시면 회신 부탁드립니다.\n감사합니다.",
+  },
+  collab: {
+    label: "협찬 제안",
+    copy: "제품 협찬과 콘텐츠 업로드를 제안합니다.",
+    name: "협찬 제안 캠페인",
+    subject: "[협찬 제안] {{account}}님께 제안드립니다",
+    body: "안녕하세요 {{account}}님,\n\n제품 협찬 캠페인을 제안드리고 싶어 연락드립니다.\n콘텐츠 방향과 일정이 맞으시면 자세한 조건을 전달드리겠습니다.\n\n확인 후 회신 부탁드립니다.\n감사합니다.",
+  },
+  seeding: {
+    label: "제품 시딩",
+    copy: "가벼운 제품 체험과 후기 가능성을 확인합니다.",
+    name: "제품 시딩 캠페인",
+    subject: "[제품 시딩] {{account}}님께 제품 체험 제안드립니다",
+    body: "안녕하세요 {{account}}님,\n\n신제품 체험을 제안드리고 싶어 연락드립니다.\n제품을 먼저 보내드린 뒤 사용감이 잘 맞으시면 콘텐츠 협업까지 논의하고 싶습니다.\n\n가능 여부 회신 주시면 감사하겠습니다.",
+  },
+  groupbuy: {
+    label: "공동구매",
+    copy: "판매형 협업 가능성과 조건을 확인합니다.",
+    name: "공동구매 제안 캠페인",
+    subject: "[공동구매 제안] {{account}}님과 판매 협업을 논의하고 싶습니다",
+    body: "안녕하세요 {{account}}님,\n\n공동구매 또는 판매형 협업을 제안드리고 싶어 연락드립니다.\n계정의 팔로워 반응과 제품 핏이 좋아 보여 조건이 맞는지 먼저 확인하고 싶습니다.\n\n관심 있으시면 회신 부탁드립니다.",
+  },
+  review: {
+    label: "후기 요청",
+    copy: "체험 후 리뷰 콘텐츠를 요청합니다.",
+    name: "후기 요청 캠페인",
+    subject: "[리뷰 요청] {{account}}님께 콘텐츠 협업 문의드립니다",
+    body: "안녕하세요 {{account}}님,\n\n제품 체험 후 리뷰 콘텐츠 협업이 가능하실지 문의드립니다.\n진행 가능하시면 일정과 가이드를 전달드리겠습니다.\n\n검토 후 회신 부탁드립니다.\n감사합니다.",
+  },
+};
 
 function identity() {
-  return { code: localStorage.getItem("team_access_code") || "", name: localStorage.getItem("team_member_name") || "" };
+  return { name: localStorage.getItem("team_member_name") || "" };
 }
-function headers() {
-  const code = identity().code || "";
-  return { "x-team-access-code": idToPayload(code) };
+function normalizeTeamMember(value) {
+  const name = String(value || "").trim();
+  return TEAM_MEMBERS.find((member) => name.includes(member)) || "";
+}
+function campaignOwner() {
+  const saved = normalizeTeamMember(identity().name);
+  if (saved) return saved;
+  const tab = ASSIGNEE_TABS[state.activeAssigneeTab] || {};
+  return normalizeTeamMember(tab.assignee) || "김시은";
+}
+function visibleCampaigns() {
+  const owner = campaignOwner();
+  return state.campaigns.filter((campaign) => campaign.created_by === owner);
+}
+function setIdentityName(name) {
+  localStorage.setItem("team_member_name", name);
+  const prefix = name === "박민서" ? "park" : "kim";
+  if (!state.activeAssigneeTab.startsWith(prefix)) state.activeAssigneeTab = `${prefix}-unchecked`;
+  state.selectedCampaign = null;
+  state.campaignCandidates = [];
+  renderCampaignOwnerUi();
+}
+function chooseIdentity(name) {
+  $("memberName").value = name;
+  saveIdentity();
+}
+function renderCampaignOwnerUi() {
+  const owner = campaignOwner();
+  if ($("workspace-title")) $("workspace-title").textContent = `${owner} 워크스페이스`;
+  if ($("campaign-owner-label")) $("campaign-owner-label").textContent = owner;
+  if ($("campaign-q")) $("campaign-q").placeholder = `${owner} 계정 및 채널 검색`;
+  if ($("finder-sub")) $("finder-sub").textContent = `${owner} 담당으로 들어온 크롤링 인플루언서 명단입니다.`;
 }
 function toast(message) {
   const el = $("toast");
@@ -480,7 +1051,7 @@ function toast(message) {
   state.toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
 }
 async function api(path, options = {}) {
-  const response = await fetch(path, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+  const response = await fetch(path, { ...options, headers: { ...(options.headers || {}) } });
   const text = await response.text();
   const contentType = (response.headers.get("content-type") || "").toLowerCase();
   if (!response.ok) {
@@ -501,12 +1072,32 @@ function showPage(name) {
   document.querySelectorAll(".page").forEach((page) => page.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach((button) => button.classList.remove("active"));
   $(`page-${name}`).classList.add("active");
-  document.querySelectorAll(".tab-btn")[name === "list" ? 0 : 1].classList.add("active");
+  const pageOrder = ["list", "campaign", "add"];
+  document.querySelectorAll(".tab-btn")[pageOrder.indexOf(name) || 0].classList.add("active");
+  if (name === "campaign") {
+    const owner = normalizeTeamMember(identity().name);
+    if (!owner) openIdentity();
+    initCampaignPage();
+  }
 }
 function setAssigneeTab(name) {
   state.activeAssigneeTab = name;
   document.querySelectorAll(".member-tab").forEach((button) => button.classList.toggle("active", button.dataset.assigneeTab === name));
+  renderWorkflowHint();
   refresh();
+}
+function renderWorkflowHint() {
+  const tab = ASSIGNEE_TABS[state.activeAssigneeTab] || ASSIGNEE_TABS["kim-unchecked"];
+  const assignee = tab.assignee || "담당자";
+  const fallbackTitle = document.querySelector(`[data-assignee-tab="${state.activeAssigneeTab}"]`)?.textContent || "분류 기준";
+  const statusParts = [
+    tab.review_status ? `검토 ${tab.review_status}` : "",
+    tab.dm_status ? `DM ${tab.dm_status}` : "",
+    tab.email_status ? `이메일 ${tab.email_status}` : "",
+  ].filter(Boolean);
+  $("workflow-title").textContent = tab.title || fallbackTitle;
+  $("workflow-copy").textContent = tab.copy || `${assignee} 담당 중 ${statusParts.join(", ") || "선택한 기준"}에 맞는 인플루언서입니다.`;
+  $("workflow-pill").textContent = tab.pill || statusParts.join(" · ") || "분류 기준";
 }
 function fillSelect(id, allLabel, values) {
   $(id).innerHTML = `<option value="">${esc(allLabel)}</option>` + values.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`).join("");
@@ -521,11 +1112,40 @@ function formatDate(value) {
 }
 function profileUrl(row) {
   if (row.profile_url) return row.profile_url;
-  const handle = (row.seller_id || row.seller_name || "").replace(/^@/, "");
+  const handle = (row.seller_id || row.account || row.seller_name || "").replace(/^@/, "");
   return handle ? `https://www.instagram.com/${handle}/` : "#";
 }
 function handle(row) {
-  return (row.seller_id || row.seller_name || "").replace(/^@/, "");
+  return (row.seller_id || row.account || row.seller_name || "").replace(/^@/, "");
+}
+function instagramIcon() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>`;
+}
+function openInstagram(event, url) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (!url || url === "#") return;
+  const next = window.open(url, "_blank", "noopener");
+  if (!next) window.location.href = url;
+}
+function profileLink(row, className = "handle-link", label = "") {
+  const cleanHandle = handle(row);
+  const url = profileUrl(row);
+  if (!cleanHandle) return `<span class="handle">-</span>`;
+  return `<a class="${className}" href="${esc(url)}" target="_blank" rel="noopener" onclick="openInstagram(event, '${esc(url)}')" aria-label="@${esc(cleanHandle)} Instagram 열기">${label || `<span>@${esc(cleanHandle)}</span>`}<span class="ig-icon">${instagramIcon()}</span></a>`;
+}
+function avatar(row, sizeClass = "") {
+  const image = row.profile_image_url;
+  const label = (row.seller_name || row.name || row.account || "?").slice(0, 1).toUpperCase();
+  const fallback = `<span class="avatar avatar-fallback ${esc(sizeClass)}">${esc(label)}</span>`;
+  if (image) return `<img class="avatar ${esc(sizeClass)}" src="${esc(image)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-fallback-label="${esc(label)}" data-fallback-class="${esc(sizeClass)}" onerror="replaceBrokenAvatar(this)" />`;
+  return fallback;
+}
+function replaceBrokenAvatar(img) {
+  const fallback = document.createElement("span");
+  fallback.className = `avatar avatar-fallback ${img.dataset.fallbackClass || ""}`.trim();
+  fallback.textContent = img.dataset.fallbackLabel || "?";
+  img.replaceWith(fallback);
 }
 function erClass(value) {
   const er = num(value);
@@ -537,12 +1157,80 @@ function erClass(value) {
 function dmClass(value) {
   if (value === "발송완료") return "s-dm";
   if (value === "답장옴") return "s-reply";
+  if (value === "미회신") return "s-call";
   if (value === "보류") return "s-wait";
   if (value === "거절" || value === "제외") return "s-exclude";
   return "s-none";
 }
+function hasDmContact(row) {
+  const value = String(row.dm_available || row.dm_status || "").trim();
+  return !["", "없음", "불가", "비공개", "제외"].includes(value);
+}
+function sendMethodCell(row) {
+  const hasEmail = Boolean(String(row.profile_email || "").trim());
+  const dmSent = ["발송완료", "DM발송", "답장옴"].includes(row.dm_status);
+  const dmOn = hasDmContact(row) || dmSent;
+  const dmTitle = row.dm_available ? `DM ${row.dm_available}` : "DM 가능 여부";
+  const emailTitle = hasEmail ? `이메일 있음: ${row.profile_email}` : "이메일 없음";
+  return `
+    <div class="finder-send-methods">
+      <span class="method-option ${dmOn ? "is-on" : "is-muted"}" title="${esc(dmTitle)}"><span class="method-dot"></span><span class="method-status">DM</span></span>
+      <span class="method-option ${hasEmail ? "is-on" : "is-muted"}" title="${esc(emailTitle)}"><span class="method-dot"></span><span>이메일</span></span>
+    </div>
+  `;
+}
+function isSentComplete(row) {
+  return ["발송완료", "DM발송", "답장옴"].includes(row.dm_status) || ["발송완료", "답장옴"].includes(row.email_status);
+}
+async function moveSentRowsToManage(rows) {
+  const owner = campaignOwner();
+  const targets = rows.filter((row) => row.id && isSentComplete(row) && row.review_status !== "좋음");
+  if (!targets.length) return;
+  try {
+    await Promise.all(targets.map((row) => api(`/api/candidates/${row.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        actor: owner,
+        assignee: row.assignee || owner,
+        review_status: "좋음",
+      }),
+    })));
+    state.candidatesCache.clear();
+    toast(`발송완료 ${targets.length.toLocaleString()}명을 인플루언서 관리로 옮겼어요.`);
+  } catch (error) {
+    toast(error.message);
+  }
+}
 function splitTags(value) {
   return String(value || "").split("|").map((item) => item.trim()).filter(Boolean);
+}
+function combinedTags(row) {
+  const tags = [
+    ...splitTags(row.matched_hashtags),
+    ...splitTags(row.prospect_signal_tags),
+    ...splitTags(row.beauty_anchor_tags),
+    ...splitTags(row.commercial_signal_tags),
+    ...splitTags(row.format_signal_tags),
+  ];
+  const seen = new Set();
+  return tags.filter((tag) => {
+    const key = tag.replace(/^#/, "").toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function renderTag(tag) {
+  const clean = String(tag || "").trim();
+  return `<span class="tag">${esc(clean.startsWith("#") ? clean : `#${clean}`)}</span>`;
+}
+function renderTagPreview(row, limit = 3) {
+  const tags = combinedTags(row);
+  if (!tags.length) return `<span class="handle">—</span>`;
+  const shown = tags.slice(0, limit).map(renderTag).join("");
+  const more = tags.length > limit ? `<span class="tag-more">+${tags.length - limit}</span>` : "";
+  return `<div class="tag-list" title="${esc(tags.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(" "))}">${shown}${more}</div>`;
 }
 function calcER() {
   const followers = num($("f-followers").value);
@@ -563,42 +1251,77 @@ function syncProfileUrl() {
 }
 function openIdentity() {
   const saved = identity();
-  $("accessCode").value = saved.code;
   $("memberName").value = saved.name;
   $("auth").classList.add("open");
 }
 function saveIdentity() {
   const name = $("memberName").value.trim();
-  localStorage.setItem("team_access_code", $("accessCode").value.trim());
-  localStorage.setItem("team_member_name", name);
+  setIdentityName(normalizeTeamMember(name) || name);
   $("auth").classList.remove("open");
+  document.querySelectorAll(".member-tab").forEach((button) => button.classList.toggle("active", button.dataset.assigneeTab === state.activeAssigneeTab));
+  renderWorkflowHint();
+  if ($("page-campaign").classList.contains("active")) {
+    state.campaigns = [];
+    initCampaignPage();
+  }
   refresh();
 }
 function renderStats() {
-  const total = state.candidates.length;
-  const assigned = state.candidates.filter((row) => row.assignee).length;
-  const sent = state.candidates.filter((row) => row.dm_status === "발송완료").length;
-  const erRows = state.candidates.filter((row) => num(row.engagement_rate) > 0);
-  const avgEr = erRows.length ? erRows.reduce((sum, row) => sum + num(row.engagement_rate), 0) / erRows.length : 0;
-  $("s-total").textContent = total.toLocaleString();
-  $("s-er").textContent = avgEr ? `${avgEr.toFixed(2)}%` : "—";
-  $("s-assigned").textContent = assigned.toLocaleString();
-  $("s-sent").textContent = sent.toLocaleString();
-  $("nav-count").textContent = `${total.toLocaleString()}명 등록`;
+  const stats = state.stats || {};
+  const tab = ASSIGNEE_TABS[state.activeAssigneeTab] || ASSIGNEE_TABS["kim-unchecked"];
+  const rows = state.candidates;
+  const count = (predicate) => rows.filter(predicate).length;
+  const tabMatches = (key, value) => tab[key] === value || String(tab[`${key}_in`] || "").split(",").map((item) => item.trim()).includes(value);
+  const scopedCount = (key, value, predicate) => tabMatches(key, value) ? rows.length : count(predicate);
+  const setStat = (id, label, value, sub = "명") => {
+    $(`${id}-label`).textContent = label;
+    $(id).textContent = num(value).toLocaleString();
+    $(`${id}-sub`).textContent = sub;
+  };
+  setStat("s-total", tab.title || "현재 탭", rows.length, "현재 조회");
+  setStat("s-assigned", "메일 있음", count((row) => row.profile_email), "현재 탭");
+  setStat("s-sendable", "검토 좋음", tab.review_status === "좋음" ? rows.length : count((row) => row.review_status === "좋음"), "현재 탭");
+  setStat("s-dm-sent", "DM 발송완료", scopedCount("dm_status", "발송완료", (row) => row.dm_status === "발송완료" || row.dm_status === "DM발송"), "현재 탭");
+  setStat("s-dm-reply", "DM 회신", scopedCount("dm_status", "답장옴", (row) => row.dm_status === "답장옴"), "현재 탭");
+  setStat("s-email-sent", "이메일 발송완료", scopedCount("email_status", "발송완료", (row) => row.email_status === "발송완료"), "현재 탭");
+  setStat("s-email-reply", "이메일 회신", scopedCount("email_status", "답장옴", (row) => row.email_status === "답장옴"), "현재 탭");
+  $("nav-count").textContent = `${num(stats.total || state.candidates.length).toLocaleString()}명 등록`;
+}
+function renderLoadingStats() {
+  const tab = ASSIGNEE_TABS[state.activeAssigneeTab] || ASSIGNEE_TABS["kim-unchecked"];
+  [
+    ["s-total", tab.title || "현재 탭"],
+    ["s-assigned", "메일 있음"],
+    ["s-sendable", "검토 좋음"],
+    ["s-dm-sent", "DM 발송완료"],
+    ["s-dm-reply", "DM 회신"],
+    ["s-email-sent", "이메일 발송완료"],
+    ["s-email-reply", "이메일 회신"],
+  ].forEach(([id, label]) => {
+    $(`${id}-label`).textContent = label;
+    $(id).textContent = "…";
+    $(`${id}-sub`).textContent = "불러오는 중";
+  });
 }
 function renderTable() {
   const tbody = $("table-body");
-  $("empty-state").style.display = state.candidates.length ? "none" : "block";
+  const empty = $("empty-state");
+  empty.querySelector("p").textContent = state.loadingCandidates ? "불러오는 중이에요" : "조회된 인플루언서가 없어요";
+  empty.querySelector("small").textContent = state.loadingCandidates ? "잠시만 기다려주세요" : "검색어나 필터를 조정해보세요";
+  empty.style.display = state.candidates.length ? "none" : "block";
   tbody.innerHTML = state.candidates.map((row, index) => `
     <tr onclick="openDrawer(${row.id})">
       <td>${index + 1}</td>
-      <td><strong>${esc(row.seller_name || "-")}</strong><div class="handle">${esc(row.grade || "")}</div></td>
-      <td class="handle">@${esc(handle(row) || "-")}</td>
+      <td><div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div class="handle">${esc(row.grade || "")}</div></div></div></td>
+      <td>${profileLink(row)}</td>
       <td class="followers-cell">${num(row.follower_count).toLocaleString()}</td>
       <td><span class="er-badge ${erClass(row.engagement_rate)}">${num(row.engagement_rate) ? num(row.engagement_rate).toFixed(2) : "—"}</span></td>
       <td>${esc(row.category || "-")}</td>
+      <td>${renderTagPreview(row)}</td>
+      <td>${row.profile_email ? `<a class="handle" href="mailto:${esc(row.profile_email)}" onclick="event.stopPropagation();">${esc(row.profile_email)}</a>` : `<span class="handle">—</span>`}</td>
       <td>${row.assignee ? `<span class="status-badge s-done">${esc(row.assignee)}</span>` : `<span class="status-badge s-none">미할당</span>`}</td>
       <td><span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span></td>
+      <td><span class="status-badge ${dmClass(row.email_status)}">${esc(row.email_status || "미발송")}</span></td>
       <td class="handle">${formatDate(row.status_updated_at || row.updated_at)}</td>
       <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${row.id})">보기</button></td>
     </tr>
@@ -606,22 +1329,34 @@ function renderTable() {
 }
 function renderDrawer(row) {
   $("d-name").textContent = row.seller_name || "—";
-  $("d-handle").textContent = `@${handle(row) || "—"}`;
+  $("d-handle").innerHTML = profileLink(row);
   $("d-profile").href = profileUrl(row);
-  const tags = splitTags(row.matched_hashtags).map((tag) => `<span class="tag">${esc(tag)}</span>`).join("");
+  $("d-profile").onclick = (event) => openInstagram(event, profileUrl(row));
+  $("d-profile").innerHTML = instagramIcon();
+  $("d-profile").setAttribute("aria-label", `${handle(row) || "profile"} Instagram 열기`);
+  const tags = combinedTags(row).map(renderTag).join("");
+  const personas = splitTags(row.prospect_personas).map((item) => `<span class="status-badge s-call">${esc(item)}</span>`).join(" ");
+  const prospectKeywords = splitTags(row.matched_prospect_keywords).slice(0, 12).map(renderTag).join("");
   const postLinks = splitTags(row.engagement_posts || row.sample_post_urls).slice(0, 6).map((url, i) => `<a class="action-btn" href="${esc(url)}" target="_blank" rel="noopener">post ${i + 1}</a>`).join(" ");
   $("drawer-body").innerHTML = `
     <div class="detail-section">
       <div class="detail-section-title">PROFILE</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div></div></div>
       <div class="detail-row"><div class="detail-key">팔로워</div><div class="detail-val">${num(row.follower_count).toLocaleString()}</div></div>
       <div class="detail-row"><div class="detail-key">평균 좋아요</div><div class="detail-val">${num(row.avg_likes).toLocaleString()}</div></div>
       <div class="detail-row"><div class="detail-key">평균 댓글</div><div class="detail-val">${num(row.avg_comments).toLocaleString()}</div></div>
       <div class="detail-row"><div class="detail-key">ER</div><div class="detail-val">${num(row.engagement_rate) ? num(row.engagement_rate).toFixed(4) + "%" : "—"}</div></div>
+      <div class="detail-row"><div class="detail-key">프로필 메일</div><div class="detail-val">${row.profile_email ? `<a href="mailto:${esc(row.profile_email)}">${esc(row.profile_email)}</a>` : "<span class='status-badge s-wait'>메일 없음</span>"}</div></div>
+      <div class="detail-row"><div class="detail-key">마지막 이메일</div><div class="detail-val">${formatDate(row.last_emailed_at)}</div></div>
+      <div class="detail-row"><div class="detail-key">마지막 회신</div><div class="detail-val">${formatDate(row.last_replied_at)}</div></div>
       <div class="detail-row"><div class="detail-key">최근 수집</div><div class="detail-val">${formatDate(row.last_engagement_refresh_at)}</div></div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">TAGS & POSTS</div>
+      <div class="detail-row"><div class="detail-key">욕망 점수</div><div class="detail-val">${num(row.prospect_score).toLocaleString()}${row.prospect_noise_score ? ` <span class="handle">noise ${num(row.prospect_noise_score)}</span>` : ""}</div></div>
+      <div class="detail-row"><div class="detail-key">페르소나</div><div class="detail-val">${personas || "<span class='handle'>-</span>"}</div></div>
       <div style="margin-bottom:10px;">${tags || "<span class='handle'>해시태그 없음</span>"}</div>
+      ${prospectKeywords ? `<div style="margin-bottom:10px;">${prospectKeywords}</div>` : ""}
       <div style="display:flex;gap:6px;flex-wrap:wrap;">${postLinks}</div>
     </div>
     <div class="detail-section">
@@ -632,7 +1367,8 @@ function renderDrawer(row) {
     <div class="detail-section">
       <div class="detail-section-title">EDIT</div>
       <div class="edit-grid-2">
-        <div class="edit-field"><label>컨택 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${row.dm_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+        <div class="edit-field"><label>DM 상태</label><select id="edit_dm_status">${DM_STATUSES.map((item) => `<option ${row.dm_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+        <div class="edit-field"><label>이메일 상태</label><select id="edit_email_status">${EMAIL_STATUSES.map((item) => `<option ${row.email_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
         <div class="edit-field"><label>검토 상태</label><select id="edit_review_status">${REVIEW_STATUSES.map((item) => `<option ${row.review_status === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
         <div class="edit-field"><label>브랜드 적합도</label><select id="edit_brand_fit">${BRAND_FITS.map((item) => `<option value="${esc(item)}" ${row.brand_fit === item ? "selected" : ""}>${esc(item || "선택")}</option>`).join("")}</select></div>
         <div class="edit-field"><label>담당자</label><input id="edit_assignee" value="${esc(row.assignee || identity().name)}" list="assigneeList" /></div>
@@ -665,6 +1401,7 @@ async function saveSelected() {
   const payload = {
     actor,
     dm_status: $("edit_dm_status").value,
+    email_status: $("edit_email_status").value,
     review_status: $("edit_review_status").value,
     brand_fit: $("edit_brand_fit").value,
     assignee: $("edit_assignee").value.trim(),
@@ -673,13 +1410,35 @@ async function saveSelected() {
   $("saveBtn").disabled = true;
   try {
     await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    state.candidatesCache.clear();
     toast("저장 완료");
+    if (payload.email_status === "답장옴" || payload.dm_status === "답장옴" || payload.email_status === "발송완료" || payload.dm_status === "발송완료" || payload.review_status === "좋음") {
+      const ownerPrefix = payload.assignee === "박민서" ? "park" : payload.assignee === "김시은" ? "kim" : "";
+      const nextTab = !ownerPrefix
+        ? state.activeAssigneeTab
+        : payload.email_status === "답장옴"
+          ? `${ownerPrefix}-email-reply`
+          : payload.dm_status === "답장옴"
+            ? `${ownerPrefix}-dm-reply`
+            : payload.email_status === "발송완료"
+              ? `${ownerPrefix}-email-sent`
+              : payload.dm_status === "발송완료"
+                ? `${ownerPrefix}-dm-sent`
+                : `${ownerPrefix}-db`;
+      state.activeAssigneeTab = nextTab;
+      document.querySelectorAll(".member-tab").forEach((button) => button.classList.toggle("active", button.dataset.assigneeTab === nextTab));
+      renderWorkflowHint();
+    }
     await refresh();
     const next = state.candidates.find((row) => row.id === state.selected.id);
-    if (next) { state.selected = next; renderDrawer(next); }
+    if (next) {
+      state.selected = next;
+      renderDrawer(next);
+    } else {
+      closeDrawerDirect();
+    }
   } catch (error) {
     toast(error.message);
-    if (String(error.message).includes("접근")) openIdentity();
   } finally {
     $("saveBtn").disabled = false;
   }
@@ -697,18 +1456,18 @@ async function excludeSelected() {
   $("excludeBtn").disabled = true;
   try {
     await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    state.candidatesCache.clear();
     toast("제외 처리 완료");
     closeDrawerDirect();
     await refresh();
   } catch (error) {
     toast(error.message);
-    if (String(error.message).includes("접근")) openIdentity();
   } finally {
     $("excludeBtn").disabled = false;
   }
 }
 function clearForm() {
-  ["f-nickname", "f-handle", "f-profile-url", "f-category", "f-followers", "f-likes", "f-comments", "f-er", "f-assignee", "f-note"].forEach((id) => $(id).value = "");
+  ["f-nickname", "f-handle", "f-profile-url", "f-profile-email", "f-category", "f-followers", "f-likes", "f-comments", "f-er", "f-assignee", "f-note"].forEach((id) => $(id).value = "");
   calcER();
 }
 async function saveInfluencer() {
@@ -718,12 +1477,14 @@ async function saveInfluencer() {
     seller_name: $("f-nickname").value.trim() || $("f-handle").value.trim(),
     seller_id: $("f-handle").value.trim(),
     profile_url: $("f-profile-url").value.trim(),
+    profile_email: $("f-profile-email").value.trim(),
     category: $("f-category").value.trim(),
     follower_count: $("f-followers").value,
     avg_likes: $("f-likes").value,
     avg_comments: $("f-comments").value,
     engagement_rate: er,
     dm_status: $("f-dm-status").value,
+    email_status: $("f-email-status").value,
     review_status: $("f-review-status").value,
     assignee: $("f-assignee").value.trim(),
     notes: $("f-note").value,
@@ -732,29 +1493,451 @@ async function saveInfluencer() {
   $("save-new-btn").disabled = true;
   try {
     await api("/api/candidates", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    state.candidatesCache.clear();
     toast("저장 완료");
     clearForm();
     showPage("list");
     await refresh();
   } catch (error) {
     toast(error.message);
-    if (String(error.message).includes("접근")) openIdentity();
   } finally {
     $("save-new-btn").disabled = false;
   }
 }
+function campaignStatusLabel(value) {
+  const labels = {
+    pending: "발송 대기",
+    sent: "발송완료",
+    replied: "답장옴",
+    error: "오류",
+    skipped_missing_email: "메일 없음",
+  };
+  return labels[value] || value || "대기";
+}
+function campaignStatusClass(value) {
+  if (value === "sent") return "s-dm";
+  if (value === "replied") return "s-reply";
+  if (value === "error") return "s-exclude";
+  if (value === "skipped_missing_email") return "s-wait";
+  return "s-none";
+}
+function selectedCampaignId() {
+  return state.selectedCampaign?.id;
+}
+function setCampaignMode(mode) {
+  state.campaignMode = mode;
+  const listMode = mode === "find" || mode === "manage" || mode === "excluded";
+  const setupMode = mode === "setup";
+  document.querySelector(".campaign-shell")?.classList.toggle("finder-mode", listMode);
+  document.querySelector(".campaign-shell")?.classList.toggle("setup-mode", setupMode);
+  $("campaign-finder-view")?.classList.toggle("active", listMode);
+  $("campaign-setup-view")?.classList.toggle("active", setupMode);
+  document.querySelectorAll("[data-campaign-mode-btn]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.campaignModeBtn === mode);
+  });
+  if (listMode) loadFinderCandidates();
+  if (setupMode) renderCampaignSetup();
+}
+async function loadFinderCandidates() {
+  renderCampaignOwnerUi();
+  const params = new URLSearchParams();
+  const query = $("campaign-q")?.value?.trim();
+  if (query) params.set("q", query);
+  try {
+    if (state.campaignMode === "excluded") {
+      params.set("assignee", campaignOwner());
+      state.finderCandidates = await api(`/api/excluded?${params.toString()}`);
+    } else {
+      params.set("assignee", campaignOwner());
+      params.set("include_excluded", "1");
+      if (state.campaignMode === "manage") params.set("review_status", "좋음");
+      const rows = await api(`/api/candidates?${params.toString()}`);
+      if (state.campaignMode === "find") {
+        const movedRows = rows.filter((row) => isSentComplete(row));
+        state.finderCandidates = rows.filter((row) => row.review_status !== "좋음" && !isSentComplete(row));
+        moveSentRowsToManage(movedRows);
+      } else {
+        state.finderCandidates = rows;
+      }
+    }
+    renderFinderCandidates();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+function renderFinderCandidates() {
+  const rows = state.finderCandidates || [];
+  const isManage = state.campaignMode === "manage";
+  const isExcluded = state.campaignMode === "excluded";
+  $("finder-count").textContent = `${rows.length.toLocaleString()}명`;
+  $("finder-sub").textContent = isManage
+    ? `${campaignOwner()} 담당 크롤링 명단 중 검토 좋음으로 분류된 인플루언서입니다.`
+    : isExcluded
+      ? `크롤링 제외 DB와 검토 제외 처리된 인플루언서입니다.`
+    : `${campaignOwner()} 담당으로 들어온 크롤링 인플루언서 명단입니다.`;
+  $("finder-list").innerHTML = rows.length ? rows.map((row, index) => `
+    <div class="finder-row">
+      <span class="handle">${index + 1}</span>
+      <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div></div></div>
+      ${sendMethodCell(row)}
+      <input class="campaign-email-input finder-email-input" value="${esc(row.profile_email || "")}" placeholder="이메일 없음" readonly />
+      <span class="status-badge ${row.review_status === "좋음" ? "s-reply" : row.review_status === "제외" ? "s-exclude" : "s-none"}">${esc(row.review_status || "미확인")}</span>
+      <span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span>
+      <span class="status-badge ${dmClass(row.email_status)}">${esc(row.email_status || "미발송")}</span>
+      <span class="status-badge s-call">${esc(row.assignee || (row.is_excluded_handle ? "크롤링 제외" : "미할당"))}</span>
+      ${isExcluded ? `<span class="handle">${esc(row.excluded_reason || row.excluded_source || "제외")}</span>` : `<button class="action-btn" onclick="setCampaignMode('send'); setTimeout(loadCampaignCandidates, 0);">발송에 담기</button>`}
+    </div>
+  `).join("") : `<div class="empty-state" style="display:block;"><p>${esc(isExcluded ? "제외 DB" : campaignOwner())} ${isExcluded ? "가 없습니다" : isManage ? "좋음 명단이 없습니다" : "담당 크롤링 명단이 없습니다"}</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 상태를 좋음으로 바꾸면 이곳에 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
+}
+function renderVariable(template, row) {
+  const context = {
+    account: row.account || handle(row) || row.seller_name || "",
+    name: row.name || row.seller_name || row.account || "",
+    email: row.email || row.profile_email || "",
+    profile_url: row.profile_url || profileUrl(row),
+  };
+  return String(template || "").replace(/\{\{\s*(account|name|email|profile_url)\s*\}\}/g, (_, key) => context[key] || "");
+}
+async function initCampaignPage() {
+  renderCampaignOwnerUi();
+  setCampaignMode(state.campaignMode || "send");
+  if (!state.campaigns.length) await loadCampaigns();
+  if (!state.campaignCandidates.length) await loadCampaignCandidates();
+  renderCampaignPreview();
+}
+async function loadCampaigns() {
+  try {
+    state.campaigns = await api("/api/campaigns");
+    const campaigns = visibleCampaigns();
+    $("campaign-count").textContent = `${campaigns.length.toLocaleString()}개`;
+    const selectedVisible = campaigns.some((campaign) => Number(campaign.id) === Number(selectedCampaignId()));
+    if ((!state.selectedCampaign || !selectedVisible) && campaigns.length) {
+      await selectCampaign(campaigns[0].id);
+    } else {
+      if (!selectedVisible) state.selectedCampaign = null;
+      renderCampaignList();
+      renderCampaignDetail();
+    }
+  } catch (error) {
+    toast(error.message);
+  }
+}
+function renderCampaignList() {
+  const list = $("campaign-list");
+  const campaigns = visibleCampaigns();
+  $("campaign-count").textContent = `${campaigns.length.toLocaleString()}개`;
+  if (!campaigns.length) {
+    list.innerHTML = `<div class="handle">${esc(campaignOwner())} 캠페인이 아직 없습니다.</div>`;
+    return;
+  }
+  list.innerHTML = campaigns.map((campaign) => `
+    <div class="campaign-item ${selectedCampaignId() === campaign.id ? "active" : ""}" onclick="selectCampaign(${campaign.id})">
+      <div class="campaign-item-main">
+        <strong>${esc(campaign.name)}</strong>
+        <span>${num(campaign.counts?.total).toLocaleString()}명 · 발송 ${num(campaign.counts?.sent).toLocaleString()} · 회신 ${num(campaign.counts?.replied).toLocaleString()}</span>
+      </div>
+      <button class="campaign-delete" onclick="deleteSelectedCampaign(event, ${campaign.id})" title="캠페인 삭제">삭제</button>
+    </div>
+  `).join("");
+}
+function setupCampaignDefaultName(preset) {
+  const owner = campaignOwner();
+  const date = new Date().toISOString().slice(0, 10);
+  return `${date} ${owner} ${preset.name}`;
+}
+function renderCampaignSetup() {
+  const preset = CAMPAIGN_PRESETS[state.campaignSetupPreset] || CAMPAIGN_PRESETS.initial;
+  $("campaign-type-grid").innerHTML = Object.entries(CAMPAIGN_PRESETS).map(([key, item]) => `
+    <button class="campaign-type-card ${key === state.campaignSetupPreset ? "active" : ""}" onclick="selectCampaignPreset('${key}')">
+      <strong>${esc(item.label)}</strong>
+      <span>${esc(item.copy)}</span>
+    </button>
+  `).join("");
+  if (!$("setup-campaign-name").value.trim()) $("setup-campaign-name").value = setupCampaignDefaultName(preset);
+  if (!$("setup-campaign-subject").value.trim()) $("setup-campaign-subject").value = preset.subject;
+  if (!$("setup-campaign-body").value.trim()) $("setup-campaign-body").value = preset.body;
+  renderCampaignSetupPreview();
+}
+function openCampaignSetup() {
+  const preset = CAMPAIGN_PRESETS[state.campaignSetupPreset] || CAMPAIGN_PRESETS.initial;
+  $("setup-campaign-name").value = setupCampaignDefaultName(preset);
+  $("setup-campaign-subject").value = preset.subject;
+  $("setup-campaign-body").value = preset.body;
+  setCampaignMode("setup");
+}
+function selectCampaignPreset(key) {
+  const preset = CAMPAIGN_PRESETS[key] || CAMPAIGN_PRESETS.initial;
+  state.campaignSetupPreset = key;
+  $("setup-campaign-name").value = setupCampaignDefaultName(preset);
+  $("setup-campaign-subject").value = preset.subject;
+  $("setup-campaign-body").value = preset.body;
+  renderCampaignSetup();
+}
+function renderCampaignSetupPreview() {
+  const sample = state.campaignCandidates?.[0] || {};
+  if ($("setup-preview-subject")) $("setup-preview-subject").textContent = renderVariable($("setup-campaign-subject")?.value || "", sample) || "제목 미리보기";
+  if ($("setup-preview-body")) $("setup-preview-body").textContent = renderVariable($("setup-campaign-body")?.value || "", sample) || "유형을 선택하면 템플릿이 표시됩니다.";
+}
+function createNewCampaign() {
+  openCampaignSetup();
+}
+async function createCampaignFromSetup() {
+  const owner = campaignOwner();
+  const preset = CAMPAIGN_PRESETS[state.campaignSetupPreset] || CAMPAIGN_PRESETS.initial;
+  const name = $("setup-campaign-name").value.trim() || setupCampaignDefaultName(preset);
+  const subject = $("setup-campaign-subject").value.trim() || preset.subject;
+  const body = $("setup-campaign-body").value.trim() || preset.body;
+  $("create-campaign-btn").disabled = true;
+  try {
+    const created = await api("/api/campaigns", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        actor: owner,
+        name,
+        subject_template: subject,
+        body_template: body,
+      }),
+    });
+    const row = Array.isArray(created) ? created[0] : created;
+    state.campaigns = [];
+    state.selectedCampaign = null;
+    await loadCampaigns();
+    if (row?.id) await selectCampaign(row.id);
+    setCampaignMode("send");
+    toast("캠페인 생성 완료");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    $("create-campaign-btn").disabled = false;
+  }
+}
+async function deleteSelectedCampaign(event, id) {
+  event?.stopPropagation();
+  const campaign = state.campaigns.find((row) => Number(row.id) === Number(id)) || state.selectedCampaign;
+  const name = campaign?.name || "캠페인";
+  if (!confirm(`'${name}' 캠페인을 삭제할까요?`)) return;
+  try {
+    await api(`/api/campaigns/${id}`, { method: "DELETE" });
+    state.campaigns = state.campaigns.filter((row) => Number(row.id) !== Number(id));
+    if (Number(selectedCampaignId()) === Number(id)) state.selectedCampaign = null;
+    const next = visibleCampaigns()[0];
+    if (next?.id) {
+      await selectCampaign(next.id);
+    } else {
+      $("campaign-name").value = "";
+      renderCampaignList();
+      renderCampaignDetail();
+      renderCampaignPreview();
+    }
+    toast("캠페인 삭제 완료");
+  } catch (error) {
+    toast(error.message);
+  }
+}
+async function selectCampaign(id) {
+  try {
+    state.selectedCampaign = await api(`/api/campaigns/${id}`);
+    $("campaign-name").value = state.selectedCampaign.name || "";
+    $("campaign-subject").value = state.selectedCampaign.subject_template || "";
+    $("campaign-body").value = state.selectedCampaign.body_template || "";
+    renderCampaignList();
+    renderCampaignDetail();
+    renderCampaignPreview();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+function renderCampaignDetail() {
+  const campaign = state.selectedCampaign;
+  const counts = campaign?.counts || {};
+  $("c-total").textContent = num(counts.total).toLocaleString();
+  $("c-sent").textContent = num(counts.sent).toLocaleString();
+  $("c-replied").textContent = num(counts.replied).toLocaleString();
+  $("campaign-date-title").textContent = campaign?.name || `${campaignOwner()} 캠페인`;
+  $("campaign-sender-email").textContent = campaign?.sender_email || "Gmail 설정 필요";
+  $("campaign-started-at").textContent = formatDate(campaign?.last_sent_at);
+  $("campaign-finished-at").textContent = formatDate(campaign?.last_sent_at);
+  $("campaign-estimated-at").textContent = campaign?.recipients?.length ? formatDate(campaign.last_sent_at || campaign.updated_at) : "—";
+  const recipients = campaign?.recipients || [];
+  $("recipient-list").innerHTML = recipients.length ? recipients.map((row) => `
+    <div class="recipient-card">
+      <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.account || row.name || "-")}</strong><div>${profileLink(row)}</div><div class="handle">${esc(row.name || "")}</div></div></div>
+      <span class="handle">${esc(row.email || "메일 없음")}</span>
+      <span class="status-badge ${campaignStatusClass(row.send_status)}">${esc(campaignStatusLabel(row.send_status))}</span>
+      <span class="handle">이메일</span>
+      <span class="status-badge ${row.replied ? "s-reply" : "s-none"}">${row.replied ? "회신" : "미회신"}</span>
+    </div>
+  `).join("") : `<div class="handle">수신인을 캠페인에 담으면 이곳에서 발송 상태를 확인할 수 있습니다.</div>`;
+  const messages = campaign?.messages || [];
+  $("message-log").innerHTML = messages.length ? messages.slice(-12).reverse().map((message) => `
+    <div class="message-log-item ${esc(message.direction)}">
+      <strong>${message.direction === "sent" ? "발송" : "회신"}</strong> · ${esc(formatDate(message.message_at))}
+      <div>${esc(message.subject || "")}</div>
+      <div class="handle">${esc(message.body_snippet || "")}</div>
+    </div>
+  `).join("") : "";
+}
+async function saveCampaignTemplate() {
+  const id = selectedCampaignId();
+  if (!id) { toast("먼저 캠페인을 생성하세요."); return; }
+  $("save-campaign-btn").disabled = true;
+  try {
+    state.selectedCampaign = await api(`/api/campaigns/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: $("campaign-name").value.trim() || state.selectedCampaign.name,
+        subject_template: $("campaign-subject").value,
+        body_template: $("campaign-body").value,
+      }),
+    });
+    state.campaigns = [];
+    await loadCampaigns();
+    await selectCampaign(id);
+    toast("제안서 저장 완료");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    $("save-campaign-btn").disabled = false;
+  }
+}
+function insertTemplateVar(id, value) {
+  const el = $(id);
+  const start = el.selectionStart || el.value.length;
+  const end = el.selectionEnd || el.value.length;
+  el.value = `${el.value.slice(0, start)}${value}${el.value.slice(end)}`;
+  el.focus();
+  el.setSelectionRange(start + value.length, start + value.length);
+  renderCampaignPreview();
+  renderCampaignSetupPreview();
+}
+function renderCampaignPreview() {
+  const recipientSample = state.selectedCampaign?.recipients?.[0];
+  const candidateSample = state.campaignCandidates?.[0];
+  const sample = recipientSample || candidateSample || {};
+  const sampleAccount = sample.account || handle(sample) || sample.seller_name || sample.name || "";
+  const sampleSource = recipientSample ? "캠페인 수신인" : candidateSample ? "후보 목록 첫 계정" : "샘플 계정";
+  if ($("preview-sample-note")) {
+    $("preview-sample-note").textContent = sampleAccount
+      ? `미리보기 샘플: ${sampleSource} ${sampleAccount}`
+      : "샘플 계정으로 변수 치환을 보여줍니다.";
+  }
+  $("preview-subject").textContent = renderVariable($("campaign-subject")?.value || "", sample) || "제목 미리보기";
+  $("preview-body").textContent = renderVariable($("campaign-body")?.value || "", sample) || "내용을 입력하면 미리보기가 표시됩니다.";
+}
+async function loadCampaignCandidates() {
+  const params = new URLSearchParams();
+  const owner = campaignOwner();
+  params.set("review_status", "좋음");
+  params.set("assignee", owner);
+  params.set("include_excluded", "1");
+  const query = $("campaign-q")?.value?.trim();
+  if (query) params.set("q", query);
+  try {
+    const rows = await api(`/api/candidates?${params.toString()}`);
+    state.campaignCandidates = rows.filter((row) => !isSentComplete(row));
+    renderCampaignCandidates();
+    renderCampaignPreview();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+function renderCampaignCandidates() {
+  const wrap = $("campaign-candidates");
+  if (!state.campaignCandidates.length) {
+    wrap.innerHTML = `<div class="empty-state" style="display:block;padding:28px 12px;"><p>${esc(campaignOwner())} 발송 대기 후보가 없습니다</p><small>검토 좋음이면서 아직 DM/이메일을 보내지 않은 인플루언서만 표시합니다.</small></div>`;
+    return;
+  }
+  wrap.innerHTML = state.campaignCandidates.map((row) => `
+    <label class="candidate-row">
+      <input type="checkbox" value="${row.id}" data-campaign-candidate />
+      <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div><div class="handle">${esc(row.profile_email || "이메일 미수집")}</div></div></div>
+      <input class="campaign-email-input" value="${esc(row.profile_email || "")}" placeholder="이메일 직접 입력" data-campaign-email="${row.id}" />
+      <span class="handle">×</span>
+    </label>
+  `).join("");
+}
+async function addSelectedRecipients() {
+  const id = selectedCampaignId();
+  if (!id) { toast("먼저 캠페인을 생성하세요."); return; }
+  const candidateIds = [...document.querySelectorAll("[data-campaign-candidate]:checked")].map((input) => Number(input.value));
+  if (!candidateIds.length) { toast("담을 수신인을 선택하세요."); return; }
+  const recipientEmails = Object.fromEntries(candidateIds.map((candidateId) => [
+    candidateId,
+    document.querySelector(`[data-campaign-email="${candidateId}"]`)?.value?.trim() || "",
+  ]));
+  $("add-recipients-btn").disabled = true;
+  try {
+    await saveCampaignTemplate();
+    state.selectedCampaign = await api(`/api/campaigns/${id}/recipients`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ candidate_ids: candidateIds, recipient_emails: recipientEmails }),
+    });
+    renderCampaignDetail();
+    renderCampaignPreview();
+    await loadCampaigns();
+    toast("수신인 추가 완료");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    $("add-recipients-btn").disabled = false;
+  }
+}
+async function sendSelectedCampaign() {
+  const id = selectedCampaignId();
+  if (!id) { toast("먼저 캠페인을 생성하세요."); return; }
+  const recipients = state.selectedCampaign?.recipients || [];
+  const readyCount = recipients.filter((row) => row.email && !["sent", "replied"].includes(row.send_status)).length;
+  if (!readyCount) { toast("발송 가능한 수신인이 없습니다."); return; }
+  if (!confirm(`캠페인 수신인 ${readyCount.toLocaleString()}명에게 이메일을 발송할까요?`)) return;
+  $("send-campaign-btn").disabled = true;
+  try {
+    await saveCampaignTemplate();
+    const result = await api(`/api/campaigns/${id}/send`, { method: "POST" });
+    state.selectedCampaign = result.campaign;
+    renderCampaignDetail();
+    renderCampaignPreview();
+    state.candidatesCache.clear();
+    toast(`발송 ${result.sent}명 · 실패 ${result.failed}명 · 건너뜀 ${result.skipped}명`);
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    $("send-campaign-btn").disabled = false;
+  }
+}
+async function syncCampaignReplies() {
+  const id = selectedCampaignId();
+  if (!id) { toast("먼저 캠페인을 생성하세요."); return; }
+  try {
+    const result = await api(`/api/campaigns/${id}/sync-replies`, { method: "POST" });
+    state.selectedCampaign = result.campaign;
+    renderCampaignDetail();
+    state.candidatesCache.clear();
+    toast(`회신 체크 완료 · ${result.replied}명 업데이트`);
+  } catch (error) {
+    toast(error.message);
+  }
+}
 async function loadStats() {
+  if (state.statsLoaded || state.statsLoading) return;
+  state.statsLoading = true;
   try {
     state.stats = await api("/api/stats");
     state.assignees = state.stats.assignees || [];
     fillSelect("assignee", "담당자 전체", state.assignees);
+    state.statsLoaded = true;
+    renderStats();
   } catch (error) {
     state.stats = null;
+  } finally {
+    state.statsLoading = false;
   }
 }
-async function loadCandidates() {
+function candidateParams() {
   const params = new URLSearchParams();
-  ["q", "dm_status", "review_status", "assignee"].forEach((id) => {
+  ["q", "dm_status", "email_status", "review_status", "assignee"].forEach((id) => {
     const value = $(id).value;
     if (value) params.set(id, value);
   });
@@ -764,13 +1947,41 @@ async function loadCandidates() {
   params.delete("assignee");
   params.delete("review_status");
   params.delete("dm_status");
+  params.delete("email_status");
   params.set("assignee", tab.assignee);
   if (tab.review_status) params.set("review_status", tab.review_status);
   if (tab.dm_status) params.set("dm_status", tab.dm_status);
+  if (tab.dm_status_in) params.set("dm_status_in", tab.dm_status_in);
+  if (tab.email_status) params.set("email_status", tab.email_status);
+  if (tab.email_status_in) params.set("email_status_in", tab.email_status_in);
   if (tab.include_excluded) {
     params.set("include_excluded", tab.include_excluded);
   }
-  state.candidates = await api(`/api/candidates?${params.toString()}`);
+  return params;
+}
+async function loadCandidates() {
+  const seq = ++state.requestSeq;
+  const params = candidateParams();
+  const cacheKey = params.toString();
+  const cached = state.candidatesCache.get(cacheKey);
+
+  if (cached) {
+    state.loadingCandidates = false;
+    state.candidates = cached;
+    renderStats();
+    renderTable();
+  } else {
+    state.loadingCandidates = true;
+    state.candidates = [];
+    renderLoadingStats();
+    renderTable();
+  }
+
+  const rows = await api(`/api/candidates?${cacheKey}`);
+  if (seq !== state.requestSeq) return;
+  state.candidatesCache.set(cacheKey, rows);
+  state.loadingCandidates = false;
+  state.candidates = rows;
   setCloudStatus("Supabase 연결됨", "ok");
   $("setup-banner").style.display = "none";
   renderStats();
@@ -778,22 +1989,29 @@ async function loadCandidates() {
 }
 async function refresh() {
   try {
-    await loadStats();
+    loadStats();
     await loadCandidates();
   } catch (error) {
+    state.loadingCandidates = false;
     setCloudStatus("Supabase 오류", "err");
     $("setup-banner").style.display = "block";
     toast(error.message);
-    if (String(error.message).includes("접근")) openIdentity();
   }
 }
 function bind() {
-  fillSelect("dm_status", "전체 컨택상태", DM_STATUSES);
+  fillSelect("dm_status", "전체 DM상태", DM_STATUSES);
+  fillSelect("email_status", "전체 이메일상태", EMAIL_STATUSES);
   fillSelect("review_status", "전체 검토상태", REVIEW_STATUSES);
   fillPlainSelect("f-dm-status", DM_STATUSES);
+  fillPlainSelect("f-email-status", EMAIL_STATUSES);
   fillPlainSelect("f-review-status", REVIEW_STATUSES);
-  ["q", "dm_status", "review_status", "assignee"].forEach((id) => $(id).addEventListener("input", refresh));
+  ["q", "dm_status", "email_status", "review_status", "assignee"].forEach((id) => $(id).addEventListener("input", refresh));
+  $("campaign-q").addEventListener("input", () => loadCampaignCandidates());
+  $("campaign-q").addEventListener("input", () => {
+    if (state.campaignMode === "find" || state.campaignMode === "manage" || state.campaignMode === "excluded") loadFinderCandidates();
+  });
   if (!identity().name) openIdentity();
+  renderWorkflowHint();
   refresh();
 }
 bind();

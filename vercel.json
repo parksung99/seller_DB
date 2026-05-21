@@ -5,6 +5,9 @@
     { "src": "review_app.html", "use": "@vercel/static" },
     { "src": "api/candidates.js", "use": "@vercel/node" },
     { "src": "api/candidates/[id].js", "use": "@vercel/node" },
+    { "src": "api/excluded.js", "use": "@vercel/node" },
+    { "src": "api/campaigns.js", "use": "@vercel/node" },
+    { "src": "api/campaigns/[id].js", "use": "@vercel/node" },
     { "src": "api/stats.js", "use": "@vercel/node" }
   ],
   "routes": [
@@ -19,6 +22,22 @@
     {
       "src": "/api/candidates/([^/]+)",
       "dest": "/api/candidates/[id].js?id=$1"
+    },
+    {
+      "src": "/api/excluded",
+      "dest": "/api/excluded.js"
+    },
+    {
+      "src": "/api/campaigns",
+      "dest": "/api/campaigns.js"
+    },
+    {
+      "src": "/api/campaigns/([^/]+)/(recipients|send|sync-replies)",
+      "dest": "/api/campaigns/[id].js?id=$1&action=$2"
+    },
+    {
+      "src": "/api/campaigns/([^/]+)",
+      "dest": "/api/campaigns/[id].js?id=$1"
     },
     {
       "src": "/review_app.html",

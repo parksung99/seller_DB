@@ -1,4 +1,4 @@
-import { handleError, sendJson, updateCandidate, verifyAccessCode } from "../../scripts/review_api.mjs";
+import { handleError, sendJson, updateCandidate } from "../../scripts/review_api.mjs";
 
 export default async function handler(request, response) {
   try {
@@ -13,7 +13,6 @@ export default async function handler(request, response) {
         : request.body && typeof request.body === "object"
           ? request.body
           : {};
-    verifyAccessCode(request, body);
     sendJson(response, 200, await updateCandidate(request.query.id, body, body.actor));
   } catch (error) {
     handleError(response, error);

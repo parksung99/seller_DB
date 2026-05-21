@@ -12,6 +12,7 @@ function parseArgs(argv) {
     cookieFile: "",
     requireBeauty: false,
     requireCommercial: false,
+    prospectMode: false,
     refreshLimit: 120,
     maxPosts: 20,
     intervalMs: 8000,
@@ -27,6 +28,7 @@ function parseArgs(argv) {
     else if (arg === "--cookie-file") args.cookieFile = argv[++i] || "";
     else if (arg === "--require-beauty" || arg === "--beauty-only") args.requireBeauty = true;
     else if (arg === "--require-commercial" || arg === "--commercial-only") args.requireCommercial = true;
+    else if (arg === "--prospect-mode") args.prospectMode = true;
     else if (arg === "--refresh-limit") args.refreshLimit = Number(argv[++i]) || args.refreshLimit;
     else if (arg === "--max-posts") args.maxPosts = Number(argv[++i]) || args.maxPosts;
     else if (arg === "--interval-ms") args.intervalMs = Number(argv[++i]) || args.intervalMs;
@@ -68,6 +70,7 @@ function buildCrawlerArgs(args) {
   else if (args.cookie) crawlerArgs.push("--cookie", args.cookie);
   if (args.requireBeauty) crawlerArgs.push("--require-beauty");
   if (args.requireCommercial) crawlerArgs.push("--require-commercial");
+  if (args.prospectMode) crawlerArgs.push("--prospect-mode");
   return crawlerArgs;
 }
 

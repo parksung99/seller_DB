@@ -14,8 +14,12 @@
     "supabase:crawl:import:refresh": "node scripts/crawl_import_refresh.mjs",
     "supabase:dedupe-id": "node scripts/dedupe_seller_id_rows.mjs",
     "engagement:refresh": "node scripts/refresh_engagement_from_instagram.mjs",
+    "profile-emails:refresh": "node scripts/refresh_profile_emails_from_instagram.mjs",
     "assign:candidates": "node scripts/assign_candidates.mjs",
     "review": "node scripts/review_server.mjs",
     "start": "node scripts/review_server.mjs"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
   }
 }

@@ -9,6 +9,7 @@ const ASSIGNEE = "김시은";
 const REVIEW_UNCHECKED = "미확인";
 const DM_UNSENT = "미발송";
 const DM_SENT = "발송완료";
+const EMAIL_UNSENT = "미발송";
 const LEGACY_DM_SENT = "DM발송";
 const SOURCE_FILE = "gugu_firestore_influencers";
 
@@ -109,6 +110,7 @@ function toSupabasePatch(row, now) {
     profile_url: `https://www.instagram.com/${row.handle}/`,
     review_status: REVIEW_UNCHECKED,
     dm_status: sent ? DM_SENT : DM_UNSENT,
+    email_status: EMAIL_UNSENT,
     assignee: ASSIGNEE,
     status_updated_by: ASSIGNEE,
     status_updated_at: now,

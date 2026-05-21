@@ -82,7 +82,7 @@ Open:
 http://localhost:4317
 ```
 
-If `TEAM_ACCESS_CODE` is present in `.env` or environment variables, local API calls require that code. If it is absent, local testing works without a code.
+Local API calls are available without a team access code.
 
 ## 4. Deploy to Vercel
 
@@ -91,7 +91,6 @@ Set these Vercel environment variables:
 ```text
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your Supabase service_role key
-TEAM_ACCESS_CODE=your shared team access code
 ```
 
 Important: `SUPABASE_SERVICE_ROLE_KEY` is used only inside server API routes. It is not embedded in `index.html`.
@@ -109,11 +108,14 @@ This will succeed only if `SUPABASE_ACCESS_TOKEN` is available and valid for Sup
 ## Features
 
 - Search by seller name, hashtags, and memo
-- Filter by grade, review status, DM status, and assignee
+- Filter by grade, review status, DM status, email status, and assignee
 - Open Instagram profile and sample post URLs
-- Save review status, DM status, brand fit, assignee, and team memo
+- Save review status, DM status, email status, brand fit, assignee, and team memo
 - Show last updater and last update time
-- Automatically records contact time when DM status is saved as sent or replied
+- Automatically records DM contact time when DM status is saved as sent or replied
+- Separately tracks email sent, email replied, and no-reply follow-up status
+
+Run `supabase_schema.sql` in the Supabase SQL Editor after pulling this version so existing tables receive `email_status`, `last_emailed_at`, and `last_replied_at`.
 
 ## Engagement refresh
 

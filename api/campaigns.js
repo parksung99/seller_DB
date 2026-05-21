@@ -1,4 +1,4 @@
-import { createCandidate, handleError, listCandidates, sendJson } from "../scripts/review_api.mjs";
+import { createCampaign, handleError, listCampaigns, sendJson } from "../scripts/review_api.mjs";
 
 export default async function handler(request, response) {
   try {
@@ -14,11 +14,10 @@ export default async function handler(request, response) {
           ? request.body
           : {};
     if (request.method === "POST") {
-      sendJson(response, 200, await createCandidate(body, body.actor));
+      sendJson(response, 200, await createCampaign(body, body.actor));
       return;
     }
-    const url = new URL(request.url, `https://${request.headers.host || "localhost"}`);
-    sendJson(response, 200, await listCandidates(url));
+    sendJson(response, 200, await listCampaigns());
   } catch (error) {
     handleError(response, error);
   }
