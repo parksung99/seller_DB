@@ -411,7 +411,7 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-subtabs.active { display:grid; gap:3px; margin:3px 0 8px; }
 .finder-subtab.active { background:#f0edff; color:#6e56e8; }
 .finder-table-head, .finder-row {
-  display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 112px 92px 96px 96px 92px;
+  display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 112px 92px 96px 96px 90px 108px 92px 124px;
   gap:10px; align-items:center;
 }
 .finder-table-head.finder-simple, .finder-row.finder-simple {
@@ -757,10 +757,14 @@ tbody tr:hover { background: var(--pink-light); }
       </div>
       <div class="form-section">
         <div class="form-section-title">컨택 & 관리</div>
-        <div class="form-row triple" style="margin-bottom:12px;">
+        <div class="form-row" style="margin-bottom:12px;">
           <div class="field"><label>DM 상태</label><select id="f-dm-status"></select></div>
           <div class="field"><label>이메일 상태</label><select id="f-email-status"></select></div>
           <div class="field"><label>검토 상태</label><select id="f-review-status"></select></div>
+        </div>
+        <div class="form-row triple" style="margin-bottom:12px;">
+          <div class="field"><label>공구경험</label><select id="f-groupbuy-experience"></select></div>
+          <div class="field"><label>에이전시 여부</label><select id="f-agency-status"></select></div>
         </div>
         <div class="form-row" style="margin-bottom:12px;">
           <div class="field"><label>프로필 이메일</label><input type="email" id="f-profile-email" placeholder="예) hello@example.com" /></div>
@@ -798,6 +802,7 @@ tbody tr:hover { background: var(--pink-light); }
           <button class="finder-subtab" data-manage-tab="replied" onclick="switchCampaignFinderTab('manage', 'replied')">회신완료</button>
           <button class="finder-subtab" data-manage-tab="excluded" onclick="switchCampaignFinderTab('manage', 'excluded')">제외</button>
         </div>
+        <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
         <div class="side-menu-title">캠페인</div>
         <button class="side-menu-item">✉ 메시지 관리</button>
         <button class="side-menu-item active" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">▷ DM/이메일 발송</button>
@@ -813,7 +818,6 @@ tbody tr:hover { background: var(--pink-light); }
           <input id="campaign-name" placeholder="예) 6월 앰플 협찬 캠페인" />
         </div>
         <div class="campaign-list" id="campaign-list"></div>
-        <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
       </aside>
       <main class="campaign-main">
         <div class="campaign-workspace-head">
@@ -836,7 +840,7 @@ tbody tr:hover { background: var(--pink-light); }
             </div>
           </div>
           <div class="finder-table-head" id="finder-table-head">
-            <span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>담당자</span><span>액션</span>
+            <span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>담당자</span><span>액션시간</span><span>액션</span>
           </div>
           <div class="finder-list" id="finder-list"></div>
         </div>
@@ -1664,8 +1668,12 @@ async function excludeSelected() {
   }
 }
 function clearForm() {
-  ["f-nickname", "f-handle", "f-profile-url", "f-profile-email", "f-category", "f-followers", "f-likes", "f-comments", "f-er", "f-assignee", "f-note"].forEach((id) => $(id).value = "");
+  ["f-nickname", "f-handle", "f-profile-url", "f-profile-email", "f-category", "f-followers", "f-likes", "f-comments", "f-er", "f-assignee", "f-note", "f-groupbuy-experience", "f-agency-status"].forEach((id) => {
+    if ($(id)) $(id).value = "";
+  });
   if ($("f-assignee")) $("f-assignee").value = campaignOwner();
+  if ($("f-groupbuy-experience")) $("f-groupbuy-experience").value = "불명";
+  if ($("f-agency-status")) $("f-agency-status").value = "불명";
   calcER();
 }
 async function saveInfluencer() {
@@ -1684,8 +1692,8 @@ async function saveInfluencer() {
     dm_status: $("f-dm-status").value,
     email_status: $("f-email-status").value,
     review_status: $("f-review-status").value,
-    groupbuy_experience: "불명",
-    agency_status: "불명",
+    groupbuy_experience: $("f-groupbuy-experience")?.value || "불명",
+    agency_status: $("f-agency-status")?.value || "불명",
     assignee: $("f-assignee").value.trim() || campaignOwner(),
     notes: $("f-note").value,
   };
@@ -1880,11 +1888,14 @@ function renderFinderCandidates() {
   const isManageSent = isManage && state.campaignManageTab === "sent";
   const isManageReply = isManage && state.campaignManageTab === "replied";
   const isManageRejected = isManage && (state.campaignManageTab === "rejected" || state.campaignManageTab === "excluded");
+  const activeAssignee = campaignOwner();
+  const findStatusLabel = FIND_TABS[state.campaignFindTab]?.label || "미확인";
+  const manageStatusLabel = isManageRejected ? "제외" : isManageReply ? "회신완료" : isManageSent ? "발송완료" : "발송전";
   $("finder-title").textContent = isManage ? "인플루언서 관리" : isExcluded ? "제외" : "인플루언서 찾기";
   $("finder-table-head")?.classList.toggle("finder-simple", isFind);
   $("finder-table-head").innerHTML = isFind
     ? `<span>#</span><span>계정</span><span>팔로워</span><span>검토</span><span>담당자</span>`
-    : `<span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>담당자</span><span>액션</span>`;
+    : `<span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>담당자</span><span>액션시간</span><span>액션</span>`;
   $("find-subtabs")?.classList.toggle("active", isFind);
   $("manage-subtabs")?.classList.toggle("active", isManage);
   document.querySelectorAll("[data-find-tab]").forEach((button) => {
@@ -1901,7 +1912,10 @@ function renderFinderCandidates() {
     : isExcluded
       ? `크롤링 제외와 검토 제외 처리된 인플루언서입니다.`
     : `${campaignOwner()} 담당 ${FIND_TABS[state.campaignFindTab]?.label || "미확인"} 인플루언서입니다. 검토 상태를 선택하면 해당 탭으로 바로 이동합니다.`;
-  $("finder-list").innerHTML = rows.length ? rows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected })).join("") : `<div class="empty-state" style="display:block;"><p>${esc(isExcluded ? "제외" : campaignOwner())} ${isExcluded ? "가 없습니다" : isManage ? `${isManageRejected ? "제외" : isManageReply ? "회신완료" : isManageSent ? "발송완료" : "발송전"} 명단이 없습니다` : "담당 크롤링 명단이 없습니다"}</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송/회신 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
+  const fallbackLabel = isFind ? findStatusLabel : manageStatusLabel;
+  $("finder-list").innerHTML = rows.length
+    ? rows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected })).join("")
+    : `<div class="empty-state" style="display:block;"><p>${esc(activeAssignee)} 담당 ${esc(fallbackLabel)}가 없습니다</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송/회신 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
 }
 function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected }) {
   if (isFind) {
@@ -1924,7 +1938,10 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
       ${finderReviewCell(row, false)}
       ${finderStatusSelect(row, "dm_status", DM_STATUSES)}
       ${finderStatusSelect(row, "email_status", EMAIL_STATUSES)}
+      ${finderStatusSelect(row, "groupbuy_experience", GROUPBUY_EXPERIENCE_VALUES)}
+      ${finderStatusSelect(row, "agency_status", AGENCY_STATUS_VALUES)}
       <span class="status-badge s-call">${esc(row.assignee || (row.is_excluded_handle ? "크롤링 제외" : "미할당"))}</span>
+      <span class="handle">${formatDate(row.status_updated_at || row.updated_at || row.created_at)}</span>
       ${finderActionCell(row, { isExcluded, isManageSent, isManageReply, isManageRejected })}
     </div>
   `;
@@ -2654,6 +2671,8 @@ function bind() {
   fillPlainSelect("f-dm-status", DM_STATUSES);
   fillPlainSelect("f-email-status", EMAIL_STATUSES);
   fillPlainSelect("f-review-status", REVIEW_STATUSES);
+  fillPlainSelect("f-groupbuy-experience", GROUPBUY_EXPERIENCE_VALUES);
+  fillPlainSelect("f-agency-status", AGENCY_STATUS_VALUES);
   ["q", "dm_status", "email_status", "review_status", "assignee"].forEach((id) => $(id).addEventListener("input", refresh));
   $("campaign-q").addEventListener("input", () => loadCampaignCandidates());
   $("campaign-q").addEventListener("input", () => {
