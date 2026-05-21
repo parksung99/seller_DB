@@ -2115,7 +2115,8 @@ async function updateFinderCandidateReview(id, reviewStatus) {
     return;
   }
   if (row.review_status === reviewStatus) return;
-  const nextRow = { ...row, review_status: reviewStatus };
+  const nextAssignee = String((row.assignee || campaignOwner() || "").trim());
+  const nextRow = { ...row, review_status: reviewStatus, assignee: nextAssignee };
   state.finderCandidates = applyReviewStatusToLocalCandidateList(nextRow, reviewStatus);
   renderFinderCandidates();
   syncFinderCandidateInCache(nextRow);
@@ -2125,7 +2126,7 @@ async function updateFinderCandidateReview(id, reviewStatus) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         actor: identity().name || campaignOwner(),
-        assignee: nextRow.assignee || campaignOwner(),
+        assignee: nextAssignee,
         review_status: nextRow.review_status,
         memo: row.memo || row.notes || "",
       }),
