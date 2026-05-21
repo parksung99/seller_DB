@@ -344,10 +344,20 @@ async function queryCandidates(url, options = {}) {
     const rows = await supabaseFetch(`${TABLE}?${apiParams.toString()}`, {
       headers: { accept: "application/json" },
     });
-    const visibleRows = replyComplete ? rows.filter(isReplyCompleteRow) : sentComplete ? rows.filter((row) => isSentCompleteRow(row) && !isReplyCompleteRow(row)) : rows;
-    if (includeExcluded || reviewStatus === "\uC81C\uC678") return visibleRows;
-    const excluded = await listExcludedHandles();
-    return visibleRows.filter((row) => row.review_status !== "\uC81C\uC678" && !excluded.has(normalizeHandleFromRow(row)));
+    const visibleRows = replyComplete
+      ? rows.filter(isReplyCompleteRow)
+      : sentComplete
+        ? rows.filter((row) => isSentCompleteRow(row))
+        : rows;
+
+    const nonExcludedRows = reviewStatus === "\uC81C\uC678" ? visibleRows : visibleRows.filter((row) => row.review_status !== "\uC81C\uC678");
+
+    if (!includeExcluded && reviewStatus !== "\uC81C\uC678") {
+      const excluded = await listExcludedHandles();
+      return nonExcludedRows.filter((row) => !excluded.has(normalizeHandleFromRow(row)));
+    }
+
+    return nonExcludedRows;
   } catch (error) {
     const missing = parseMissingColumn(error);
     if (missing) {
@@ -439,10 +449,15 @@ function toNumberOrNull(value) {
 }
 
 export async function createCandidate(patch, actor) {
-  const sellerId = normalizeSellerId(patch.seller_id || patch.handle || patch.seller_name || patch.profile_url);
+  const sellerId = normalizeSellerId(patch.seller_id || patch.handle || patch.profile_url);
   const sellerName = String(patch.seller_name || sellerId || "").trim().replace(/^@/, "");
   if (!sellerName) {
     const error = new Error("seller_name is required.");
+    error.status = 400;
+    throw error;
+  }
+  if (!sellerId) {
+    const error = new Error("seller_id is required.");
     error.status = 400;
     throw error;
   }
@@ -478,7 +493,7 @@ export async function createCandidate(patch, actor) {
     status_updated_at: now,
   };
 
-  return supabaseFetch(`${TABLE}?on_conflict=seller_name`, {
+  return supabaseFetch(`${TABLE}?on_conflict=seller_id`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
