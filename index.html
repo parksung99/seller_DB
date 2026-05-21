@@ -397,6 +397,14 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-title { font-size:16px; font-weight:900; color:#111827; }
 .finder-sub { color:#8b909b; font-size:12px; margin-top:3px; }
 .finder-stats { display:flex; align-items:center; gap:8px; }
+.finder-subtabs { display:none; gap:6px; padding:0 22px 12px; border-bottom:1px solid #f0f1f4; }
+.finder-subtabs.active { display:flex; }
+.finder-subtab {
+  font-family:inherit; font-size:12px; font-weight:800; cursor:pointer;
+  border:1px solid #e5e7eb; background:#fff; color:#6b7280;
+  border-radius:8px; padding:7px 12px;
+}
+.finder-subtab.active { border-color:#c7bfff; background:#f0edff; color:#6e56e8; }
 .finder-table-head, .finder-row {
   display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 82px 92px 96px 96px 92px;
   gap:10px; align-items:center;
@@ -564,6 +572,7 @@ tbody tr:hover { background: var(--pink-light); }
     <div class="member-tabs">
       <button class="member-tab active" data-assignee-tab="kim-unchecked" onclick="setAssigneeTab('kim-unchecked')">김시은 할당</button>
       <button class="member-tab" data-assignee-tab="kim-db" onclick="setAssigneeTab('kim-db')">김시은 발송DB</button>
+      <button class="member-tab" data-assignee-tab="kim-sent-complete" onclick="setAssigneeTab('kim-sent-complete')">김시은 발송완료</button>
       <button class="member-tab" data-assignee-tab="kim-wait" onclick="setAssigneeTab('kim-wait')">김시은 보류</button>
       <button class="member-tab" data-assignee-tab="kim-excluded" onclick="setAssigneeTab('kim-excluded')">김시은 제외</button>
       <button class="member-tab" data-assignee-tab="kim-dm-sent" onclick="setAssigneeTab('kim-dm-sent')">김시은 DM 발송완료</button>
@@ -573,6 +582,7 @@ tbody tr:hover { background: var(--pink-light); }
       <button class="member-tab" data-assignee-tab="kim-email-no-reply" onclick="setAssigneeTab('kim-email-no-reply')">김시은 미회신</button>
       <button class="member-tab" data-assignee-tab="park-unchecked" onclick="setAssigneeTab('park-unchecked')">박민서 할당</button>
       <button class="member-tab" data-assignee-tab="park-db" onclick="setAssigneeTab('park-db')">박민서 발송DB</button>
+      <button class="member-tab" data-assignee-tab="park-sent-complete" onclick="setAssigneeTab('park-sent-complete')">박민서 발송완료</button>
       <button class="member-tab" data-assignee-tab="park-wait" onclick="setAssigneeTab('park-wait')">박민서 보류</button>
       <button class="member-tab" data-assignee-tab="park-excluded" onclick="setAssigneeTab('park-excluded')">박민서 제외</button>
       <button class="member-tab" data-assignee-tab="park-dm-sent" onclick="setAssigneeTab('park-dm-sent')">박민서 DM 발송완료</button>
@@ -697,10 +707,7 @@ tbody tr:hover { background: var(--pink-light); }
         <button class="side-menu-item" data-campaign-mode-btn="find" onclick="setCampaignMode('find')">◎ 인플루언서 찾기</button>
         <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="setCampaignMode('manage')">☷ 인플루언서 관리</button>
         <button class="side-menu-item" data-campaign-mode-btn="excluded" onclick="setCampaignMode('excluded')">⊘ 제외 DB</button>
-        <button class="side-menu-item">♕ 인플루언서 랭킹</button>
-        <button class="side-menu-item">✦ AI 리스트업</button>
         <div class="side-menu-title">캠페인</div>
-        <button class="side-menu-item">▱ 캠페인 관리</button>
         <button class="side-menu-item">✉ 메시지 관리</button>
         <button class="side-menu-item active" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">▷ DM/이메일 발송</button>
         <div class="campaign-top">
@@ -728,13 +735,17 @@ tbody tr:hover { background: var(--pink-light); }
         <div class="campaign-finder-view" id="campaign-finder-view">
           <div class="finder-header">
             <div>
-              <div class="finder-title">인플루언서 찾기</div>
+              <div class="finder-title" id="finder-title">인플루언서 찾기</div>
               <div class="finder-sub" id="finder-sub">크롤링해서 DB에 들어온 인플루언서 명단입니다.</div>
             </div>
             <div class="finder-stats">
               <button class="action-btn" onclick="loadFinderCandidates()">새로고침</button>
               <span class="status-badge s-call" id="finder-count">0명</span>
             </div>
+          </div>
+          <div class="finder-subtabs" id="manage-subtabs">
+            <button class="finder-subtab active" data-manage-tab="pending" onclick="setCampaignManageTab('pending')">발송전</button>
+            <button class="finder-subtab" data-manage-tab="sent" onclick="setCampaignManageTab('sent')">발송완료</button>
           </div>
           <div class="finder-table-head">
             <span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>담당자</span><span>액션</span>
@@ -929,6 +940,7 @@ const BRAND_FITS = ["", "높음", "중간", "낮음"];
 const ASSIGNEE_TABS = {
   "kim-unchecked": { assignee: "김시은", review_status: "미확인", dm_status: "미발송", title: "김시은 할당", copy: "미확인이고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "검토 시작" },
   "kim-db": { assignee: "김시은", review_status: "좋음", dm_status: "미발송", title: "김시은 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
+  "kim-sent-complete": { assignee: "김시은", sent_complete: "1", include_excluded: "1", title: "김시은 발송완료", copy: "DM 또는 이메일 발송이 완료된 인플루언서입니다.", pill: "발송완료" },
   "kim-wait": { assignee: "김시은", review_status: "보류", title: "김시은 보류", copy: "추가 확인이 필요해 잠시 멈춘 인플루언서입니다.", pill: "보류" },
   "kim-excluded": { assignee: "김시은", review_status: "제외", include_excluded: "1", title: "김시은 제외", copy: "제외 처리되어 일반 DB에서는 빠지는 인플루언서입니다.", pill: "제외 목록" },
   "kim-dm-sent": { assignee: "김시은", dm_status: "발송완료", dm_status_in: "발송완료,DM발송", include_excluded: "1", title: "김시은 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
@@ -938,6 +950,7 @@ const ASSIGNEE_TABS = {
   "kim-email-no-reply": { assignee: "김시은", email_status: "미회신", include_excluded: "1", title: "김시은 미회신", copy: "이메일 발송 후 아직 회신이 없는 인플루언서입니다.", pill: "미회신" },
   "park-unchecked": { assignee: "박민서", review_status: "미확인", dm_status: "미발송", title: "박민서 할당", copy: "미확인이고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "검토 시작" },
   "park-db": { assignee: "박민서", review_status: "좋음", dm_status: "미발송", title: "박민서 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
+  "park-sent-complete": { assignee: "박민서", sent_complete: "1", include_excluded: "1", title: "박민서 발송완료", copy: "DM 또는 이메일 발송이 완료된 인플루언서입니다.", pill: "발송완료" },
   "park-wait": { assignee: "박민서", review_status: "보류", title: "박민서 보류", copy: "추가 확인이 필요해 잠시 멈춘 인플루언서입니다.", pill: "보류" },
   "park-excluded": { assignee: "박민서", review_status: "제외", include_excluded: "1", title: "박민서 제외", copy: "제외 처리되어 일반 DB에서는 빠지는 인플루언서입니다.", pill: "제외 목록" },
   "park-dm-sent": { assignee: "박민서", dm_status: "발송완료", dm_status_in: "발송완료,DM발송", include_excluded: "1", title: "박민서 DM 발송완료", copy: "DM 발송완료로 저장된 인플루언서입니다.", pill: "DM 발송" },
@@ -963,6 +976,7 @@ const state = {
   campaignCandidates: [],
   finderCandidates: [],
   campaignMode: "send",
+  campaignManageTab: "pending",
   campaignSetupPreset: "initial",
 };
 const $ = (id) => document.getElementById(id);
@@ -1094,6 +1108,7 @@ function renderWorkflowHint() {
     tab.review_status ? `검토 ${tab.review_status}` : "",
     tab.dm_status ? `DM ${tab.dm_status}` : "",
     tab.email_status ? `이메일 ${tab.email_status}` : "",
+    tab.sent_complete ? "발송완료" : "",
   ].filter(Boolean);
   $("workflow-title").textContent = tab.title || fallbackTitle;
   $("workflow-copy").textContent = tab.copy || `${assignee} 담당 중 ${statusParts.join(", ") || "선택한 기준"}에 맞는 인플루언서입니다.`;
@@ -1180,7 +1195,7 @@ function sendMethodCell(row) {
   `;
 }
 function isSentComplete(row) {
-  return ["발송완료", "DM발송", "답장옴"].includes(row.dm_status) || ["발송완료", "답장옴"].includes(row.email_status);
+  return ["발송완료", "DM발송"].includes(row.dm_status) || row.email_status === "발송완료";
 }
 async function moveSentRowsToManage(rows) {
   const owner = campaignOwner();
@@ -1538,6 +1553,13 @@ function setCampaignMode(mode) {
   if (listMode) loadFinderCandidates();
   if (setupMode) renderCampaignSetup();
 }
+function setCampaignManageTab(name) {
+  state.campaignManageTab = name;
+  document.querySelectorAll("[data-manage-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.manageTab === name);
+  });
+  loadFinderCandidates();
+}
 async function loadFinderCandidates() {
   renderCampaignOwnerUi();
   const params = new URLSearchParams();
@@ -1550,12 +1572,17 @@ async function loadFinderCandidates() {
     } else {
       params.set("assignee", campaignOwner());
       params.set("include_excluded", "1");
-      if (state.campaignMode === "manage") params.set("review_status", "좋음");
+      if (state.campaignMode === "manage") {
+        params.set("review_status", "좋음");
+        if (state.campaignManageTab === "sent") params.set("sent_complete", "1");
+      }
       const rows = await api(`/api/candidates?${params.toString()}`);
       if (state.campaignMode === "find") {
         const movedRows = rows.filter((row) => isSentComplete(row));
         state.finderCandidates = rows.filter((row) => row.review_status !== "좋음" && !isSentComplete(row));
         moveSentRowsToManage(movedRows);
+      } else if (state.campaignMode === "manage") {
+        state.finderCandidates = state.campaignManageTab === "sent" ? rows.filter(isSentComplete) : rows.filter((row) => !isSentComplete(row));
       } else {
         state.finderCandidates = rows;
       }
@@ -1569,9 +1596,15 @@ function renderFinderCandidates() {
   const rows = state.finderCandidates || [];
   const isManage = state.campaignMode === "manage";
   const isExcluded = state.campaignMode === "excluded";
+  const isManageSent = isManage && state.campaignManageTab === "sent";
+  $("finder-title").textContent = isManage ? "인플루언서 관리" : isExcluded ? "제외 DB" : "인플루언서 찾기";
+  $("manage-subtabs")?.classList.toggle("active", isManage);
+  document.querySelectorAll("[data-manage-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.manageTab === state.campaignManageTab);
+  });
   $("finder-count").textContent = `${rows.length.toLocaleString()}명`;
   $("finder-sub").textContent = isManage
-    ? `${campaignOwner()} 담당 크롤링 명단 중 검토 좋음으로 분류된 인플루언서입니다.`
+    ? `${campaignOwner()} 담당 검토 좋음 명단 중 ${isManageSent ? "발송이 완료된" : "아직 발송 전인"} 인플루언서입니다.`
     : isExcluded
       ? `크롤링 제외 DB와 검토 제외 처리된 인플루언서입니다.`
     : `${campaignOwner()} 담당으로 들어온 크롤링 인플루언서 명단입니다.`;
@@ -1585,9 +1618,9 @@ function renderFinderCandidates() {
       <span class="status-badge ${dmClass(row.dm_status)}">${esc(row.dm_status || "미발송")}</span>
       <span class="status-badge ${dmClass(row.email_status)}">${esc(row.email_status || "미발송")}</span>
       <span class="status-badge s-call">${esc(row.assignee || (row.is_excluded_handle ? "크롤링 제외" : "미할당"))}</span>
-      ${isExcluded ? `<span class="handle">${esc(row.excluded_reason || row.excluded_source || "제외")}</span>` : `<button class="action-btn" onclick="setCampaignMode('send'); setTimeout(loadCampaignCandidates, 0);">발송에 담기</button>`}
+      ${isExcluded ? `<span class="handle">${esc(row.excluded_reason || row.excluded_source || "제외")}</span>` : isManageSent ? `<span class="status-badge s-dm">발송완료</span>` : `<button class="action-btn" onclick="setCampaignMode('send'); setTimeout(loadCampaignCandidates, 0);">발송에 담기</button>`}
     </div>
-  `).join("") : `<div class="empty-state" style="display:block;"><p>${esc(isExcluded ? "제외 DB" : campaignOwner())} ${isExcluded ? "가 없습니다" : isManage ? "좋음 명단이 없습니다" : "담당 크롤링 명단이 없습니다"}</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 상태를 좋음으로 바꾸면 이곳에 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
+  `).join("") : `<div class="empty-state" style="display:block;"><p>${esc(isExcluded ? "제외 DB" : campaignOwner())} ${isExcluded ? "가 없습니다" : isManage ? `${isManageSent ? "발송완료" : "발송전"} 명단이 없습니다` : "담당 크롤링 명단이 없습니다"}</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
 }
 function renderVariable(template, row) {
   const context = {
@@ -1954,6 +1987,7 @@ function candidateParams() {
   if (tab.dm_status_in) params.set("dm_status_in", tab.dm_status_in);
   if (tab.email_status) params.set("email_status", tab.email_status);
   if (tab.email_status_in) params.set("email_status_in", tab.email_status_in);
+  if (tab.sent_complete) params.set("sent_complete", tab.sent_complete);
   if (tab.include_excluded) {
     params.set("include_excluded", tab.include_excluded);
   }

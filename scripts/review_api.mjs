@@ -240,6 +240,10 @@ function cleanSelectColumns(selectColumns) {
   return removeKnownMissingColumns(selectColumns.split(",")).join(",");
 }
 
+function isSentCompleteRow(row) {
+  return ["발송완료", "DM발송"].includes(row.dm_status) || row.email_status === "발송완료";
+}
+
 async function queryCandidates(url, options = {}) {
   const params = url.searchParams;
   let orColumns = removeKnownMissingColumns([...options.orColumns]);
@@ -252,6 +256,7 @@ async function queryCandidates(url, options = {}) {
   const emailStatusIn = options.hasOwnProperty("emailStatusIn") ? options.emailStatusIn : params.get("email_status_in");
   const assignee = options.hasOwnProperty("assignee") ? options.assignee : params.get("assignee");
   const unassigned = options.hasOwnProperty("unassigned") ? options.unassigned : params.get("unassigned") === "1";
+  const sentComplete = options.hasOwnProperty("sentComplete") ? options.sentComplete : params.get("sent_complete") === "1";
   const includeExcluded = options.hasOwnProperty("includeExcluded")
     ? options.includeExcluded
     : params.get("include_excluded") === "1";
@@ -262,7 +267,7 @@ async function queryCandidates(url, options = {}) {
   const apiParams = new URLSearchParams();
   apiParams.set("select", selectColumns);
   apiParams.set("order", order);
-  apiParams.set("limit", "500");
+  apiParams.set("limit", sentComplete ? "2000" : "500");
   if (grade) apiParams.set("grade", `eq.${grade}`);
   if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
   if (dmStatusIn) {
@@ -296,9 +301,10 @@ async function queryCandidates(url, options = {}) {
     const rows = await supabaseFetch(`${TABLE}?${apiParams.toString()}`, {
       headers: { accept: "application/json" },
     });
-    if (includeExcluded || reviewStatus === "\uC81C\uC678") return rows;
+    const visibleRows = sentComplete ? rows.filter(isSentCompleteRow) : rows;
+    if (includeExcluded || reviewStatus === "\uC81C\uC678") return visibleRows;
     const excluded = await listExcludedHandles();
-    return rows.filter((row) => row.review_status !== "\uC81C\uC678" && !excluded.has(normalizeHandleFromRow(row)));
+    return visibleRows.filter((row) => row.review_status !== "\uC81C\uC678" && !excluded.has(normalizeHandleFromRow(row)));
   } catch (error) {
     const missing = parseMissingColumn(error);
     if (missing) {
