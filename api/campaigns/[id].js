@@ -7,6 +7,7 @@ import {
   sendJson,
   syncCampaignReplies,
   updateCampaign,
+  updateCampaignRecipient,
 } from "../../scripts/review_api.mjs";
 
 export default async function handler(request, response) {
@@ -34,6 +35,10 @@ export default async function handler(request, response) {
     }
     if (action === "recipients" && request.method === "POST") {
       sendJson(response, 200, await addCampaignRecipients(id, body));
+      return;
+    }
+    if (action === "recipient" && request.method === "PATCH") {
+      sendJson(response, 200, await updateCampaignRecipient(id, request.query.recipient_id, body));
       return;
     }
     if (action === "send" && request.method === "POST") {

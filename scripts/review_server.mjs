@@ -16,6 +16,7 @@ import {
   stats,
   syncCampaignReplies,
   updateCampaign,
+  updateCampaignRecipient,
   updateCandidate,
 } from "./review_api.mjs";
 
@@ -77,6 +78,13 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    if (url.pathname.match(/^\/api\/campaigns\/\d+$/) && request.method === "PATCH" && url.searchParams.get("action") === "recipient") {
+      const id = url.pathname.split("/").at(-1);
+      const body = await readBody(request);
+      sendJson(response, 200, await updateCampaignRecipient(id, url.searchParams.get("recipient_id"), body));
+      return;
+    }
+
     if (url.pathname.match(/^\/api\/campaigns\/\d+$/) && request.method === "PATCH") {
       const id = url.pathname.split("/").at(-1);
       const body = await readBody(request);
@@ -94,6 +102,13 @@ const server = http.createServer(async (request, response) => {
       const id = url.pathname.split("/").at(-2);
       const body = await readBody(request);
       sendJson(response, 200, await addCampaignRecipients(id, body));
+      return;
+    }
+
+    if (url.pathname.match(/^\/api\/campaigns\/\d+\/recipients\/\d+$/) && request.method === "PATCH") {
+      const parts = url.pathname.split("/");
+      const body = await readBody(request);
+      sendJson(response, 200, await updateCampaignRecipient(parts.at(-3), parts.at(-1), body));
       return;
     }
 

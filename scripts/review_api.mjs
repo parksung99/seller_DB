@@ -140,6 +140,20 @@ async function upsertExcludedHandle(handle, { reason = "manual_review_excluded",
   }
 }
 
+async function deleteExcludedHandle(handle) {
+  const normalized = normalizeInstagramHandle(handle);
+  if (!normalized) return null;
+  try {
+    return await supabaseFetch(`${EXCLUDED_TABLE}?handle=eq.${encodeURIComponent(normalized)}`, {
+      method: "DELETE",
+      headers: { prefer: "return=minimal" },
+    });
+  } catch (error) {
+    if (isMissingRelation(error)) return null;
+    throw error;
+  }
+}
+
 export async function listExcludedDb(url) {
   const query = cleanSearch(url.searchParams.get("q"));
   const assignee = url.searchParams.get("assignee");
@@ -241,7 +255,12 @@ function cleanSelectColumns(selectColumns) {
 }
 
 function isSentCompleteRow(row) {
-  return ["발송완료", "DM발송"].includes(row.dm_status) || row.email_status === "발송완료";
+  return ["발송완료", "DM발송"].includes(row.dm_status) || ["발송완료", "미회신"].includes(row.email_status);
+}
+
+function isReplyCompleteRow(row) {
+  const replyStatuses = ["답장옴", "거절", "보류"];
+  return replyStatuses.includes(row.dm_status) || replyStatuses.includes(row.email_status);
 }
 
 async function queryCandidates(url, options = {}) {
@@ -257,6 +276,7 @@ async function queryCandidates(url, options = {}) {
   const assignee = options.hasOwnProperty("assignee") ? options.assignee : params.get("assignee");
   const unassigned = options.hasOwnProperty("unassigned") ? options.unassigned : params.get("unassigned") === "1";
   const sentComplete = options.hasOwnProperty("sentComplete") ? options.sentComplete : params.get("sent_complete") === "1";
+  const replyComplete = options.hasOwnProperty("replyComplete") ? options.replyComplete : params.get("reply_complete") === "1";
   const includeExcluded = options.hasOwnProperty("includeExcluded")
     ? options.includeExcluded
     : params.get("include_excluded") === "1";
@@ -267,7 +287,7 @@ async function queryCandidates(url, options = {}) {
   const apiParams = new URLSearchParams();
   apiParams.set("select", selectColumns);
   apiParams.set("order", order);
-  apiParams.set("limit", sentComplete ? "2000" : "500");
+  apiParams.set("limit", sentComplete || replyComplete ? "2000" : "500");
   if (grade) apiParams.set("grade", `eq.${grade}`);
   if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
   if (dmStatusIn) {
@@ -301,7 +321,7 @@ async function queryCandidates(url, options = {}) {
     const rows = await supabaseFetch(`${TABLE}?${apiParams.toString()}`, {
       headers: { accept: "application/json" },
     });
-    const visibleRows = sentComplete ? rows.filter(isSentCompleteRow) : rows;
+    const visibleRows = replyComplete ? rows.filter(isReplyCompleteRow) : sentComplete ? rows.filter((row) => isSentCompleteRow(row) && !isReplyCompleteRow(row)) : rows;
     if (includeExcluded || reviewStatus === "\uC81C\uC678") return visibleRows;
     const excluded = await listExcludedHandles();
     return visibleRows.filter((row) => row.review_status !== "\uC81C\uC678" && !excluded.has(normalizeHandleFromRow(row)));
@@ -485,23 +505,66 @@ export async function updateCandidate(id, patch, actor) {
       source: "review_app",
       excludedBy: body.status_updated_by,
     });
+  } else if (body.review_status && row) {
+    await deleteExcludedHandle(normalizeHandleFromRow(row));
   }
   return updated;
 }
 
 function templateContext(row) {
   const account = normalizeInstagramHandle(row?.seller_id || row?.profile_url || row?.seller_name || "") || String(row?.seller_name || "").trim();
+  const personalized = row?.personalized_context && typeof row.personalized_context === "object" ? row.personalized_context : {};
   return {
     account,
     name: String(row?.seller_name || account || "").trim(),
     email: String(row?.profile_email || row?.email || "").trim(),
     profile_url: row?.profile_url || (account ? `https://www.instagram.com/${account}/` : ""),
+    product_name: personalized.product_name || row?.product_name || "",
+    recent_content_note: personalized.recent_content_note || row?.recent_content_note || "",
+    fit_reason: personalized.fit_reason || row?.fit_reason || "",
+    custom_note: personalized.custom_note || row?.custom_note || "",
+    reply_deadline: personalized.reply_deadline || row?.reply_deadline || "",
+    offer: personalized.offer || row?.offer || "",
+    schedule: personalized.schedule || row?.schedule || "",
   };
 }
 
-function renderTemplate(template, row) {
+function renderTemplate(template, row, extraContext = {}) {
+  const context = { ...templateContext(row), ...extraContext };
+  return String(template || "").replace(
+    /\{\{\s*(account|name|email|profile_url|product_name|recent_content_note|fit_reason|custom_note|reply_deadline|offer|schedule)\s*\}\}/g,
+    (_, key) => context[key] || ""
+  );
+}
+
+function defaultPersonalizedContext(row) {
+  const signals = [
+    row?.brand_fit ? `브랜드 핏 ${row.brand_fit}` : "",
+    row?.prospect_signal_tags,
+    row?.matched_prospect_keywords,
+  ].filter(Boolean);
+  return {
+    product_name: "",
+    recent_content_note: "",
+    fit_reason: signals.slice(0, 2).join(" · "),
+    custom_note: row?.memo || row?.notes || "",
+    reply_deadline: "",
+    offer: "",
+  };
+}
+
+function campaignRenderContext(campaign, row) {
   const context = templateContext(row);
-  return String(template || "").replace(/\{\{\s*(account|name|email|profile_url)\s*\}\}/g, (_, key) => context[key] || "");
+  const schedule = renderTemplate(campaign.schedule_template || "", row, context);
+  return { ...context, schedule };
+}
+
+function renderCampaignSubject(campaign, row) {
+  return renderTemplate(campaign.subject_template, row, campaignRenderContext(campaign, row));
+}
+
+function renderCampaignBody(campaign, row) {
+  return renderTemplate(campaign.body_template, row, campaignRenderContext(campaign, row));
 }
 
 function campaignSchemaError() {
@@ -561,6 +624,7 @@ export async function createCampaign(patch, actor) {
         sender_name: patch.sender_name || env.gmailSenderName || null,
         subject_template: patch.subject_template || "",
         body_template: patch.body_template || "",
+        schedule_template: patch.schedule_template || "",
         status: patch.status || "draft",
         created_by: String(actor || patch.created_by || "").trim() || "unknown",
         created_at: now,
@@ -598,7 +662,7 @@ export async function getCampaign(id) {
 }
 
 export async function updateCampaign(id, patch) {
-  const allowed = new Set(["name", "sender_email", "sender_name", "subject_template", "body_template", "status"]);
+  const allowed = new Set(["name", "sender_email", "sender_name", "subject_template", "body_template", "schedule_template", "status"]);
   const body = Object.fromEntries(Object.entries(patch).filter(([key]) => allowed.has(key)));
   if (!Object.keys(body).length) return getCampaign(id);
   try {
@@ -660,6 +724,8 @@ export async function addCampaignRecipients(id, patch) {
   const body = candidates.map((row) => {
     const context = templateContext(row);
     const email = String(emailOverrides[row.id] || row.profile_email || "").trim();
+    const personalizedContext = defaultPersonalizedContext(row);
+    const renderRow = { ...row, profile_email: email || row.profile_email, personalized_context: personalizedContext };
     return {
       campaign_id: Number(id),
       candidate_id: Number(row.id),
@@ -669,8 +735,9 @@ export async function addCampaignRecipients(id, patch) {
       name: context.name || null,
       profile_url: context.profile_url || null,
       profile_image_url: row.profile_image_url || null,
-      personalized_subject: renderTemplate(campaign.subject_template, row),
-      personalized_body: renderTemplate(campaign.body_template, row),
+      personalized_subject: renderCampaignSubject(campaign, renderRow),
+      personalized_body: renderCampaignBody(campaign, renderRow),
+      personalized_context: personalizedContext,
       send_status: email ? "pending" : "skipped_missing_email",
       error_message: email ? null : "profile_email is empty",
     };
@@ -686,6 +753,48 @@ export async function addCampaignRecipients(id, patch) {
     });
   }
   return getCampaign(id);
+}
+
+export async function updateCampaignRecipient(campaignId, recipientId, patch) {
+  const campaign = await getCampaign(campaignId);
+  const recipient = (campaign.recipients || []).find((row) => Number(row.id) === Number(recipientId));
+  if (!recipient) {
+    const error = new Error("recipient not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  const currentContext = recipient.personalized_context && typeof recipient.personalized_context === "object" ? recipient.personalized_context : {};
+  const nextContext = {
+    ...currentContext,
+    ...(patch.personalized_context && typeof patch.personalized_context === "object" ? patch.personalized_context : {}),
+  };
+  const nextRecipient = {
+    ...recipient,
+    seller_id: recipient.account,
+    seller_name: recipient.name,
+    profile_email: patch.email ?? recipient.email,
+    profile_url: recipient.profile_url,
+    personalized_context: nextContext,
+  };
+  const body = {
+    personalized_context: nextContext,
+    personalized_subject: patch.personalized_subject ?? renderCampaignSubject(campaign, nextRecipient),
+    personalized_body: patch.personalized_body ?? renderCampaignBody(campaign, nextRecipient),
+    updated_at: new Date().toISOString(),
+  };
+  if (Object.prototype.hasOwnProperty.call(patch, "email")) {
+    body.email = String(patch.email || "").trim() || null;
+    if (!body.email) {
+      body.send_status = "skipped_missing_email";
+      body.error_message = "profile_email is empty";
+    } else if (recipient.send_status === "skipped_missing_email") {
+      body.send_status = "pending";
+      body.error_message = null;
+    }
+  }
+  await patchRecipient(recipientId, body);
+  return getCampaign(campaignId);
 }
 
 function assertGmailConfigured() {
@@ -837,9 +946,10 @@ export async function sendCampaign(id) {
       seller_name: recipient.name,
       profile_url: recipient.profile_url,
       profile_email: recipient.email,
+      personalized_context: recipient.personalized_context || {},
     };
-    const subject = renderTemplate(campaign.subject_template, rowContext) || recipient.personalized_subject || campaign.name;
-    const body = renderTemplate(campaign.body_template, rowContext) || recipient.personalized_body || "";
+    const subject = renderCampaignSubject(campaign, rowContext) || recipient.personalized_subject || campaign.name;
+    const body = renderCampaignBody(campaign, rowContext) || recipient.personalized_body || "";
     try {
       const sent = await sendGmailMessage(gmail, {
         fromName: campaign.sender_name || env.gmailSenderName,
