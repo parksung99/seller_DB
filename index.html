@@ -1797,13 +1797,18 @@ function switchCampaignFinderTab(mode, tab) {
   if (requestedMode === previousMode && (requestedMode === "find" ? state.campaignFindTab === requestedFindTab : state.campaignManageTab === nextManageTab) && state.finderCandidates.length) {
     return;
   }
+  const requestedOwner = campaignOwner();
+  const fallbackRows = state.finderCandidates || [];
   setCampaignMode(requestedMode, { skipFinderLoad: true });
-  state.finderCandidates = [];
   if (requestedMode === "find") {
     setCampaignFindTab(requestedFindTab, { skipFinderLoad: true });
   } else {
     setCampaignManageTab(nextManageTab, { skipFinderLoad: true });
   }
+  const cached = getFinderCache();
+  state.finderCandidates = cached
+    ? filterFinderCandidates(cached, requestedOwner, requestedFindTab, requestedMode === "manage" ? nextManageTab : requestedFindTab)
+    : filterFinderCandidates(fallbackRows, requestedOwner, requestedFindTab, requestedMode === "manage" ? nextManageTab : requestedFindTab);
   renderFinderCandidates();
   loadFinderCandidates();
 }
@@ -2063,8 +2068,19 @@ function findTabForReviewStatus(reviewStatus) {
   if (reviewStatus === "제외") return "excluded";
   return "";
 }
+function syncFinderCandidateInCache(nextRow) {
+  const targetId = Number(nextRow.id);
+  if (!Number.isFinite(targetId)) return;
+  for (const key of [...state.finderCache.keys()]) {
+    const rows = state.finderCache.get(key);
+    if (!Array.isArray(rows)) continue;
+    state.finderCache.set(
+      key,
+      rows.map((row) => (Number(row.id) === targetId ? { ...row, ...nextRow } : row))
+    );
+  }
+}
 function applyReviewStatusToLocalCandidateList(nextRow, reviewStatus) {
-  const reviewAffectRow = reviewStatus === "\uc81c\uc678" ? { ...nextRow, review_status: "제외" } : nextRow;
   if (state.campaignMode === "find") {
     const nextFindTab = findTabForReviewStatus(reviewStatus);
     if (state.campaignFindTab === nextFindTab) {
@@ -2073,8 +2089,8 @@ function applyReviewStatusToLocalCandidateList(nextRow, reviewStatus) {
     return state.finderCandidates.filter((item) => Number(item.id) !== Number(nextRow.id));
   }
   if (state.campaignMode === "manage") {
-    return rowMatchesCurrentManageTab(reviewAffectRow)
-      ? state.finderCandidates.map((item) => Number(item.id) === Number(reviewAffectRow.id) ? nextRow : item)
+    return rowMatchesCurrentManageTab(nextRow)
+      ? state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item)
       : state.finderCandidates.filter((item) => Number(item.id) !== Number(nextRow.id));
   }
   return state.finderCandidates.map((item) => Number(item.id) === Number(nextRow.id) ? nextRow : item);
@@ -2087,10 +2103,10 @@ async function updateFinderCandidateReview(id, reviewStatus) {
     return;
   }
   if (row.review_status === reviewStatus) return;
-  const nextReviewStatus = reviewStatus === "\uc81c\uc678" ? "좋음" : reviewStatus;
-  const nextRow = { ...row, review_status: nextReviewStatus };
+  const nextRow = { ...row, review_status: reviewStatus };
   state.finderCandidates = applyReviewStatusToLocalCandidateList(nextRow, reviewStatus);
   renderFinderCandidates();
+  syncFinderCandidateInCache(nextRow);
   try {
     await api(`/api/candidates/${id}`, {
       method: "PATCH",
@@ -2102,8 +2118,6 @@ async function updateFinderCandidateReview(id, reviewStatus) {
         memo: row.memo || row.notes || "",
       }),
     });
-    state.candidatesCache.clear();
-    state.finderCache.clear();
     toast(`${reviewStatus} 처리 완료`);
   } catch (error) {
     toast(error.message);
@@ -2125,6 +2139,7 @@ async function updateFinderCandidateStatus(id, field, value) {
     ? state.finderCandidates.map((item) => Number(item.id) === Number(id) ? nextRow : item)
     : state.finderCandidates.filter((item) => Number(item.id) !== Number(id));
   renderFinderCandidates();
+  syncFinderCandidateInCache(nextRow);
   try {
     await api(`/api/candidates/${id}`, {
       method: "PATCH",
@@ -2134,8 +2149,6 @@ async function updateFinderCandidateStatus(id, field, value) {
         [field]: value,
       }),
     });
-    state.finderCache.clear();
-    state.candidatesCache.clear();
     toast("상태 저장 완료");
   } catch (error) {
     toast(error.message);

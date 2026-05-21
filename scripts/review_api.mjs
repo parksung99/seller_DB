@@ -542,11 +542,6 @@ export async function updateCandidate(id, patch, actor) {
     body.dm_status = normalizeDmStatus(body.dm_status);
   }
 
-  const markAsExcluded = body.review_status === "제외";
-  if (markAsExcluded) {
-    body.review_status = REVIEW_STATUSES[1];
-  }
-
   if (!Object.keys(body).length) return null;
 
   const now = new Date().toISOString();
@@ -566,6 +561,7 @@ export async function updateCandidate(id, patch, actor) {
   if (normalizedDmStatus === DM_STATUSES[2] || body.email_status === EMAIL_STATUSES[2]) {
     body.last_replied_at = now;
   }
+  const markAsExcluded = body.review_status === "제외";
 
   const updated = await supabaseFetch(`${TABLE}?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
