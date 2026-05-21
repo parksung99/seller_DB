@@ -1034,6 +1034,13 @@ const EMAIL_STATUSES = ["미발송", "발송완료", "답장옴", "미회신", "
 const BRAND_FITS = ["", "높음", "중간", "낮음"];
 const GROUPBUY_EXPERIENCE_VALUES = ["불명", "있음", "없음"];
 const AGENCY_STATUS_VALUES = ["불명", "있음", "없음"];
+function normalizeWithAllowed(value, allowed) {
+  return allowed.includes(value) ? value : "불명";
+}
+function normalizeAgencyStatusValue(value) {
+  if (value === "개인" || value === "에이전시") return "있음";
+  return normalizeWithAllowed(value, AGENCY_STATUS_VALUES);
+}
 const ASSIGNEE_TABS = {
   "kim-unchecked": { assignee: "김시은", review_status: "미확인", dm_status: "미발송", title: "김시은 할당", copy: "미확인이고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "검토 시작" },
   "kim-db": { assignee: "김시은", review_status: "좋음", dm_status: "미발송", title: "김시은 발송DB", copy: "검토 결과가 좋고 아직 DM을 보내지 않은 인플루언서입니다.", pill: "발송 대기" },
@@ -1522,8 +1529,8 @@ function renderDrawer(row) {
   const personas = splitTags(row.prospect_personas).map((item) => `<span class="status-badge s-call">${esc(item)}</span>`).join(" ");
   const prospectKeywords = splitTags(row.matched_prospect_keywords).slice(0, 12).map(renderTag).join("");
   const postLinks = splitTags(row.engagement_posts || row.sample_post_urls).slice(0, 6).map((url, i) => `<a class="action-btn" href="${esc(url)}" target="_blank" rel="noopener">post ${i + 1}</a>`).join(" ");
-  const groupbuyExperience = GROUPBUY_EXPERIENCE_VALUES.includes(row.groupbuy_experience) ? row.groupbuy_experience : "불명";
-  const agencyStatus = AGENCY_STATUS_VALUES.includes(row.agency_status) ? row.agency_status : "불명";
+  const groupbuyExperience = normalizeWithAllowed(row.groupbuy_experience, GROUPBUY_EXPERIENCE_VALUES);
+  const agencyStatus = normalizeAgencyStatusValue(row.agency_status);
   $("drawer-body").innerHTML = `
     <div class="detail-section">
       <div class="detail-section-title">PROFILE</div>

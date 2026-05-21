@@ -76,6 +76,17 @@ function cleanSearch(value) {
   return String(value || "").replace(/[(),]/g, " ").trim();
 }
 
+function normalizeWithAllowed(value, allowed) {
+  const normalized = String(value || "").trim();
+  return allowed.includes(normalized) ? normalized : allowed[0];
+}
+
+function normalizeAgencyStatus(value) {
+  const normalized = String(value || "").trim();
+  if (normalized === "개인" || normalized === "에이전시") return "있음";
+  return normalizeWithAllowed(normalized, AGENCY_STATUS_VALUES);
+}
+
 function instagramHandleFromUrl(value) {
   const match = String(value || "").match(/instagram\.com\/(?!p\/|reel\/|tv\/|explore\/|accounts\/)([A-Za-z0-9._]+)/i);
   return match ? match[1].toLowerCase() : "";
@@ -458,8 +469,8 @@ export async function createCandidate(patch, actor) {
     dm_status: patch.dm_status || DM_STATUSES[0],
     email_status: patch.email_status || EMAIL_STATUSES[0],
     brand_fit: patch.brand_fit || null,
-    groupbuy_experience: patch.groupbuy_experience || GROUPBUY_EXPERIENCE_VALUES[0],
-    agency_status: patch.agency_status || AGENCY_STATUS_VALUES[0],
+    groupbuy_experience: normalizeWithAllowed(patch.groupbuy_experience, GROUPBUY_EXPERIENCE_VALUES),
+    agency_status: normalizeAgencyStatus(patch.agency_status),
     assignee: patch.assignee || null,
     memo: patch.memo || null,
     notes: patch.notes || null,
@@ -484,6 +495,12 @@ export async function updateCandidate(id, patch, actor) {
       .filter(([key]) => !blocked.has(key))
       .map(([key, value]) => [key, value === undefined ? null : value])
   );
+  if (Object.prototype.hasOwnProperty.call(body, "groupbuy_experience")) {
+    body.groupbuy_experience = normalizeWithAllowed(body.groupbuy_experience, GROUPBUY_EXPERIENCE_VALUES);
+  }
+  if (Object.prototype.hasOwnProperty.call(body, "agency_status")) {
+    body.agency_status = normalizeAgencyStatus(body.agency_status);
+  }
 
   if (!Object.keys(body).length) return null;
 
