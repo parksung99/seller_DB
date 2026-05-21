@@ -1798,7 +1798,7 @@ function switchCampaignFinderTab(mode, tab) {
     return;
   }
   const requestedOwner = campaignOwner();
-  const fallbackRows = state.finderCandidates || [];
+  const fallbackRows = requestedMode === previousMode ? state.finderCandidates || [] : [];
   setCampaignMode(requestedMode, { skipFinderLoad: true });
   if (requestedMode === "find") {
     setCampaignFindTab(requestedFindTab, { skipFinderLoad: true });
@@ -1841,7 +1841,12 @@ function setCampaignManageTab(name, { skipFinderLoad = false } = {}) {
   if (!skipFinderLoad) loadFinderCandidates();
 }
 function finderCacheKey({ mode, owner, query, tab }) {
-  return `${mode}::${owner || ""}::${tab || ""}::${query || ""}`;
+  const normalizedTab = mode === "manage"
+    ? tab === "rejected" || tab === "excluded"
+      ? "excluded"
+      : "good"
+    : tab || "";
+  return `${mode}::${owner || ""}::${normalizedTab}::${query || ""}`;
 }
 function getFinderCache() {
   const mode = state.campaignMode;
@@ -1898,13 +1903,18 @@ async function loadFinderCandidates() {
       params.set("include_excluded", "1");
       if (requestedManageTab === "rejected" || requestedManageTab === "excluded") {
         params.set("review_status", "제외");
+        params.set("row_limit", "500");
       } else if (requestedManageTab === "pending") {
         params.set("review_status", "좋음");
+        params.set("row_limit", "2000");
+      } else if (requestedManageTab === "sent" || requestedManageTab === "replied") {
+        params.set("review_status", "좋음");
+        params.set("row_limit", "2000");
       }
-      if (requestedManageTab === "sent") params.set("sent_complete", "1");
-      if (requestedManageTab === "replied") params.set("reply_complete", "1");
+      params.set("manage_tab", requestedManageTab);
     } else if (requestedMode === "find") {
       params.set("review_status", FIND_TABS[requestedFindTab]?.review_status || "미확인");
+      params.delete("manage_tab");
     }
     const rows = await api(`/api/candidates?${params.toString()}`);
     if (seq !== state.finderRequestSeq || requestedMode !== state.campaignMode || requestedFindTab !== state.campaignFindTab || requestedManageTab !== state.campaignManageTab) return;

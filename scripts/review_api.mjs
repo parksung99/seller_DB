@@ -320,6 +320,10 @@ async function queryCandidates(url, options = {}) {
   const includeExcluded = options.hasOwnProperty("includeExcluded")
     ? options.includeExcluded
     : params.get("include_excluded") === "1";
+  const requestedManageTab = options.hasOwnProperty("manageTab") ? options.manageTab : params.get("manage_tab");
+  const rowLimit = options.hasOwnProperty("rowLimit")
+    ? options.rowLimit
+    : params.get("row_limit");
 
   const selectColumns = cleanSelectColumns(options.selectColumns || "*");
   const queries = searchTerms(params.get("q"));
@@ -327,7 +331,9 @@ async function queryCandidates(url, options = {}) {
   const apiParams = new URLSearchParams();
   apiParams.set("select", selectColumns);
   apiParams.set("order", order);
-  apiParams.set("limit", sentComplete || replyComplete ? "2000" : "500");
+  const parsedRowLimit = Number(rowLimit);
+  const fallbackLimit = sentComplete || replyComplete ? 2000 : 500;
+  apiParams.set("limit", Number.isFinite(parsedRowLimit) && parsedRowLimit > 0 ? String(Math.round(parsedRowLimit)) : String(fallbackLimit));
   if (grade) apiParams.set("grade", `eq.${grade}`);
   if (reviewStatus) apiParams.set("review_status", `eq.${reviewStatus}`);
   if (dmStatusIn) {
@@ -371,8 +377,13 @@ async function queryCandidates(url, options = {}) {
       : sentComplete
         ? rows.filter((row) => isSentCompleteRow(row))
         : rows;
+    const isManageTab = ["pending", "sent", "replied", "rejected", "excluded"].includes(requestedManageTab || "");
+    const isExcludedManageTab = requestedManageTab === "rejected" || requestedManageTab === "excluded";
+    const filteredRows = isManageTab && !isExcludedManageTab && reviewStatus !== REVIEW_STATUSES[3]
+      ? visibleRows.filter((row) => row.review_status === REVIEW_STATUSES[1])
+      : visibleRows;
 
-    const nonExcludedRows = reviewStatus === "\uC81C\uC678" ? visibleRows : visibleRows.filter((row) => row.review_status !== "\uC81C\uC678");
+    const nonExcludedRows = reviewStatus === "\uC81C\uC678" ? filteredRows : filteredRows.filter((row) => row.review_status !== "\uC81C\uC678");
 
     if (!includeExcluded && reviewStatus !== "\uC81C\uC678") {
       const excluded = await listExcludedHandles();
