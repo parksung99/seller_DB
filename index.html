@@ -626,6 +626,9 @@ tbody tr:hover { background: var(--pink-light); }
   background: #f4f4f5; border-radius: 12px; padding: 13px; font-size: 12px; line-height: 1.65;
   white-space: pre-wrap; color: var(--text); word-break: break-word;
 }
+.message-bubble img {
+  display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0;
+}
 .campaign-history-tabs {
   display: flex; align-items: center; gap: 20px; height: 46px; padding: 0 22px; border-bottom: 1px solid #edf0f4;
 }
@@ -1100,6 +1103,7 @@ tbody tr:hover { background: var(--pink-light); }
                 <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{profile_url}}')">프로필</button>
                 <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{launch_date}}')">런칭일</button>
                 <button class="action-btn" onclick="insertTemplateVar('setup-campaign-body', '{{custom_note}}')">맞춤문구</button>
+                <button class="action-btn" onclick="insertTemplateImage('setup-campaign-body')">이미지</button>
               </div>
               <div class="field" style="margin-bottom:14px;">
                 <label>제목 *</label>
@@ -1163,6 +1167,7 @@ tbody tr:hover { background: var(--pink-light); }
                 <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{recent_content_note}}')">최근콘텐츠</button>
                 <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{fit_reason}}')">선정이유</button>
                 <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{custom_note}}')">맞춤문구</button>
+                <button class="action-btn" onclick="insertTemplateImage('campaign-body')">이미지</button>
               </div>
             </div>
             <div class="campaign-template-grid">
@@ -2730,6 +2735,7 @@ function renderCampaignManager() {
           <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{recent_content_note}}')">최근콘텐츠</button>
           <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{fit_reason}}')">선정이유</button>
           <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{custom_note}}')">맞춤문구</button>
+          <button class="action-btn" onclick="insertTemplateImage('manager-campaign-body')">이미지</button>
         </div>
         <div class="field" style="margin-bottom:14px;">
           <label>이메일 제목</label>
@@ -3176,6 +3182,7 @@ async function saveCampaignTemplate({ silent = false } = {}) {
 }
 function insertTemplateVar(id, value) {
   const el = $(id);
+  if (!el) return;
   const start = el.selectionStart || el.value.length;
   const end = el.selectionEnd || el.value.length;
   el.value = `${el.value.slice(0, start)}${value}${el.value.slice(end)}`;
@@ -3184,6 +3191,24 @@ function insertTemplateVar(id, value) {
   renderCampaignPreview();
   renderCampaignSetupPreview();
   renderCampaignManagerPreview();
+}
+function insertTemplateImage(id) {
+  const rawUrl = prompt("이미지 URL을 붙여넣어주세요.");
+  const imageUrl = String(rawUrl || "").trim();
+  if (!imageUrl) return;
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(imageUrl);
+  } catch {
+    toast("올바른 이미지 URL을 입력해주세요.");
+    return;
+  }
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    toast("이미지는 http 또는 https URL만 넣을 수 있어요.");
+    return;
+  }
+  const imageTag = `<p><img src="${esc(parsedUrl.href)}" alt="" style="max-width:100%;height:auto;border-radius:12px;display:block;margin:16px 0;" /></p>`;
+  insertTemplateVar(id, imageTag);
 }
 function renderCampaignPreview() {
   const recipientSample = state.selectedCampaign?.recipients?.[0];
