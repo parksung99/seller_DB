@@ -170,6 +170,11 @@ tbody tr:hover { background: var(--pink-light); }
 .profile-mini > div { min-width: 0; }
 .profile-mini strong,
 .profile-mini .handle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finder-profile-email {
+  display: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #8b909b; font-size: 10.5px; line-height: 1.2; margin-top: 2px; text-decoration: none;
+}
+.finder-profile-email:hover { color: var(--pink); }
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
   background: var(--pink-light); border: 1px solid var(--border); flex-shrink: 0;
@@ -454,7 +459,7 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-subtabs.active { display:grid; gap:3px; margin:3px 0 8px; }
 .finder-subtab.active { background:#f0edff; color:#6e56e8; }
 	.finder-table-head, .finder-row {
-	  display:grid; grid-template-columns: 34px minmax(150px, 1.35fr) minmax(100px, .85fr) 62px minmax(70px, .5fr) minmax(70px, .5fr) minmax(64px, .45fr) minmax(64px, .45fr) minmax(120px, 1fr) 62px;
+	  display:grid; grid-template-columns: 34px minmax(150px, 1.35fr) minmax(100px, .85fr) 62px minmax(70px, .5fr) minmax(70px, .5fr) minmax(64px, .45fr) minmax(64px, .45fr) 62px;
 	  gap:6px; align-items:center;
 	}
 	.finder-table-head.finder-simple, .finder-row.finder-simple {
@@ -479,13 +484,22 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-template-choices {
   display: grid; gap: 7px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0f1f4;
 }
+.campaign-template-choice-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch;
+}
 .campaign-template-choice {
   border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 8px 10px;
   font-family: inherit; color: #374151; text-align: left; font-size: 12px; font-weight: 800;
-  cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 .campaign-template-choice:hover { border-color: #b8a6ff; background: #f7f5ff; color: #6e56e8; }
 .campaign-template-choice.active { border-color: #b8a6ff; background: #f0edff; color: #6e56e8; }
+.campaign-template-edit {
+  border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 8px 9px;
+  font-family: inherit; color: #6b7280; font-size: 11px; font-weight: 800;
+  cursor: pointer; white-space: nowrap;
+}
+.campaign-template-edit:hover { border-color: #b8a6ff; background: #f7f5ff; color: #6e56e8; }
 .campaign-template-empty { color: #8b909b; font-size: 11px; line-height: 1.45; }
 .campaign-load-option {
   display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e4e7ec; background: #fff;
@@ -722,6 +736,22 @@ tbody tr:hover { background: var(--pink-light); }
   .campaign-table-head, .recipient-card { grid-template-columns: 1fr; }
   .campaign-finder-view.active { overflow-x: auto; }
   .finder-list { max-height: none; overflow: visible; }
+  .finder-table-head:not(.finder-simple), .finder-row:not(.finder-simple) {
+    min-width: 760px;
+    grid-template-columns: 34px minmax(188px, 1.4fr) 62px minmax(70px, .55fr) minmax(70px, .55fr) minmax(64px, .48fr) minmax(64px, .48fr) 58px;
+  }
+  .finder-table-head:not(.finder-simple) > span:nth-child(3),
+  .finder-row:not(.finder-simple) > .finder-email-input {
+    display: none;
+  }
+  .finder-row:not(.finder-simple) .finder-profile { min-width: 0; gap: 8px; }
+  .finder-row:not(.finder-simple) .finder-profile .avatar { width: 30px; height: 30px; }
+  .finder-row:not(.finder-simple) .finder-profile strong { font-size: 12px; line-height: 1.2; }
+  .finder-row:not(.finder-simple) .finder-profile .handle-link {
+    max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 11px;
+  }
+  .finder-row:not(.finder-simple) .finder-profile-email { display: block; max-width: 130px; }
   .finder-table-head.finder-simple, .finder-row.finder-simple {
     min-width: 760px;
     grid-template-columns: 36px minmax(150px, 1fr) 90px minmax(190px, 220px) minmax(120px, 1fr) 86px;
@@ -742,6 +772,7 @@ tbody tr:hover { background: var(--pink-light); }
     max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     font-size: 11px;
   }
+  .finder-row.finder-simple .finder-profile-email { display: block; max-width: 110px; }
   .finder-row.finder-simple .ig-icon { width: 15px; height: 15px; border-radius: 4px; }
   .finder-row.finder-simple .ig-icon svg { width: 14px; height: 14px; }
   .finder-row.finder-simple .followers-cell {
@@ -954,7 +985,7 @@ tbody tr:hover { background: var(--pink-light); }
             </div>
           </div>
           <div class="finder-table-head" id="finder-table-head">
-            <span>#</span><span>계정</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span><span>액션</span>
+            <span>#</span><span>계정</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span>
           </div>
           <div class="finder-list" id="finder-list"></div>
         </div>
@@ -2262,7 +2293,7 @@ function renderFinderCandidates() {
   $("finder-table-head")?.classList.toggle("finder-simple", isFind);
   $("finder-table-head").innerHTML = isFind
     ? `<span>#</span><span>계정</span><span class="finder-head-cell">팔로워${followerSortControl()}</span><span>검토</span><span>메모</span><span>담당자</span>`
-    : `<span>#</span><span>계정</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span><span>액션</span>`;
+    : `<span>#</span><span>계정</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span>`;
   renderFollowerSortIndicators();
   $("find-subtabs")?.classList.toggle("active", isFind);
   $("manage-subtabs")?.classList.toggle("active", isManage);
@@ -2328,7 +2359,7 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
       return `
       <div class="finder-row finder-simple">
         <span class="handle">${index + 1}</span>
-        <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div></div></div>
+        <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div>${finderProfileEmail(row)}</div></div>
         <span class="followers-cell">${num(row.follower_count).toLocaleString()}</span>
         ${finderReviewCell(row, true)}
         ${finderMemoCell(row)}
@@ -2339,17 +2370,22 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
   return `
     <div class="finder-row">
       <span class="handle">${index + 1}</span>
-      <div class="profile-mini finder-profile">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div></div></div>
+      <div class="profile-mini finder-profile">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div>${finderProfileEmail(row)}</div></div>
       <input class="campaign-email-input finder-email-input" value="${esc(row.profile_email || "")}" placeholder="이메일 없음" readonly />
       ${finderReviewCell(row, false)}
       ${finderStatusSelect(row, "dm_status", DM_STATUSES)}
       ${finderStatusSelect(row, "email_status", EMAIL_STATUSES)}
       ${finderStatusSelect(row, "groupbuy_experience", GROUPBUY_EXPERIENCE_VALUES)}
       ${finderStatusSelect(row, "agency_status", AGENCY_STATUS_VALUES)}
-      ${finderMemoCell(row)}
       ${finderActionCell(row, { isExcluded, isManageSent, isManageReply, isManageRejected, isManage })}
     </div>
   `;
+}
+function finderProfileEmail(row) {
+  const email = String(row.profile_email || "").trim();
+  return email
+    ? `<a class="finder-profile-email" href="mailto:${esc(email)}" onclick="event.stopPropagation();" title="${esc(email)}">${esc(email)}</a>`
+    : `<span class="finder-profile-email">이메일 없음</span>`;
 }
 function finderStatusSelect(row, field, options) {
   const value = field === "dm_status"
@@ -2657,15 +2693,22 @@ function renderCampaignTemplateChoices() {
     return;
   }
   wrap.innerHTML = campaigns.map((campaign) => `
-    <button class="campaign-template-choice ${Number(selectedCampaignId()) === Number(campaign.id) ? "active" : ""}" onclick="applyCampaignTemplateFromButton(${campaign.id})" title="${esc(campaign.name)}">
-      ${esc(campaign.name)}
-    </button>
+    <div class="campaign-template-choice-row">
+      <button class="campaign-template-choice ${Number(selectedCampaignId()) === Number(campaign.id) ? "active" : ""}" onclick="applyCampaignTemplateFromButton(${campaign.id})" title="${esc(campaign.name)}">
+        ${esc(campaign.name)}
+      </button>
+      <button class="campaign-template-edit" onclick="openCampaignManagement(${campaign.id})" title="${esc(campaign.name)} 관리수정">수정하기</button>
+    </div>
   `).join("");
 }
 async function selectCampaignForManagement(id) {
   await selectCampaign(id);
   setCampaignMode("campaigns");
   renderCampaignManager();
+}
+async function openCampaignManagement(id) {
+  await selectCampaignForManagement(id);
+  $("campaign-manager-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 async function applyManagedCampaign() {
   await saveManagedCampaignTemplate({ silent: true });
