@@ -364,6 +364,9 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-shell.finder-mode { grid-template-columns: 196px minmax(0, 1fr); }
 .campaign-shell.finder-mode .campaign-preview { display: none; }
 .campaign-shell.finder-mode .campaign-body-grid { display: none; }
+.campaign-shell.campaigns-mode { grid-template-columns: 196px minmax(0, 1fr); }
+.campaign-shell.campaigns-mode .campaign-preview,
+.campaign-shell.campaigns-mode .campaign-body-grid { display: none; }
 .campaign-side { border-right: 1px solid #edf0f4; background: #fbfcff; padding: 14px; }
 .campaign-main { padding: 0; border-right: 1px solid #edf0f4; min-width: 0; overflow: hidden; background: #fff; }
 .campaign-preview { padding: 0; background: #fff; min-width: 0; display: flex; flex-direction: column; }
@@ -386,19 +389,34 @@ tbody tr:hover { background: var(--pink-light); }
 }
 .campaign-item:hover .campaign-delete, .campaign-item.active .campaign-delete { opacity: 1; }
 .campaign-delete:hover { background: #fff; color: var(--red); }
+.campaign-home-view { display: none; min-height: calc(100vh - 56px); background: #fff; }
+.campaign-home-view.active { display: block; }
+.campaign-home-content { padding: 22px; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 18px; align-items: start; }
+.campaign-home-view .campaign-list {
+  gap: 10px; margin-top: 0;
+}
+.campaign-home-view .campaign-item {
+  border-color: #e4e7ec; background: #fff; border-radius: 6px; padding: 14px;
+  min-height: 86px;
+}
+.campaign-home-view .campaign-item:hover { border-color: #b8a6ff; background: #faf9ff; }
+.campaign-home-view .campaign-item strong { font-size: 15px; }
+.campaign-home-view .campaign-item span { font-size: 12px; }
+.campaign-manager-list { min-width: 0; }
+.campaign-manager-editor {
+  border: 1px solid #e4e7ec; border-radius: 6px; background: #fff;
+  min-height: calc(100vh - 168px); overflow: hidden;
+}
+.campaign-manager-empty { padding: 22px; }
+.campaign-manager-form { display: grid; grid-template-columns: minmax(0, 1fr) 320px; min-height: calc(100vh - 168px); }
+.campaign-manager-fields { padding: 22px; min-width: 0; border-right: 1px solid #f0f1f4; }
+.campaign-manager-preview { padding: 22px; background: #fbfbfc; min-width: 0; }
+.campaign-title-edit { padding: 16px 22px; border-bottom: 1px solid #f0f1f4; background: #fff; }
 .step-label {
   display: inline-flex; align-items: center; gap: 6px;
   color: #6e56e8; background: #f1efff; border: 1px solid #dcd7ff;
   border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 800; margin-right: 8px;
 }
-.campaign-workspace-head {
-  height: 48px; border-bottom: 1px solid #edf0f4; display: flex; align-items: center;
-  justify-content: space-between; padding: 0 22px; background: #fff;
-}
-.campaign-date { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #30323a; }
-.campaign-actions { display: flex; align-items: center; gap: 8px; }
-.campaign-action-mini { border: none; background: transparent; color: #6b7280; font-size: 12px; font-family: inherit; cursor: pointer; }
-.campaign-next { background: #6f5bff; color: #fff; border: 0; border-radius: 4px; padding: 7px 15px; font-size: 12px; font-weight: 700; cursor: pointer; }
 .campaign-body-grid { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .campaign-shell.setup-mode .campaign-body-grid { display: none; }
 .campaign-shell.add-mode .campaign-body-grid { display: none; }
@@ -446,23 +464,38 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-step-main { padding: 0; min-width: 0; }
 .campaign-step-title { font-size: 12px; font-weight: 800; color: #2d2f36; margin-bottom: 4px; }
 .campaign-step-copy { font-size: 11px; color: #8b909b; line-height: 1.5; }
-.campaign-load-option {
-  display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid #f0f1f4;
-  font-size: 12px; color: #4b5563; font-weight: 700;
+.campaign-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.campaign-template-choices {
+  display: grid; gap: 7px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0f1f4;
 }
+.campaign-template-choice {
+  border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 8px 10px;
+  font-family: inherit; color: #374151; text-align: left; font-size: 12px; font-weight: 800;
+  cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.campaign-template-choice:hover { border-color: #b8a6ff; background: #f7f5ff; color: #6e56e8; }
+.campaign-template-choice.active { border-color: #b8a6ff; background: #f0edff; color: #6e56e8; }
+.campaign-template-empty { color: #8b909b; font-size: 11px; line-height: 1.45; }
+.campaign-load-option {
+  display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e4e7ec; background: #fff;
+  border-radius: 4px; padding: 7px 10px; font-family: inherit; font-size: 12px; color: #4b5563;
+  font-weight: 800; cursor: pointer;
+}
+.campaign-load-option:hover { border-color: #b8a6ff; background: #f7f5ff; color: #6e56e8; }
 .campaign-load-icon { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; color:#6e56e8; }
 .campaign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
 .candidate-picker {
   border: 0; border-radius: 0; overflow: hidden; background: var(--surface);
-  max-height: 310px; overflow-y: auto;
+  max-height: 310px; overflow: auto;
 }
 .campaign-candidate-head {
-  grid-template-columns: 24px minmax(240px, 1fr) minmax(220px, 320px) 28px !important;
+  grid-template-columns: 34px minmax(180px, 1fr) minmax(180px, 260px) 86px 70px 86px 86px minmax(130px, 1fr) !important;
+  min-width: 980px;
 }
 .candidate-row {
-  display: grid; grid-template-columns: 24px minmax(240px, 1fr) minmax(220px, 320px) 28px;
+  display: grid; grid-template-columns: 34px minmax(180px, 1fr) minmax(180px, 260px) 86px 70px 86px 86px minmax(130px, 1fr);
   gap: 14px; align-items: center;
-  padding: 12px 22px; border-bottom: 1px solid #f0f1f4; min-height: 70px;
+  padding: 12px 22px; border-bottom: 1px solid #f0f1f4; min-height: 70px; min-width: 980px;
 }
 .candidate-row:last-child { border-bottom: none; }
 .candidate-row:hover { background: #fafaff; }
@@ -472,6 +505,7 @@ tbody tr:hover { background: var(--pink-light); }
 .candidate-row .profile-mini strong,
 .candidate-row .profile-mini .handle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .candidate-row > .handle:last-child { justify-self: center; font-size: 18px; line-height: 1; }
+.campaign-select-all { width: 14px; height: 14px; accent-color: #6e56e8; }
 .campaign-email-input {
   width: 100%; border: 1px solid #e4e7ec; border-radius: 4px; padding: 6px 9px;
   font-size: 12px; color: #374151; background: #fff;
@@ -653,12 +687,7 @@ tbody tr:hover { background: var(--pink-light); }
     display: none;
   }
   .finder-review-btn { flex: 1 1 70px; }
-  .campaign-candidate-head { display: none; }
-  .candidate-row { grid-template-columns: 24px minmax(0, 1fr) 28px; gap: 10px; padding: 12px 18px; }
-  .candidate-row > input[type="checkbox"] { grid-column: 1; grid-row: 1; }
-  .candidate-row .profile-mini { grid-column: 2 / 3; grid-row: 1; }
-  .candidate-row .campaign-email-input { grid-column: 2 / 4; }
-  .candidate-row > .handle:last-child { grid-column: 3; grid-row: 1; }
+  .campaign-candidate-head { display: grid; }
 }
 </style>
 </head>
@@ -830,29 +859,10 @@ tbody tr:hover { background: var(--pink-light); }
         </div>
         <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
         <div class="side-menu-title">캠페인</div>
-        <button class="side-menu-item active" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">▷ DM/이메일 발송</button>
-        <div class="campaign-top">
-          <div>
-            <div class="campaign-title">캠페인</div>
-            <div class="handle"><span id="campaign-owner-label">담당자</span> · <span id="campaign-count">0개</span></div>
-          </div>
-          <button class="action-btn" onclick="openCampaignSetup()">새 캠페인</button>
-        </div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>캠페인명</label>
-          <input id="campaign-name" placeholder="예) 6월 앰플 협찬 캠페인" />
-        </div>
-        <div class="campaign-list" id="campaign-list"></div>
+        <button class="side-menu-item" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">✉ DM/이메일 발송</button>
+        <button class="side-menu-item active" data-campaign-mode-btn="campaigns" onclick="setCampaignMode('campaigns')">▷ 캠페인</button>
       </aside>
       <main class="campaign-main">
-        <div class="campaign-workspace-head">
-          <div class="campaign-date"><span id="campaign-date-title">2025-01-10</span><span>✎</span></div>
-          <div class="campaign-actions">
-            <button class="campaign-action-mini" onclick="saveCampaignTemplate()">↻ 자동 저장</button>
-            <button class="campaign-action-mini" onclick="setCampaignMode('add')">추가하기</button>
-            <button class="campaign-next" onclick="sendSelectedCampaign()">다음</button>
-          </div>
-        </div>
         <div class="campaign-finder-view" id="campaign-finder-view">
           <div class="finder-header">
             <div>
@@ -870,13 +880,33 @@ tbody tr:hover { background: var(--pink-light); }
           </div>
           <div class="finder-list" id="finder-list"></div>
         </div>
+        <div class="campaign-home-view" id="campaign-home-view">
+          <div class="finder-header">
+            <div>
+              <div class="finder-title">캠페인</div>
+              <div class="finder-sub"><span id="campaign-owner-label">담당자</span> 담당 캠페인 <span id="campaign-count">0개</span></div>
+            </div>
+            <button class="btn btn-primary" onclick="openCampaignSetup()">새 캠페인 만들기</button>
+          </div>
+          <div class="campaign-home-content">
+            <div class="campaign-manager-list">
+              <div class="campaign-list" id="campaign-list"></div>
+            </div>
+            <div class="campaign-manager-editor" id="campaign-manager-editor">
+              <div class="campaign-manager-empty">
+                <div class="campaign-title">캠페인을 선택하세요</div>
+                <div class="finder-sub">기존 캠페인을 선택해 이메일 템플릿을 관리하거나 새 캠페인을 만드세요.</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="campaign-setup-view" id="campaign-setup-view">
           <div class="finder-header">
             <div>
               <div class="finder-title">새 캠페인 설정</div>
               <div class="finder-sub">캠페인 목적에 따라 제목과 제안서 템플릿을 먼저 고릅니다.</div>
             </div>
-            <button class="action-btn" onclick="setCampaignMode('send')">닫기</button>
+            <button class="action-btn" onclick="setCampaignMode('campaigns')">닫기</button>
           </div>
           <div class="campaign-setup-layout">
             <div class="campaign-setup-form">
@@ -905,7 +935,7 @@ tbody tr:hover { background: var(--pink-light); }
                 <textarea id="setup-campaign-body" style="min-height:220px;" oninput="renderCampaignSetupPreview()"></textarea>
               </div>
               <div class="campaign-setup-actions">
-                <button class="btn btn-ghost" onclick="setCampaignMode('send')">취소</button>
+                <button class="btn btn-ghost" onclick="setCampaignMode('campaigns')">취소</button>
                 <button class="btn btn-primary" id="create-campaign-btn" onclick="createCampaignFromSetup()">캠페인 생성</button>
               </div>
             </div>
@@ -919,18 +949,31 @@ tbody tr:hover { background: var(--pink-light); }
           </div>
         </div>
         <div class="campaign-body-grid">
+          <div class="campaign-title-edit">
+            <div class="field">
+              <label>캠페인명</label>
+              <input id="campaign-name" placeholder="예) 6월 앰플 협찬 캠페인" />
+            </div>
+          </div>
           <div class="campaign-step-row">
             <div class="campaign-step-aside">
               <div><span class="step-label">STEP 1</span><span class="campaign-step-title">수신인 추가</span></div>
-              <div class="campaign-step-copy">체크한 인플루언서만 캠페인 수신인으로 담깁니다. 아직 발송되지는 않습니다.</div>
-              <div style="height:22px;"></div>
-              <div class="campaign-load-option"><span class="campaign-load-icon">☷</span>그룹/캠페인 불러오기</div>
-              <div class="campaign-load-option"><span class="campaign-load-icon">↗</span>계정 링크 일괄 추가하기</div>
-              <button class="action-btn" style="margin-top:18px;" onclick="loadCampaignCandidates()">검색 후 추가하기</button>
+              <div class="campaign-step-copy">검토 좋음 상태의 발송 대기 인플루언서가 자동으로 표시됩니다. 전체 선택하거나 필요한 대상만 체크하세요.</div>
+              <div class="campaign-template-choices" id="campaign-template-choices"></div>
+              <div class="campaign-step-actions">
+                <button class="action-btn" onclick="toggleCampaignCandidateSelection(true)">전체 대상 선택</button>
+              </div>
             </div>
             <div class="campaign-step-main">
               <div class="campaign-table-head campaign-candidate-head">
-                <span></span><span>계정</span><span>이메일</span><span></span>
+                <span><input type="checkbox" class="campaign-select-all" id="campaign-select-all" onchange="toggleCampaignCandidateSelection(this.checked)" /></span>
+                <span>계정</span>
+                <span>이메일</span>
+                <span>팔로워</span>
+                <span>ER</span>
+                <span>공구경험</span>
+                <span>에이전시</span>
+                <span>메모</span>
               </div>
               <div class="candidate-picker" id="campaign-candidates"></div>
               <div style="padding:12px 18px;border-top:1px solid #f0f1f4;text-align:right;">
@@ -953,7 +996,6 @@ tbody tr:hover { background: var(--pink-light); }
                 <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{fit_reason}}')">선정이유</button>
                 <button class="action-btn" onclick="insertTemplateVar('campaign-body', '{{custom_note}}')">맞춤문구</button>
               </div>
-              <button class="btn btn-primary" id="save-campaign-btn" onclick="saveCampaignTemplate()">제안서 저장</button>
             </div>
             <div class="campaign-template-grid">
               <div class="campaign-template-form">
@@ -1320,7 +1362,7 @@ function showPage(name) {
   if (name === "campaign") {
     const owner = normalizeTeamMember(identity().name);
     if (!owner) openIdentity();
-    state.campaignMode = "find";
+    state.campaignMode = "campaigns";
     state.campaignFindTab = "unchecked";
     initCampaignPage();
   }
@@ -1880,16 +1922,20 @@ function selectedCampaignId() {
 function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   state.campaignMode = mode;
   const listMode = mode === "find" || mode === "manage" || mode === "excluded";
+  const campaignsMode = mode === "campaigns";
   const setupMode = mode === "setup";
   const addMode = mode === "add";
   document.querySelector(".campaign-shell")?.classList.toggle("finder-mode", listMode);
+  document.querySelector(".campaign-shell")?.classList.toggle("campaigns-mode", campaignsMode);
   document.querySelector(".campaign-shell")?.classList.toggle("setup-mode", setupMode);
   document.querySelector(".campaign-shell")?.classList.toggle("add-mode", addMode);
   $("campaign-finder-view")?.classList.toggle("active", listMode);
+  $("campaign-home-view")?.classList.toggle("active", campaignsMode);
   $("campaign-setup-view")?.classList.toggle("active", setupMode);
   $("page-add")?.classList.toggle("active", addMode);
+  const activeButtonMode = mode === "setup" ? "campaigns" : mode;
   document.querySelectorAll("[data-campaign-mode-btn]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.campaignModeBtn === mode);
+    button.classList.toggle("active", button.dataset.campaignModeBtn === activeButtonMode);
   });
   if (listMode && !skipFinderLoad) loadFinderCandidates();
   if (setupMode) renderCampaignSetup();
@@ -2363,12 +2409,73 @@ function setPreviewContent(id, value, fallback) {
     el.classList?.remove("html-preview");
   }
 }
+function renderCampaignManagerPreview() {
+  const sample = withSamplePersonalization(state.campaignCandidates?.[0]);
+  if ($("manager-preview-subject")) $("manager-preview-subject").textContent = renderCampaignText($("manager-campaign-subject")?.value || "", sample, "") || "제목 미리보기";
+  setPreviewContent("manager-preview-body", renderCampaignText($("manager-campaign-body")?.value || "", sample, ""), "내용을 입력하면 미리보기가 표시됩니다.");
+}
+function renderCampaignManager() {
+  const editor = $("campaign-manager-editor");
+  if (!editor) return;
+  const campaign = state.selectedCampaign;
+  if (!campaign) {
+    editor.innerHTML = `
+      <div class="campaign-manager-empty">
+        <div class="campaign-title">캠페인을 선택하세요</div>
+        <div class="finder-sub">기존 캠페인을 선택해 이메일 템플릿을 관리하거나 새 캠페인을 만드세요.</div>
+        <button class="btn btn-primary" style="margin-top:14px;" onclick="openCampaignSetup()">새 캠페인 만들기</button>
+      </div>
+    `;
+    return;
+  }
+  editor.innerHTML = `
+    <div class="campaign-manager-form">
+      <div class="campaign-manager-fields">
+        <div class="field" style="margin-bottom:16px;">
+          <label>캠페인명</label>
+          <input id="manager-campaign-name" value="${esc(campaign.name || "")}" placeholder="예) 6월 앰플 협찬 캠페인" />
+        </div>
+        <div class="template-tools" style="justify-content:flex-start;">
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{account}}')">계정명</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{name}}')">이름</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{email}}')">이메일</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{profile_url}}')">프로필</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{launch_date}}')">런칭일</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{recent_content_note}}')">최근콘텐츠</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{fit_reason}}')">선정이유</button>
+          <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{custom_note}}')">맞춤문구</button>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label>이메일 제목</label>
+          <textarea id="manager-campaign-subject" style="min-height:58px;" oninput="renderCampaignManagerPreview()">${esc(campaign.subject_template || "")}</textarea>
+        </div>
+        <div class="field">
+          <label>이메일 내용</label>
+          <textarea id="manager-campaign-body" style="min-height:260px;" oninput="renderCampaignManagerPreview()">${esc(campaign.body_template || "")}</textarea>
+        </div>
+        <div class="campaign-setup-actions">
+          <button class="btn btn-ghost" id="save-manager-template-btn" onclick="saveManagedCampaignTemplate()">저장</button>
+          <button class="btn btn-primary" onclick="applyManagedCampaign()">DM/이메일 발송에 적용</button>
+        </div>
+      </div>
+      <div class="campaign-manager-preview">
+        <div class="campaign-title">템플릿 미리보기</div>
+        <div class="phone-preview">
+          <div class="handle" style="margin-bottom:8px;" id="manager-preview-subject">제목 미리보기</div>
+          <div class="message-bubble" id="manager-preview-body">내용을 입력하면 미리보기가 표시됩니다.</div>
+        </div>
+      </div>
+    </div>
+  `;
+  renderCampaignManagerPreview();
+}
 async function initCampaignPage() {
   renderCampaignOwnerUi();
-  setCampaignMode(state.campaignMode || "send");
+  setCampaignMode(state.campaignMode || "campaigns");
   if (!state.campaigns.length) await loadCampaigns();
   if (!state.campaignCandidates.length) await loadCampaignCandidates();
   renderCampaignPreview();
+  renderCampaignManager();
 }
 async function loadCampaigns() {
   try {
@@ -2382,6 +2489,8 @@ async function loadCampaigns() {
       if (!selectedVisible) state.selectedCampaign = null;
       renderCampaignList();
       renderCampaignDetail();
+      renderCampaignManager();
+      renderCampaignTemplateChoices();
     }
   } catch (error) {
     toast(error.message);
@@ -2391,12 +2500,18 @@ function renderCampaignList() {
   const list = $("campaign-list");
   const campaigns = visibleCampaigns();
   $("campaign-count").textContent = `${campaigns.length.toLocaleString()}개`;
+  renderCampaignTemplateChoices();
   if (!campaigns.length) {
-    list.innerHTML = `<div class="handle">${esc(campaignOwner())} 캠페인이 아직 없습니다.</div>`;
+    list.innerHTML = `
+      <div class="empty-state" style="display:block;padding:28px 12px;">
+        <p>${esc(campaignOwner())} 캠페인이 아직 없습니다</p>
+        <small>새 캠페인 만들기로 첫 캠페인을 생성하세요.</small>
+      </div>
+    `;
     return;
   }
   list.innerHTML = campaigns.map((campaign) => `
-    <div class="campaign-item ${selectedCampaignId() === campaign.id ? "active" : ""}" onclick="selectCampaign(${campaign.id})">
+    <div class="campaign-item ${selectedCampaignId() === campaign.id ? "active" : ""}" onclick="selectCampaignForManagement(${campaign.id})">
       <div class="campaign-item-main">
         <strong>${esc(campaign.name)}</strong>
         <span>${num(campaign.counts?.total).toLocaleString()}명 · 발송 ${num(campaign.counts?.sent).toLocaleString()} · 회신 ${num(campaign.counts?.replied).toLocaleString()}</span>
@@ -2404,6 +2519,35 @@ function renderCampaignList() {
       <button class="campaign-delete" onclick="deleteSelectedCampaign(event, ${campaign.id})" title="캠페인 삭제">삭제</button>
     </div>
   `).join("");
+}
+function renderCampaignTemplateChoices() {
+  const wrap = $("campaign-template-choices");
+  if (!wrap) return;
+  const campaigns = visibleCampaigns();
+  if (!campaigns.length) {
+    wrap.innerHTML = `<div class="campaign-template-empty">캠페인 관리에서 먼저 캠페인을 만들어주세요.</div>`;
+    return;
+  }
+  wrap.innerHTML = campaigns.map((campaign) => `
+    <button class="campaign-template-choice ${Number(selectedCampaignId()) === Number(campaign.id) ? "active" : ""}" onclick="applyCampaignTemplateFromButton(${campaign.id})" title="${esc(campaign.name)}">
+      ${esc(campaign.name)}
+    </button>
+  `).join("");
+}
+async function selectCampaignForManagement(id) {
+  await selectCampaign(id);
+  setCampaignMode("campaigns");
+  renderCampaignManager();
+}
+async function applyManagedCampaign() {
+  await saveManagedCampaignTemplate({ silent: true });
+  setCampaignMode("send");
+}
+async function applyCampaignTemplateFromButton(id) {
+  await selectCampaign(id);
+  setCampaignMode("send");
+  renderCampaignTemplateChoices();
+  toast("캠페인 템플릿 적용 완료");
 }
 function setupCampaignDefaultName(preset) {
   const owner = campaignOwner();
@@ -2469,7 +2613,8 @@ async function createCampaignFromSetup() {
     state.selectedCampaign = null;
     await loadCampaigns();
     if (row?.id) await selectCampaign(row.id);
-    setCampaignMode("send");
+    setCampaignMode("campaigns");
+    renderCampaignManager();
     toast("캠페인 생성 완료");
   } catch (error) {
     toast(error.message);
@@ -2511,6 +2656,8 @@ async function selectCampaign(id) {
     renderCampaignList();
     renderCampaignDetail();
     renderCampaignPreview();
+    renderCampaignManager();
+    renderCampaignTemplateChoices();
   } catch (error) {
     toast(error.message);
   }
@@ -2521,7 +2668,6 @@ function renderCampaignDetail() {
   $("c-total").textContent = num(counts.total).toLocaleString();
   $("c-sent").textContent = num(counts.sent).toLocaleString();
   $("c-replied").textContent = num(counts.replied).toLocaleString();
-  $("campaign-date-title").textContent = campaign?.name || `${campaignOwner()} 캠페인`;
   $("campaign-sender-email").textContent = campaign?.sender_email || "Gmail 설정 필요";
   $("campaign-started-at").textContent = formatDate(campaign?.last_sent_at);
   $("campaign-finished-at").textContent = formatDate(campaign?.last_sent_at);
@@ -2690,10 +2836,37 @@ async function saveRecipientPersonalization() {
     if ($("save-personalization-btn")) $("save-personalization-btn").disabled = false;
   }
 }
-async function saveCampaignTemplate() {
+async function saveManagedCampaignTemplate({ silent = false } = {}) {
+  const id = selectedCampaignId();
+  if (!id) { toast("먼저 캠페인을 선택하세요."); return; }
+  const button = $("save-manager-template-btn");
+  if (button) button.disabled = true;
+  try {
+    state.selectedCampaign = await api(`/api/campaigns/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: $("manager-campaign-name")?.value.trim() || state.selectedCampaign.name,
+        subject_template: $("manager-campaign-subject")?.value || "",
+        body_template: $("manager-campaign-body")?.value || "",
+      }),
+    });
+    state.campaigns = [];
+    await loadCampaigns();
+    await selectCampaign(id);
+    renderCampaignManager();
+    if (!silent) toast("캠페인 템플릿 저장 완료");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+async function saveCampaignTemplate({ silent = false } = {}) {
   const id = selectedCampaignId();
   if (!id) { toast("먼저 캠페인을 생성하세요."); return; }
-  $("save-campaign-btn").disabled = true;
+  const button = $("save-campaign-btn");
+  if (button) button.disabled = true;
   try {
     state.selectedCampaign = await api(`/api/campaigns/${id}`, {
       method: "PATCH",
@@ -2707,11 +2880,11 @@ async function saveCampaignTemplate() {
     state.campaigns = [];
     await loadCampaigns();
     await selectCampaign(id);
-    toast("제안서 저장 완료");
+    if (!silent) toast("제안서 저장 완료");
   } catch (error) {
     toast(error.message);
   } finally {
-    $("save-campaign-btn").disabled = false;
+    if (button) button.disabled = false;
   }
 }
 function insertTemplateVar(id, value) {
@@ -2723,6 +2896,7 @@ function insertTemplateVar(id, value) {
   el.setSelectionRange(start + value.length, start + value.length);
   renderCampaignPreview();
   renderCampaignSetupPreview();
+  renderCampaignManagerPreview();
 }
 function renderCampaignPreview() {
   const recipientSample = state.selectedCampaign?.recipients?.[0];
@@ -2758,18 +2932,37 @@ async function loadCampaignCandidates() {
 }
 function renderCampaignCandidates() {
   const wrap = $("campaign-candidates");
+  const selectAll = $("campaign-select-all");
+  if (selectAll) selectAll.checked = false;
   if (!state.campaignCandidates.length) {
     wrap.innerHTML = `<div class="empty-state" style="display:block;padding:28px 12px;"><p>${esc(campaignOwner())} 발송 대기 후보가 없습니다</p><small>검토 좋음이면서 아직 DM/이메일을 보내지 않은 인플루언서만 표시합니다.</small></div>`;
     return;
   }
   wrap.innerHTML = state.campaignCandidates.map((row) => `
     <label class="candidate-row">
-      <input type="checkbox" value="${row.id}" data-campaign-candidate />
+      <input type="checkbox" value="${row.id}" data-campaign-candidate onchange="syncCampaignSelectAll()" />
       <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div><div class="handle">${esc(row.profile_email || "이메일 미수집")}</div></div></div>
       <input class="campaign-email-input" value="${esc(row.profile_email || "")}" placeholder="이메일 직접 입력" data-campaign-email="${row.id}" />
-      <span class="handle">×</span>
+      <span class="handle">${num(row.follower_count).toLocaleString()}</span>
+      <span class="handle">${row.engagement_rate ? `${Number(row.engagement_rate).toFixed(2)}%` : "—"}</span>
+      <span class="handle">${esc(row.groupbuy_experience || "불명")}</span>
+      <span class="handle">${esc(row.agency_status || "불명")}</span>
+      <span class="finder-memo" title="${esc(rowMemoText(row))}">${esc(rowMemoText(row) || "—")}</span>
     </label>
   `).join("");
+}
+function toggleCampaignCandidateSelection(checked) {
+  document.querySelectorAll("[data-campaign-candidate]").forEach((input) => {
+    input.checked = checked;
+  });
+  syncCampaignSelectAll();
+}
+function syncCampaignSelectAll() {
+  const inputs = [...document.querySelectorAll("[data-campaign-candidate]")];
+  const selectAll = $("campaign-select-all");
+  if (!selectAll) return;
+  selectAll.checked = inputs.length > 0 && inputs.every((input) => input.checked);
+  selectAll.indeterminate = inputs.some((input) => input.checked) && !selectAll.checked;
 }
 async function addSelectedRecipients() {
   const id = selectedCampaignId();
@@ -2782,7 +2975,7 @@ async function addSelectedRecipients() {
   ]));
   $("add-recipients-btn").disabled = true;
   try {
-    await saveCampaignTemplate();
+    await saveCampaignTemplate({ silent: true });
     state.selectedCampaign = await api(`/api/campaigns/${id}/recipients`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -2807,7 +3000,7 @@ async function sendSelectedCampaign() {
   if (!confirm(`캠페인 수신인 ${readyCount.toLocaleString()}명에게 이메일을 발송할까요?`)) return;
   $("send-campaign-btn").disabled = true;
   try {
-    await saveCampaignTemplate();
+    await saveCampaignTemplate({ silent: true });
     const result = await api(`/api/campaigns/${id}/send`, { method: "POST" });
     state.selectedCampaign = result.campaign;
     const sentCandidateIds = new Set((result.campaign?.recipients || [])

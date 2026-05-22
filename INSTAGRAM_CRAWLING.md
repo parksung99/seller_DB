@@ -95,3 +95,45 @@ CSV 필드는 전략 문서의 1차 DM 리스트 구조와 맞춰두었다.
 ```powershell
 .\.tools\node-v22.22.3-win-x64\node.exe scripts\instagram_hashtag_crawler.mjs --delay-ms 5000
 ```
+
+## 주기적으로 계속 실행
+
+`scripts/run_periodic_crawler.mjs`는 기존 `scripts/crawl_import_refresh.mjs` 파이프라인을 일정 간격으로 반복 실행한다.
+기본값은 6시간마다 한 번이며, 첫 실행은 바로 시작한다.
+
+로컬 터미널에서만 테스트하려면 다음처럼 실행한다.
+
+```bash
+npm run crawler:periodic -- --interval-minutes 360
+```
+
+터미널을 닫아도 계속 돌리려면 데몬 스크립트로 실행한다.
+이미 `crawl_import_refresh`가 실행 중이면 중복 실행하지 않고 10분 뒤 다시 확인한다.
+
+```bash
+./scripts/crawler_daemon.sh start
+./scripts/crawler_daemon.sh logs
+```
+
+상태 확인/중지/재시작은 다음 명령을 사용한다.
+
+```bash
+./scripts/crawler_daemon.sh status
+./scripts/crawler_daemon.sh stop
+./scripts/crawler_daemon.sh restart
+```
+
+기본 파이프라인 인자는 다음과 같다.
+
+```text
+--cookie-file ig_cookie.txt --delay-ms 8000 --limit 20 --refresh-limit 120
+```
+
+실행 간격은 환경변수로 바꿀 수 있다.
+
+```bash
+CRAWLER_INTERVAL_MINUTES=180 ./scripts/crawler_daemon.sh restart
+```
+
+Codex 앱의 recurring automation을 쓰면 이 터미널 세션과 별개로 같은 작업을 주기 실행할 수 있다.
+현재 권장 주기는 6시간이다.

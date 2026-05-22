@@ -3,4 +3,5 @@ ig_cookie.txt
 data/*.json
 data/*.csv
 .tools/
+logs/
 review_server*.log

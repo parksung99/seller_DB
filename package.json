@@ -17,6 +17,12 @@
     "followers:apify": "node scripts/refresh_followers_from_apify.mjs",
     "profile-emails:refresh": "node scripts/refresh_profile_emails_from_instagram.mjs",
     "assign:candidates": "node scripts/assign_candidates.mjs",
+    "crawler:periodic": "node scripts/run_periodic_crawler.mjs",
+    "crawler:start": "scripts/crawler_daemon.sh start",
+    "crawler:logs": "scripts/crawler_daemon.sh logs",
+    "crawler:status": "scripts/crawler_daemon.sh status",
+    "crawler:stop": "scripts/crawler_daemon.sh stop",
+    "crawler:restart": "scripts/crawler_daemon.sh restart",
     "review": "node scripts/review_server.mjs",
     "start": "node scripts/review_server.mjs"
   },
