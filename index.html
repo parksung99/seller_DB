@@ -478,11 +478,23 @@ tbody tr:hover { background: var(--pink-light); }
 }
 .campaign-step-aside { padding: 22px; border-right: 1px solid #f0f1f4; background: #fff; }
 .campaign-step-main { padding: 0; min-width: 0; }
+.campaign-recipient-step {
+  grid-template-columns: minmax(0, 1fr);
+}
+.campaign-recipient-step .campaign-step-aside {
+  border-right: 0; border-bottom: 1px solid #f0f1f4; padding-bottom: 16px;
+}
+.campaign-recipient-step .campaign-step-main {
+  background: #fff;
+}
+.campaign-recipient-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 34%); gap: 16px; align-items: start;
+}
 .campaign-step-title { font-size: 12px; font-weight: 800; color: #2d2f36; margin-bottom: 4px; }
 .campaign-step-copy { font-size: 11px; color: #8b909b; line-height: 1.5; }
 .campaign-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .campaign-template-choices {
-  display: grid; gap: 7px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0f1f4;
+  display: grid; gap: 7px; padding-left: 16px; border-left: 1px solid #f0f1f4;
 }
 .campaign-template-choice-row {
   min-width: 0;
@@ -542,26 +554,24 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-email-input {
   height: 30px; background: #fbfbfc; color: #374151;
 }
-.finder-status-select {
-  width: 100%; height: 30px; border: 1px solid transparent; border-radius: 999px;
-  padding: 0 18px 0 8px; font-family: inherit; font-size: 10.5px; font-weight: 800;
-  outline: none; cursor: pointer; appearance: auto;
-}
-.finder-status-select.s-none { border-color: #e7e4df; }
-.finder-status-select.s-dm { border-color: #c7dcf5; }
-.finder-status-select.s-wait { border-color: #f2d59b; }
-.finder-status-select.s-reply { border-color: #c4ead8; }
-.finder-status-select.s-call { border-color: #f4c8d8; }
-.finder-status-select.s-exclude { border-color: #e7e4df; }
+.finder-status-select,
 .finder-review-select {
-  width: 100%; height: 31px; border: 1px solid transparent; border-radius: 999px;
-  padding: 0 24px 0 10px; font-family: inherit; font-size: 11px; font-weight: 800;
-  outline: none; cursor: pointer; appearance: auto;
+  width: 100%; min-width: 0; height: 34px; border: 1px solid #e7e4df; border-radius: 999px;
+  padding: 0 24px 0 12px; font-family: inherit; font-size: 12px; font-weight: 800;
+  color: #4b5563; outline: none; cursor: pointer; appearance: auto; line-height: 1;
 }
-.finder-review-select.s-none { border-color: #e7e4df; }
-.finder-review-select.s-reply { border-color: #c4ead8; }
-.finder-review-select.s-wait { border-color: #f2d59b; }
-.finder-review-select.s-exclude { border-color: #e7e4df; }
+.finder-status-select.s-none,
+.finder-review-select.s-none { border-color: #e7e4df; color: var(--text2); }
+.finder-status-select.s-dm,
+.finder-review-select.s-dm { border-color: #c7dcf5; color: var(--blue); }
+.finder-status-select.s-wait,
+.finder-review-select.s-wait { border-color: #f2d59b; color: var(--amber); }
+.finder-status-select.s-reply,
+.finder-review-select.s-reply { border-color: #c4ead8; color: var(--green); }
+.finder-status-select.s-call,
+.finder-review-select.s-call { border-color: #f4c8d8; color: var(--pink); }
+.finder-status-select.s-exclude,
+.finder-review-select.s-exclude { border-color: #e7e4df; color: var(--text2); }
 	.finder-memo {
 	  display: inline-block;
 	  max-width: 100%;
@@ -734,7 +744,8 @@ tbody tr:hover { background: var(--pink-light); }
     display: grid; grid-template-columns: 1fr; gap: 3px; margin: 3px 0 8px;
   }
   .finder-subtab { padding: 7px 9px 7px 28px; text-align: left; }
-  .campaign-grid, .campaign-step-row, .campaign-setup-layout, .campaign-info-strip, .campaign-history-stats { grid-template-columns: 1fr; }
+  .campaign-grid, .campaign-step-row, .campaign-recipient-head, .campaign-setup-layout, .campaign-info-strip, .campaign-history-stats { grid-template-columns: 1fr; }
+  .campaign-template-choices { padding-left: 0; padding-top: 14px; border-left: 0; border-top: 1px solid #f0f1f4; }
   .campaign-template-grid { grid-template-columns: minmax(0, 1fr); }
   .campaign-template-form { border-right: 0; border-bottom: 1px solid #f0f1f4; }
   .campaign-template-preview { border-left: 0; margin-left: 0; border-top: 1px solid #f0f1f4; }
@@ -1089,18 +1100,19 @@ tbody tr:hover { background: var(--pink-light); }
           </div>
         </div>
         <div class="campaign-body-grid">
-          <div class="campaign-step-row">
+          <div class="campaign-step-row campaign-recipient-step">
             <div class="campaign-step-aside">
-              <div><span class="step-label">STEP 1</span><span class="campaign-step-title">수신인 추가</span></div>
-              <div class="campaign-step-copy">검토 좋음 상태이고 이메일이 있는 발송 대기 인플루언서가 자동으로 표시됩니다. 전체 선택하거나 필요한 대상만 체크하세요.</div>
-              <div class="campaign-template-choices" id="campaign-template-choices"></div>
-              <div class="campaign-step-actions">
-                <button class="action-btn" onclick="toggleCampaignCandidateSelection(true)">전체 대상 선택</button>
+              <div class="campaign-recipient-head">
+                <div>
+                  <div><span class="step-label">STEP 1</span><span class="campaign-step-title">수신인 추가</span></div>
+                  <div class="campaign-step-copy">검토 좋음 상태이고 이메일이 있는 발송 대기 인플루언서가 자동으로 표시됩니다. 필요한 대상만 체크해 캠페인 수신인으로 담으세요.</div>
+                </div>
+                <div class="campaign-template-choices" id="campaign-template-choices"></div>
               </div>
             </div>
             <div class="campaign-step-main">
               <div class="campaign-table-head campaign-candidate-head">
-                <span><input type="checkbox" class="campaign-select-all" id="campaign-select-all" onchange="toggleCampaignCandidateSelection(this.checked)" /></span>
+                <span></span>
                 <span>계정</span>
                 <span>이메일</span>
                 <span>팔로워</span>
@@ -1701,10 +1713,27 @@ function reviewClass(value) {
   if (value === "좋음") return "s-reply";
   if (value === "보류") return "s-wait";
   if (value === "제외") return "s-exclude";
+  if (value === "브랜드전달") return "s-call";
   return "s-none";
 }
 function hasProfileEmail(row) {
   return Boolean(String(row?.profile_email || "").trim());
+}
+function manageTabForCandidate(row) {
+  if (isRejectedComplete(row)) return "excluded";
+  if (isReplyComplete(row)) return "replied";
+  if (isSentComplete(row)) return "sent";
+  return hasProfileEmail(row) ? "pending-email" : "pending-dm";
+}
+function manageTabToastMessage(tab) {
+  const messages = {
+    "pending-email": "발송전 이메일로 이동했어요",
+    "pending-dm": "발송전 DM으로 이동했어요",
+    sent: "발송완료로 이동했어요",
+    replied: "회신완료로 이동했어요",
+    excluded: "제외로 이동했어요",
+  };
+  return messages[tab] || "인플루언서 관리로 이동했어요";
 }
 function isEmailSendCandidate(row) {
   return row.review_status === "좋음" && !isContactedComplete(row) && hasProfileEmail(row);
@@ -2152,6 +2181,10 @@ function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   if (isMobileCampaignLayout()) toggleCampaignSide(false);
 }
 function switchCampaignFinderTab(mode, tab) {
+  if (mode === "find" && tab === "good") {
+    switchCampaignFinderTab("manage", "pending-email");
+    return;
+  }
   const requestedMode = mode === "find" ? "find" : "manage";
   const requestedFindTab = requestedMode === "find" ? FIND_TABS[tab] ? tab : "unchecked" : state.campaignFindTab;
   const requestedManageTab = requestedMode === "manage" ? tab : state.campaignManageTab;
@@ -2366,9 +2399,9 @@ function renderFinderCandidates() {
         : isManageSent
           ? "DM 또는 이메일 발송 후 아직 회신 전인"
           : isManagePendingEmail
-            ? "이메일이 등록된 발송전 인플루언서"
+            ? "이메일이 등록된 발송전"
             : isManagePendingDm
-              ? "이메일이 없는 발송전 인플루언서"
+              ? "이메일이 없는 발송전"
               : "아직 발송 전인"} 인플루언서입니다. 검토 상태를 잘못 넘겼다면 셀렉트에서 바로 바꿀 수 있습니다.`
     : isExcluded
       ? `크롤링 제외와 검토 제외 처리된 인플루언서입니다.`
@@ -2445,10 +2478,18 @@ function finderStatusSelect(row, field, options) {
   const value = field === "dm_status"
     ? normalizeDmStatus(row.dm_status)
     : row[field] || (field === "groupbuy_experience" || field === "agency_status" ? "불명" : "미발송");
-  const className = field === "email_status" ? emailClass(value) : field === "dm_status" ? dmClass(value) : "";
+  const className = field === "email_status" ? emailClass(value) : field === "dm_status" ? dmClass(value) : "s-none";
   return `
     <select class="finder-status-select ${className}" onchange="updateFinderCandidateStatus(${Number(row.id)}, '${field}', this.value)">
       ${options.map((item) => `<option value="${esc(item)}" ${value === item ? "selected" : ""}>${esc(item)}</option>`).join("")}
+    </select>
+  `;
+}
+function finderReviewSelect(row) {
+  const value = row.review_status || "미확인";
+  return `
+    <select class="finder-review-select ${reviewClass(value)}" onchange="updateFinderCandidateReview(${Number(row.id)}, this.value)">
+      ${REVIEW_STATUSES.map((item) => `<option value="${esc(item)}" ${value === item ? "selected" : ""}>${esc(item)}</option>`).join("")}
     </select>
   `;
 }
@@ -2460,7 +2501,7 @@ function finderMemoCell(row) {
 }
 function finderReviewCell(row, editable) {
   if (!editable) {
-    return `<span class="status-badge ${row.review_status === "좋음" ? "s-reply" : row.review_status === "제외" ? "s-exclude" : "s-none"}">${esc(row.review_status || "미확인")}</span>`;
+    return finderReviewSelect(row);
   }
   return `
     <div class="finder-review-actions">
@@ -2532,6 +2573,7 @@ async function updateFinderCandidateReview(id, reviewStatus) {
   if (row.review_status === reviewStatus) return;
   const nextAssignee = String((row.assignee || campaignOwner() || "").trim());
   const nextRow = { ...row, review_status: reviewStatus, assignee: nextAssignee };
+  const nextManageTab = reviewStatus === "좋음" ? manageTabForCandidate(nextRow) : "";
   state.finderCandidates = applyReviewStatusToLocalCandidateList(nextRow, reviewStatus);
   renderFinderCandidates();
   syncFinderCandidateInCache(nextRow);
@@ -2546,7 +2588,14 @@ async function updateFinderCandidateReview(id, reviewStatus) {
         memo: row.memo || "",
       }),
     });
-    invalidateDbCaches({ candidates: true, finder: false, stats: true });
+    invalidateDbCaches({ candidates: true, finder: reviewStatus === "좋음", stats: true });
+    if (reviewStatus === "좋음") {
+      setCampaignMode("manage", { skipFinderLoad: true });
+      setCampaignManageTab(nextManageTab, { skipFinderLoad: true });
+      await loadFinderCandidates({ force: true });
+      toast(manageTabToastMessage(nextManageTab));
+      return;
+    }
     toast(`${reviewStatus} 처리 완료`);
   } catch (error) {
     toast(error.message);
