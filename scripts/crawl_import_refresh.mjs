@@ -62,6 +62,18 @@ function run(script, args, label, { capture = false } = {}) {
   return `${result.stdout || ""}${result.stderr || ""}`;
 }
 
+function redactArgs(args) {
+  const redacted = [];
+  for (let i = 0; i < args.length; i += 1) {
+    redacted.push(args[i]);
+    if (args[i] === "--cookie") {
+      i += 1;
+      redacted.push("[redacted]");
+    }
+  }
+  return redacted;
+}
+
 function buildCrawlerArgs(args) {
   const crawlerArgs = ["--hashtag-file", args.hashtagFile, "--delay-ms", String(args.delayMs)];
   if (args.outputDir) crawlerArgs.push("--output-dir", args.outputDir);
@@ -103,7 +115,7 @@ function main() {
   ];
   if (cookie) refreshArgs.push("--cookie", cookie);
 
-  console.log(`[pipeline] refreshing missing engagement metrics: ${refreshArgs.join(" ")}`);
+  console.log(`[pipeline] refreshing missing engagement metrics: ${redactArgs(refreshArgs).join(" ")}`);
   run("refresh_engagement_from_instagram.mjs", refreshArgs, "refresh");
   console.log("[pipeline] done.");
 }

@@ -226,7 +226,7 @@ export async function listExcludedDb(url) {
   }
 
   const candidateParams = new URLSearchParams();
-  candidateParams.set("select", "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,review_status,dm_available,dm_status,email_status,assignee,memo,notes,status_updated_at,updated_at");
+  candidateParams.set("select", "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,review_status,dm_available,dm_status,email_status,assignee,status_updated_at,updated_at");
   candidateParams.set("review_status", `eq.${REVIEW_STATUSES[3]}`);
   candidateParams.set("order", "status_updated_at.desc,updated_at.desc");
   candidateParams.set("limit", "10000");
@@ -266,7 +266,7 @@ export async function listExcludedDb(url) {
   return [
     ...scopedExcludedCandidates.map((row) => ({
       ...row,
-      excluded_reason: row.memo || row.notes || "candidate_review_excluded",
+      excluded_reason: "candidate_review_excluded",
       excluded_source: "beauty_seller_candidates",
       is_excluded_handle: false,
     })),
@@ -489,23 +489,21 @@ export async function listCandidates(url) {
     "format_signal_tags",
     "sample_post_urls",
     "engagement_posts",
-    "notes",
-    "memo",
   ];
 
   try {
     return await queryCandidates(url, {
       order: "grade.desc,prospect_score.desc,combination_score.desc,beauty_score.desc,total_comments.desc",
       orColumns: initialOrColumns,
-      selectColumns: "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,grade,matched_hashtags,category,beauty_score,selling_score,negative_score,combination_score,prospect_score,prospect_noise_score,prospect_personas,prospect_signal_tags,matched_prospect_keywords,prospect_noise_keywords,total_likes,total_comments,avg_likes,avg_comments,follower_count,beauty_anchor_tags,commercial_signal_tags,format_signal_tags,engagement_rate,engagement_post_count,engagement_posts,engagement_refresh_error,last_engagement_refresh_at,review_status,dm_available,dm_status,email_status,brand_fit,groupbuy_experience,agency_status,assignee,memo,sample_post_urls,notes,status_updated_by,status_updated_at,last_contacted_at,last_emailed_at,last_replied_at,updated_at",
+      selectColumns: "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,grade,matched_hashtags,category,beauty_score,selling_score,negative_score,combination_score,prospect_score,prospect_noise_score,prospect_personas,prospect_signal_tags,matched_prospect_keywords,prospect_noise_keywords,total_likes,total_comments,avg_likes,avg_comments,follower_count,beauty_anchor_tags,commercial_signal_tags,format_signal_tags,engagement_rate,engagement_post_count,engagement_posts,engagement_refresh_error,last_engagement_refresh_at,review_status,dm_available,dm_status,email_status,brand_fit,groupbuy_experience,agency_status,assignee,sample_post_urls,status_updated_by,status_updated_at,last_contacted_at,last_emailed_at,last_replied_at,updated_at",
     });
   } catch (error) {
     const missing = parseMissingColumn(error);
     if (missing) {
       return queryCandidates(url, {
         order: "grade.desc,combination_score.desc,beauty_score.desc,total_comments.desc",
-        orColumns: ["seller_name", "seller_id", "profile_url", "profile_email", "notes", "memo"],
-        selectColumns: "*",
+        orColumns: ["seller_name", "seller_id", "profile_url", "profile_email"],
+        selectColumns: "id,seller_name,seller_id,profile_url,profile_email,profile_image_url,grade,matched_hashtags,category,combination_score,beauty_score,total_comments,follower_count,review_status,dm_status,email_status,brand_fit,groupbuy_experience,agency_status,assignee,status_updated_at,updated_at",
       });
     }
     throw error;
@@ -691,7 +689,7 @@ function defaultPersonalizedContext(row) {
     product_name: "",
     recent_content_note: "",
     fit_reason: signals.slice(0, 2).join(" · "),
-    custom_note: row?.memo || row?.notes || "",
+    custom_note: "",
     reply_deadline: "",
     launch_date: "6월 20일",
     offer: "",
