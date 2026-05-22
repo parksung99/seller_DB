@@ -827,7 +827,7 @@ async function fetchCandidatesByIds(ids) {
     const batch = ids.slice(i, i + 120).map((id) => Number(id)).filter(Boolean);
     if (!batch.length) continue;
     const rows = await supabaseFetch(
-      `${TABLE}?select=id,seller_name,seller_id,profile_url,profile_email,profile_image_url,email_status,review_status,groupbuy_experience,agency_status,assignee&id=in.(${batch.join(",")})&limit=500`,
+      `${TABLE}?select=id,seller_name,seller_id,profile_url,profile_email,profile_image_url,dm_status,email_status,review_status,groupbuy_experience,agency_status,assignee&id=in.(${batch.join(",")})&limit=500`,
       { headers: { accept: "application/json" } }
     );
     chunks.push(...(rows || []));
@@ -844,7 +844,9 @@ export async function addCampaignRecipients(id, patch) {
     throw error;
   }
   const existing = new Set((campaign.recipients || []).map((row) => Number(row.candidate_id)).filter(Boolean));
-  const candidates = (await fetchCandidatesByIds(candidateIds)).filter((row) => !existing.has(Number(row.id)));
+  const candidates = (await fetchCandidatesByIds(candidateIds))
+    .filter((row) => !existing.has(Number(row.id)))
+    .filter((row) => !isSentCompleteRow(row) && !isReplyCompleteRow(row));
   const emailOverrides = patch.recipient_emails || patch.recipientEmails || {};
   const body = candidates.map((row) => {
     const context = templateContext(row);

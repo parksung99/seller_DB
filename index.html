@@ -2724,9 +2724,16 @@ async function sendSelectedCampaign() {
     await saveCampaignTemplate();
     const result = await api(`/api/campaigns/${id}/send`, { method: "POST" });
     state.selectedCampaign = result.campaign;
+    const sentCandidateIds = new Set((result.campaign?.recipients || [])
+      .filter((row) => ["sent", "replied"].includes(row.send_status))
+      .map((row) => Number(row.candidate_id))
+      .filter(Boolean));
+    state.campaignCandidates = state.campaignCandidates.filter((row) => !sentCandidateIds.has(Number(row.id)) && !isContactedComplete(row));
+    state.finderCache.clear();
     renderCampaignDetail();
     renderCampaignPreview();
     state.candidatesCache.clear();
+    await loadCampaignCandidates();
     toast(`발송 ${result.sent}명 · 실패 ${result.failed}명 · 건너뜀 ${result.skipped}명`);
   } catch (error) {
     toast(error.message);
