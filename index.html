@@ -485,17 +485,21 @@ tbody tr:hover { background: var(--pink-light); }
   display: grid; gap: 7px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0f1f4;
 }
 .campaign-template-choice-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch;
+  min-width: 0;
 }
 .campaign-template-choice {
-  border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 8px 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 7px 7px 7px 10px;
   font-family: inherit; color: #374151; text-align: left; font-size: 12px; font-weight: 800;
-  cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  cursor: pointer; min-width: 0;
 }
 .campaign-template-choice:hover { border-color: #b8a6ff; background: #f7f5ff; color: #6e56e8; }
 .campaign-template-choice.active { border-color: #b8a6ff; background: #f0edff; color: #6e56e8; }
+.campaign-template-choice-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
 .campaign-template-edit {
-  border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 8px 9px;
+  flex: 0 0 auto; border: 1px solid #e4e7ec; background: #fff; border-radius: 4px; padding: 5px 7px;
   font-family: inherit; color: #6b7280; font-size: 11px; font-weight: 800;
   cursor: pointer; white-space: nowrap;
 }
@@ -671,6 +675,7 @@ tbody tr:hover { background: var(--pink-light); }
 .side-menu-title { color:#a0a5af; font-size:10px; font-weight:800; margin:18px 0 8px; }
 .side-menu-item { display:flex; align-items:center; gap:8px; width:100%; border:0; background:transparent; border-radius:4px; padding:8px 9px; font-family:inherit; font-size:12px; font-weight:700; color:#4b5563; text-align:left; }
 .side-menu-item.active { background:#f0edff; color:#6e56e8; }
+.side-menu-item.expanded:not(.active) { color:#6e56e8; }
 @media (max-width: 720px) {
   .nav { padding: 0 12px; }
   .page { padding: 16px; }
@@ -752,44 +757,74 @@ tbody tr:hover { background: var(--pink-light); }
     font-size: 11px;
   }
   .finder-row:not(.finder-simple) .finder-profile-email { display: block; max-width: 130px; }
-  .finder-table-head.finder-simple, .finder-row.finder-simple {
-    min-width: 760px;
-    grid-template-columns: 36px minmax(150px, 1fr) 90px minmax(190px, 220px) minmax(120px, 1fr) 86px;
-  }
   .finder-table-head.finder-simple {
-    display: grid;
-    padding: 9px 14px;
+    display: none;
   }
   .finder-row.finder-simple {
-    gap: 9px 10px;
-    align-items: center;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
     padding: 12px 14px;
   }
-  .finder-row.finder-simple .profile-mini { min-width: 0; gap: 8px; }
-  .finder-row.finder-simple .avatar { width: 30px; height: 30px; }
-  .finder-row.finder-simple .profile-mini strong { font-size: 12px; line-height: 1.2; }
+  .finder-row.finder-simple > .handle,
+  .finder-row.finder-simple > .followers-cell,
+  .finder-row.finder-simple > .finder-memo,
+  .finder-row.finder-simple > .status-badge {
+    display: none;
+  }
+  .finder-row.finder-simple .profile-mini { min-width: 0; width: 100%; gap: 0; }
+  .finder-row.finder-simple .avatar { display: none; }
+  .finder-row.finder-simple .finder-identity-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+  .finder-row.finder-simple .profile-mini strong {
+    flex: 0 1 auto;
+    min-width: 34px;
+    max-width: 36%;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+  .finder-row.finder-simple .finder-handle-wrap {
+    flex: 0 1 auto;
+    min-width: 42px;
+    max-width: 32%;
+    min-height: 18px;
+    overflow: hidden;
+  }
   .finder-row.finder-simple .handle-link {
-    max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .finder-row.finder-simple .handle-link span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .finder-row.finder-simple .finder-profile-email {
+    display: block;
+    flex: 1 1 62px;
+    min-width: 48px;
+    max-width: none;
+    margin-top: 0;
     font-size: 11px;
   }
-  .finder-row.finder-simple .finder-profile-email { display: block; max-width: 110px; }
   .finder-row.finder-simple .ig-icon { width: 15px; height: 15px; border-radius: 4px; }
   .finder-row.finder-simple .ig-icon svg { width: 14px; height: 14px; }
-  .finder-row.finder-simple .followers-cell {
-    justify-self: start; font-size: 12px; padding: 3px 7px; border-radius: 999px;
-    background: #f5f6f8; color: #374151; white-space: nowrap;
-  }
   .finder-row.finder-simple .finder-review-actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
     width: 100%;
   }
-  .finder-row.finder-simple .finder-memo {
-    display: inline-block;
-    max-width: 100%;
-  }
-  .finder-review-btn { min-width: 0; flex: 0 0 auto; padding: 8px 4px; font-size: 12px; }
+  .finder-review-btn { min-width: 0; flex: 0 0 auto; min-height: 36px; padding: 8px 4px; font-size: 12px; }
   .campaign-candidate-head { display: grid; }
 }
 </style>
@@ -942,7 +977,7 @@ tbody tr:hover { background: var(--pink-light); }
   <div class="page active" id="page-campaign">
     <p class="section-title">DM/이메일 발송</p>
     <p class="section-sub">이메일 있는 인플루언서를 캠페인에 담고, 변수 제안서를 Gmail로 발송한 뒤 회신까지 확인합니다.</p>
-    <div class="campaign-shell">
+    <div class="campaign-shell finder-mode">
       <button class="campaign-menu-toggle" type="button" onclick="toggleCampaignSide()">메뉴</button>
       <div class="campaign-side-backdrop" onclick="toggleCampaignSide(false)"></div>
       <aside class="campaign-side">
@@ -952,14 +987,14 @@ tbody tr:hover { background: var(--pink-light); }
         </div>
         <input class="side-search" id="campaign-q" placeholder="계정 및 채널 검색" />
         <div class="side-menu-title">인플루언서</div>
-        <button class="side-menu-item" data-campaign-mode-btn="find" onclick="setCampaignMode('find')">◎ 인플루언서 찾기</button>
+        <button class="side-menu-item active" data-campaign-mode-btn="find" onclick="showCampaignSideSubtabs('find')" aria-expanded="true">◎ 인플루언서 찾기</button>
         <div class="finder-subtabs" id="find-subtabs">
           <button class="finder-subtab active" data-find-tab="unchecked" onclick="switchCampaignFinderTab('find', 'unchecked')">미확인</button>
           <button class="finder-subtab" data-find-tab="good" onclick="switchCampaignFinderTab('find', 'good')">좋음</button>
           <button class="finder-subtab" data-find-tab="hold" onclick="switchCampaignFinderTab('find', 'hold')">보류</button>
           <button class="finder-subtab" data-find-tab="excluded" onclick="switchCampaignFinderTab('find', 'excluded')">제외</button>
         </div>
-        <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="setCampaignMode('manage')">☷ 인플루언서 관리</button>
+        <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="showCampaignSideSubtabs('manage')" aria-expanded="false">☷ 인플루언서 관리</button>
         <div class="finder-subtabs" id="manage-subtabs">
           <button class="finder-subtab active" data-manage-tab="pending-dm" onclick="switchCampaignFinderTab('manage', 'pending-dm')">발송전 DM</button>
           <button class="finder-subtab" data-manage-tab="pending-email" onclick="switchCampaignFinderTab('manage', 'pending-email')">발송전 이메일</button>
@@ -969,10 +1004,10 @@ tbody tr:hover { background: var(--pink-light); }
         <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
         <div class="side-menu-title">캠페인</div>
         <button class="side-menu-item" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">✉ DM/이메일 발송</button>
-        <button class="side-menu-item active" data-campaign-mode-btn="campaigns" onclick="setCampaignMode('campaigns')">▷ 캠페인</button>
+        <button class="side-menu-item" data-campaign-mode-btn="campaigns" onclick="setCampaignMode('campaigns')">▷ 캠페인</button>
       </aside>
       <main class="campaign-main">
-        <div class="campaign-finder-view" id="campaign-finder-view">
+        <div class="campaign-finder-view active" id="campaign-finder-view">
           <div class="finder-header">
             <div>
               <div class="finder-title" id="finder-title">인플루언서 찾기</div>
@@ -1273,7 +1308,8 @@ const state = {
   finderCandidates: [],
   finderCache: new Map(),
   finderCacheTimes: new Map(),
-  campaignMode: "send",
+  campaignMode: "find",
+  campaignExpandedSideSection: "find",
   campaignFindTab: "unchecked",
   campaignManageTab: "pending-dm",
   campaignSetupPreset: "gugu",
@@ -1462,7 +1498,7 @@ function showPage(name) {
   if (name === "campaign") {
     const owner = normalizeTeamMember(identity().name);
     if (!owner) openIdentity();
-    state.campaignMode = "campaigns";
+    state.campaignMode = "find";
     state.campaignFindTab = "unchecked";
     initCampaignPage();
   }
@@ -1897,6 +1933,7 @@ function renderDrawer(row) {
           <div class="edit-field"><label>브랜드 적합도</label><select id="edit_brand_fit">${BRAND_FITS.map((item) => `<option value="${esc(item)}" ${row.brand_fit === item ? "selected" : ""}>${esc(item || "선택")}</option>`).join("")}</select></div>
           <div class="edit-field"><label>공구경험</label><select id="edit_groupbuy_experience">${GROUPBUY_EXPERIENCE_VALUES.map((item) => `<option value="${esc(item)}" ${groupbuyExperience === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
           <div class="edit-field"><label>에이전시 여부</label><select id="edit_agency_status">${AGENCY_STATUS_VALUES.map((item) => `<option value="${esc(item)}" ${agencyStatus === item ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div>
+          <div class="edit-field"><label>프로필 이메일</label><input type="email" id="edit_profile_email" value="${esc(row.profile_email || "")}" placeholder="예) hello@example.com" /></div>
           <div class="edit-field"><label>담당자</label><input id="edit_assignee" value="${esc(row.assignee || identity().name)}" list="assigneeList" /></div>
         </div>
       <datalist id="assigneeList">${state.assignees.map((name) => `<option value="${esc(name)}"></option>`).join("")}</datalist>
@@ -1935,6 +1972,7 @@ async function saveSelected() {
     brand_fit: $("edit_brand_fit").value,
     groupbuy_experience: $("edit_groupbuy_experience")?.value || "불명",
     agency_status: $("edit_agency_status")?.value || "불명",
+    profile_email: $("edit_profile_email")?.value.trim() || "",
     assignee: $("edit_assignee").value.trim(),
     memo: $("edit_memo").value,
   };
@@ -2073,6 +2111,21 @@ function toggleCampaignSide(open) {
   const nextOpen = typeof open === "boolean" ? open : !shell.classList.contains("side-open");
   shell.classList.toggle("side-open", nextOpen);
 }
+function updateCampaignSideSubtabs() {
+  const expandedSection = state.campaignExpandedSideSection;
+  $("find-subtabs")?.classList.toggle("active", expandedSection === "find");
+  $("manage-subtabs")?.classList.toggle("active", expandedSection === "manage");
+  document.querySelectorAll("[data-campaign-mode-btn]").forEach((button) => {
+    const isExpandable = button.dataset.campaignModeBtn === "find" || button.dataset.campaignModeBtn === "manage";
+    const isExpanded = isExpandable && button.dataset.campaignModeBtn === expandedSection;
+    button.classList.toggle("expanded", isExpanded);
+    if (isExpandable) button.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  });
+}
+function showCampaignSideSubtabs(section) {
+  state.campaignExpandedSideSection = section === "manage" ? "manage" : "find";
+  updateCampaignSideSubtabs();
+}
 function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   state.campaignMode = mode;
   const listMode = mode === "find" || mode === "manage" || mode === "excluded";
@@ -2087,10 +2140,12 @@ function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   $("campaign-home-view")?.classList.toggle("active", campaignsMode);
   $("campaign-setup-view")?.classList.toggle("active", setupMode);
   $("page-add")?.classList.toggle("active", addMode);
+  state.campaignExpandedSideSection = mode === "find" || mode === "manage" ? mode : "";
   const activeButtonMode = mode === "setup" ? "campaigns" : mode;
   document.querySelectorAll("[data-campaign-mode-btn]").forEach((button) => {
     button.classList.toggle("active", button.dataset.campaignModeBtn === activeButtonMode);
   });
+  updateCampaignSideSubtabs();
   if (listMode && !skipFinderLoad) loadFinderCandidates();
   if (setupMode) renderCampaignSetup();
   if (addMode && $("f-assignee") && !$("f-assignee").value.trim()) $("f-assignee").value = campaignOwner();
@@ -2295,8 +2350,7 @@ function renderFinderCandidates() {
     ? `<span>#</span><span>계정</span><span class="finder-head-cell">팔로워${followerSortControl()}</span><span>검토</span><span>메모</span><span>담당자</span>`
     : `<span>#</span><span>계정</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span>`;
   renderFollowerSortIndicators();
-  $("find-subtabs")?.classList.toggle("active", isFind);
-  $("manage-subtabs")?.classList.toggle("active", isManage);
+  updateCampaignSideSubtabs();
   document.querySelectorAll("[data-find-tab]").forEach((button) => {
     button.classList.toggle("active", button.dataset.findTab === state.campaignFindTab);
   });
@@ -2318,7 +2372,7 @@ function renderFinderCandidates() {
               : "아직 발송 전인"} 인플루언서입니다. 검토 상태를 잘못 넘겼다면 셀렉트에서 바로 바꿀 수 있습니다.`
     : isExcluded
       ? `크롤링 제외와 검토 제외 처리된 인플루언서입니다.`
-    : `${campaignOwner()} 담당 ${FIND_TABS[state.campaignFindTab]?.label || "미확인"} 인플루언서입니다. 검토 상태를 선택하면 해당 탭으로 바로 이동합니다.`;
+    : `${campaignOwner()} 담당 ${FIND_TABS[state.campaignFindTab]?.label || "미확인"} 인플루언서입니다. 검토 상태를 바꾸면 현재 탭에서는 해당 인플루언서만 빠집니다.`;
   const fallbackLabel = isFind ? findStatusLabel : manageStatusLabel;
   $("finder-list").innerHTML = displayRows.length
     ? displayRows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected, isManage })).join("")
@@ -2359,7 +2413,7 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
       return `
       <div class="finder-row finder-simple">
         <span class="handle">${index + 1}</span>
-        <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div>${finderProfileEmail(row)}</div></div>
+        <div class="profile-mini finder-mobile-profile">${avatar(row)}<div class="finder-identity-line"><strong>${esc(row.seller_name || "-")}</strong><div class="finder-handle-wrap">${profileLink(row)}</div>${finderProfileEmail(row)}</div></div>
         <span class="followers-cell">${num(row.follower_count).toLocaleString()}</span>
         ${finderReviewCell(row, true)}
         ${finderMemoCell(row)}
@@ -2371,7 +2425,7 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
     <div class="finder-row">
       <span class="handle">${index + 1}</span>
       <div class="profile-mini finder-profile">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div>${finderProfileEmail(row)}</div></div>
-      <input class="campaign-email-input finder-email-input" value="${esc(row.profile_email || "")}" placeholder="이메일 없음" readonly />
+      <input class="campaign-email-input finder-email-input" type="email" value="${esc(row.profile_email || "")}" placeholder="이메일 없음" onchange="updateFinderCandidateEmail(${Number(row.id)}, this.value)" />
       ${finderReviewCell(row, false)}
       ${finderStatusSelect(row, "dm_status", DM_STATUSES)}
       ${finderStatusSelect(row, "email_status", EMAIL_STATUSES)}
@@ -2411,8 +2465,8 @@ function finderReviewCell(row, editable) {
   return `
     <div class="finder-review-actions">
       <button class="finder-review-btn good" ${row.review_status === "좋음" ? "disabled" : ""} onclick="updateFinderCandidateReview(${Number(row.id)}, '좋음')">좋음</button>
-      <button class="finder-review-btn hold" ${row.review_status === "보류" ? "disabled" : ""} onclick="updateFinderCandidateReview(${Number(row.id)}, '보류')">보류</button>
       <button class="finder-review-btn exclude" ${row.review_status === "제외" ? "disabled" : ""} onclick="updateFinderCandidateReview(${Number(row.id)}, '제외')">제외</button>
+      <button class="finder-review-btn hold" ${row.review_status === "보류" ? "disabled" : ""} onclick="updateFinderCandidateReview(${Number(row.id)}, '보류')">보류</button>
     </div>
   `;
 }
@@ -2493,11 +2547,6 @@ async function updateFinderCandidateReview(id, reviewStatus) {
       }),
     });
     invalidateDbCaches({ candidates: true, finder: false, stats: true });
-    if (reviewStatus === "좋음" && isEmailSendCandidate(nextRow)) {
-      toast("좋음 처리 완료 · 이메일 발송대상으로 이동");
-      switchCampaignFinderTab("manage", "pending-email");
-      return;
-    }
     toast(`${reviewStatus} 처리 완료`);
   } catch (error) {
     toast(error.message);
@@ -2537,6 +2586,32 @@ async function updateFinderCandidateStatus(id, field, value) {
     });
     invalidateDbCaches({ candidates: true, finder: false, stats: true });
     toast("상태 저장 완료");
+  } catch (error) {
+    toast(error.message);
+    await loadFinderCandidates();
+  }
+}
+async function updateFinderCandidateEmail(id, value) {
+  const row = (state.finderCandidates || []).find((item) => Number(item.id) === Number(id));
+  if (!row) return;
+  const profileEmail = String(value || "").trim();
+  const nextRow = { ...row, profile_email: profileEmail };
+  state.finderCandidates = rowMatchesCurrentManageTab(nextRow)
+    ? state.finderCandidates.map((item) => Number(item.id) === Number(id) ? nextRow : item)
+    : state.finderCandidates.filter((item) => Number(item.id) !== Number(id));
+  renderFinderCandidates();
+  syncFinderCandidateInCache(nextRow);
+  try {
+    await api(`/api/candidates/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        actor: identity().name || campaignOwner(),
+        profile_email: profileEmail,
+      }),
+    });
+    invalidateDbCaches({ candidates: true, finder: false, stats: true });
+    toast("이메일 저장 완료");
   } catch (error) {
     toast(error.message);
     await loadFinderCandidates();
@@ -2694,10 +2769,10 @@ function renderCampaignTemplateChoices() {
   }
   wrap.innerHTML = campaigns.map((campaign) => `
     <div class="campaign-template-choice-row">
-      <button class="campaign-template-choice ${Number(selectedCampaignId()) === Number(campaign.id) ? "active" : ""}" onclick="applyCampaignTemplateFromButton(${campaign.id})" title="${esc(campaign.name)}">
-        ${esc(campaign.name)}
-      </button>
-      <button class="campaign-template-edit" onclick="openCampaignManagement(${campaign.id})" title="${esc(campaign.name)} 관리수정">수정하기</button>
+      <div class="campaign-template-choice ${Number(selectedCampaignId()) === Number(campaign.id) ? "active" : ""}" role="button" tabindex="0" onclick="applyCampaignTemplateFromButton(${campaign.id})" onkeydown="if(event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); applyCampaignTemplateFromButton(${campaign.id}); }" title="${esc(campaign.name)}">
+        <span class="campaign-template-choice-name">${esc(campaign.name)}</span>
+        <button class="campaign-template-edit" type="button" onclick="event.stopPropagation(); openCampaignManagement(${campaign.id})" title="${esc(campaign.name)} 관리수정">수정하기</button>
+      </div>
     </div>
   `).join("");
 }
