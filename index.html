@@ -823,7 +823,8 @@ tbody tr:hover { background: var(--pink-light); }
         </div>
         <button class="side-menu-item" data-campaign-mode-btn="manage" onclick="setCampaignMode('manage')">☷ 인플루언서 관리</button>
         <div class="finder-subtabs" id="manage-subtabs">
-          <button class="finder-subtab active" data-manage-tab="pending" onclick="switchCampaignFinderTab('manage', 'pending')">발송전</button>
+          <button class="finder-subtab active" data-manage-tab="pending-dm" onclick="switchCampaignFinderTab('manage', 'pending-dm')">발송전 DM</button>
+          <button class="finder-subtab" data-manage-tab="pending-email" onclick="switchCampaignFinderTab('manage', 'pending-email')">발송전 이메일</button>
           <button class="finder-subtab" data-manage-tab="sent" onclick="switchCampaignFinderTab('manage', 'sent')">발송완료</button>
           <button class="finder-subtab" data-manage-tab="replied" onclick="switchCampaignFinderTab('manage', 'replied')">회신완료</button>
         </div>
@@ -1132,7 +1133,7 @@ const state = {
   finderCache: new Map(),
   campaignMode: "send",
   campaignFindTab: "unchecked",
-  campaignManageTab: "pending",
+  campaignManageTab: "pending-dm",
   campaignSetupPreset: "gugu",
   selectedRecipientId: null,
   tableSortKey: "",
@@ -1142,6 +1143,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const num = (value) => Number(value || 0);
 const TEAM_MEMBERS = ["김시은", "박민서"];
+const CAMPAIGN_MANAGE_TABS = ["pending-dm", "pending-email", "sent", "replied", "rejected", "excluded"];
 const FIND_TABS = {
   unchecked: { label: "미확인", review_status: "미확인" },
   hold: { label: "보류", review_status: "보류" },
@@ -1439,6 +1441,9 @@ function reviewClass(value) {
 function hasDmContact(row) {
   const value = String(row.dm_available || row.dm_status || "").trim();
   return !["", "없음", "불가", "비공개", "제외"].includes(value);
+}
+function hasProfileEmail(row) {
+  return Boolean(String(row?.profile_email || "").trim());
 }
 function sendMethodCell(row) {
   const hasEmail = Boolean(String(row.profile_email || "").trim());
@@ -1812,7 +1817,7 @@ async function saveInfluencer() {
     toast("저장 완료");
     clearForm();
     setCampaignMode("manage", { skipFinderLoad: true });
-    setCampaignManageTab("pending", { skipFinderLoad: true });
+    setCampaignManageTab(payload.profile_email ? "pending-email" : "pending-dm", { skipFinderLoad: true });
     await loadFinderCandidates();
   } catch (error) {
     toast(error.message);
@@ -1862,8 +1867,8 @@ function switchCampaignFinderTab(mode, tab) {
   const requestedMode = mode === "find" ? "find" : "manage";
   const requestedFindTab = requestedMode === "find" ? FIND_TABS[tab] ? tab : "unchecked" : state.campaignFindTab;
   const requestedManageTab = requestedMode === "manage" ? tab : state.campaignManageTab;
-  const validManageTabs = ["pending", "sent", "replied"];
-  const nextManageTab = validManageTabs.includes(requestedManageTab) ? requestedManageTab : "pending";
+  const validManageTabs = CAMPAIGN_MANAGE_TABS.filter((value) => !["rejected", "excluded"].includes(value));
+  const nextManageTab = validManageTabs.includes(requestedManageTab) ? requestedManageTab : "pending-dm";
   const previousMode = state.campaignMode;
   if (requestedMode === previousMode && (requestedMode === "find" ? state.campaignFindTab === requestedFindTab : state.campaignManageTab === nextManageTab) && state.finderCandidates.length) {
     return;
@@ -1897,10 +1902,16 @@ function setCampaignFindTab(name, { skipFinderLoad = false } = {}) {
   }
   if (!skipFinderLoad) loadFinderCandidates();
 }
+function normalizeCampaignManageTab(name) {
+  if (CAMPAIGN_MANAGE_TABS.includes(name)) return name;
+  if (name === "pending") return "pending-dm";
+  return "pending-dm";
+}
 function setCampaignManageTab(name, { skipFinderLoad = false } = {}) {
-  state.campaignManageTab = name;
+  const nextManageTab = normalizeCampaignManageTab(name);
+  state.campaignManageTab = nextManageTab;
   document.querySelectorAll("[data-manage-tab]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.manageTab === name);
+    button.classList.toggle("active", button.dataset.manageTab === nextManageTab);
   });
   const cached = getFinderCache();
   if (cached) {
@@ -1939,6 +1950,12 @@ function filterFinderCandidates(rows, owner, findTab, manageTab) {
     return list.filter((row) => normalizeTeamMember(row.assignee) === owner && row.review_status === expectedStatus);
   }
   if (state.campaignMode === "manage") {
+    if (manageTab === "pending-dm" || manageTab === "pending") {
+      return list.filter((row) => row.review_status === "좋음" && !isContactedComplete(row) && !hasProfileEmail(row));
+    }
+    if (manageTab === "pending-email") {
+      return list.filter((row) => row.review_status === "좋음" && !isContactedComplete(row) && hasProfileEmail(row));
+    }
     if (manageTab === "replied") {
       return list.filter((row) => !isRejectedComplete(row) && isReplyComplete(row));
     }
@@ -1975,7 +1992,7 @@ async function loadFinderCandidates() {
       if (requestedManageTab === "rejected" || requestedManageTab === "excluded") {
         params.set("review_status", "제외");
         params.set("row_limit", "500");
-      } else if (requestedManageTab === "pending") {
+      } else if (requestedManageTab === "pending-dm" || requestedManageTab === "pending-email" || requestedManageTab === "pending") {
         params.set("review_status", "좋음");
         params.set("row_limit", "2000");
       } else if (requestedManageTab === "sent" || requestedManageTab === "replied") {
@@ -2013,9 +2030,21 @@ function renderFinderCandidates() {
   const isManageSent = isManage && state.campaignManageTab === "sent";
   const isManageReply = isManage && state.campaignManageTab === "replied";
   const isManageRejected = isManage && (state.campaignManageTab === "rejected" || state.campaignManageTab === "excluded");
+  const isManagePendingEmail = isManage && state.campaignManageTab === "pending-email";
+  const isManagePendingDm = isManage && state.campaignManageTab === "pending-dm";
   const activeAssignee = campaignOwner();
   const findStatusLabel = FIND_TABS[state.campaignFindTab]?.label || "미확인";
-  const manageStatusLabel = isManageRejected ? "제외" : isManageReply ? "회신완료" : isManageSent ? "발송완료" : "발송전";
+  const manageStatusLabel = isManageRejected
+    ? "제외"
+    : isManageReply
+      ? "회신완료"
+      : isManageSent
+        ? "발송완료"
+        : isManagePendingEmail
+          ? "발송전(이메일)"
+          : isManagePendingDm
+            ? "발송전(DM)"
+            : "발송전";
   const restoreExcludedBtn = $("finder-restore-excluded-btn");
   if (restoreExcludedBtn) {
     restoreExcludedBtn.style.display = state.campaignMode === "find" && state.campaignFindTab === "excluded" ? "inline-block" : "none";
@@ -2037,8 +2066,16 @@ function renderFinderCandidates() {
   $("finder-count").textContent = `${rows.length.toLocaleString()}명`;
   $("finder-sub").textContent = isManage
     ? isManageRejected
-      ? `${campaignOwner()} 담당 제외 상태 인플루언서입니다. DM/이메일 상태 셀렉트에서 다시 변경할 수 있습니다.`
-      : `${campaignOwner()} 담당 검토 좋음 명단 중 ${isManageReply ? "DM 또는 이메일 회신이 완료된" : isManageSent ? "DM 또는 이메일 발송 후 아직 회신 전인" : "아직 발송 전인"} 인플루언서입니다.`
+      ? `${campaignOwner()} 담당 제외 상태 인플루언서입니다. 검토 상태 셀렉트에서 다시 변경할 수 있습니다.`
+      : `${campaignOwner()} 담당 검토 좋음 명단 중 ${isManageReply
+        ? "DM 또는 이메일 회신이 완료된"
+        : isManageSent
+          ? "DM 또는 이메일 발송 후 아직 회신 전인"
+          : isManagePendingEmail
+            ? "이메일이 등록된 발송전 인플루언서"
+            : isManagePendingDm
+              ? "이메일이 없는 발송전 인플루언서"
+              : "아직 발송 전인"} 인플루언서입니다. 검토 상태를 잘못 넘겼다면 셀렉트에서 바로 바꿀 수 있습니다.`
     : isExcluded
       ? `크롤링 제외와 검토 제외 처리된 인플루언서입니다.`
     : `${campaignOwner()} 담당 ${FIND_TABS[state.campaignFindTab]?.label || "미확인"} 인플루언서입니다. 검토 상태를 선택하면 해당 탭으로 바로 이동합니다.`;
@@ -2218,6 +2255,12 @@ async function updateFinderCandidateReview(id, reviewStatus) {
 }
 function rowMatchesCurrentManageTab(row) {
   if (state.campaignMode !== "manage") return true;
+  if (state.campaignManageTab === "pending-dm" || state.campaignManageTab === "pending") {
+    return row.review_status === "좋음" && !isContactedComplete(row) && !hasProfileEmail(row);
+  }
+  if (state.campaignManageTab === "pending-email") {
+    return row.review_status === "좋음" && !isContactedComplete(row) && hasProfileEmail(row);
+  }
   if (state.campaignManageTab === "replied") return !isRejectedComplete(row) && isReplyComplete(row);
   if (state.campaignManageTab === "rejected" || state.campaignManageTab === "excluded") return isRejectedComplete(row);
   if (state.campaignManageTab === "sent") return !isRejectedComplete(row) && isSentComplete(row) && !isReplyComplete(row);

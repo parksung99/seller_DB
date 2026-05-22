@@ -398,7 +398,7 @@ async function queryCandidates(url, options = {}) {
       : sentComplete
         ? rows.filter((row) => isSentCompleteRow(row))
         : rows;
-    const isManageTab = ["pending", "sent", "replied", "rejected", "excluded"].includes(requestedManageTab || "");
+    const isManageTab = ["pending", "pending-dm", "pending-email", "sent", "replied", "rejected", "excluded"].includes(requestedManageTab || "");
     const isExcludedManageTab = requestedManageTab === "rejected" || requestedManageTab === "excluded";
     const filteredRows = isManageTab && !isExcludedManageTab && reviewStatus !== REVIEW_STATUSES[3]
       ? visibleRows.filter((row) => row.review_status === REVIEW_STATUSES[1])
