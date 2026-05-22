@@ -14,6 +14,8 @@ export const AGENCY_STATUS_VALUES = ["\uBD88\uBA85", "\uC788\uC74C", "\uC5C6\uC7
 
 const env = readSupabaseEnv();
 const missingColumns = new Set();
+const EXCLUDED_HANDLES_TTL_MS = 5000;
+let excludedHandlesCache = { expiresAt: 0, handles: null };
 
 function supabaseHeaders(extra = {}) {
   return {
@@ -32,6 +34,9 @@ export function assertConfigured() {
 export function sendJson(response, status, data) {
   response.statusCode = status;
   response.setHeader("content-type", "application/json; charset=utf-8");
+  response.setHeader("cache-control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  response.setHeader("pragma", "no-cache");
+  response.setHeader("expires", "0");
   response.end(JSON.stringify(data));
 }
 
@@ -120,15 +125,25 @@ function normalizeHandleFromRow(row) {
 }
 
 async function listExcludedHandles() {
+  const now = Date.now();
+  if (excludedHandlesCache.handles && excludedHandlesCache.expiresAt > now) {
+    return excludedHandlesCache.handles;
+  }
   try {
     const rows = await supabaseFetch(`${EXCLUDED_TABLE}?select=handle&limit=10000`, {
       headers: { accept: "application/json" },
     });
-    return new Set((rows || []).map((row) => normalizeInstagramHandle(row.handle)).filter(Boolean));
+    const handles = new Set((rows || []).map((row) => normalizeInstagramHandle(row.handle)).filter(Boolean));
+    excludedHandlesCache = { handles, expiresAt: now + EXCLUDED_HANDLES_TTL_MS };
+    return handles;
   } catch (error) {
     if (isMissingRelation(error)) return new Set();
     throw error;
   }
+}
+
+function invalidateExcludedHandlesCache() {
+  excludedHandlesCache = { expiresAt: 0, handles: null };
 }
 
 async function isHandleExcluded(handle) {
@@ -150,7 +165,7 @@ async function upsertExcludedHandle(handle, { reason = "manual_review_excluded",
   const normalized = normalizeInstagramHandle(handle);
   if (!normalized) return null;
   try {
-    return await supabaseFetch(`${EXCLUDED_TABLE}?on_conflict=handle`, {
+    const result = await supabaseFetch(`${EXCLUDED_TABLE}?on_conflict=handle`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -163,6 +178,8 @@ async function upsertExcludedHandle(handle, { reason = "manual_review_excluded",
         excluded_by: excludedBy,
       }),
     });
+    invalidateExcludedHandlesCache();
+    return result;
   } catch (error) {
     if (isMissingRelation(error)) return null;
     throw error;
@@ -173,10 +190,12 @@ async function deleteExcludedHandle(handle) {
   const normalized = normalizeInstagramHandle(handle);
   if (!normalized) return null;
   try {
-    return await supabaseFetch(`${EXCLUDED_TABLE}?handle=eq.${encodeURIComponent(normalized)}`, {
+    const result = await supabaseFetch(`${EXCLUDED_TABLE}?handle=eq.${encodeURIComponent(normalized)}`, {
       method: "DELETE",
       headers: { prefer: "return=minimal" },
     });
+    invalidateExcludedHandlesCache();
+    return result;
   } catch (error) {
     if (isMissingRelation(error)) return null;
     throw error;

@@ -148,6 +148,35 @@ create index if not exists idx_beauty_seller_candidates_email_status
 create index if not exists idx_beauty_seller_candidates_assignee
   on public.beauty_seller_candidates (assignee);
 
+create index if not exists idx_beauty_seller_candidates_assignee_review_scores
+  on public.beauty_seller_candidates (
+    assignee,
+    review_status,
+    grade desc,
+    prospect_score desc,
+    combination_score desc,
+    beauty_score desc,
+    total_comments desc
+  );
+
+create index if not exists idx_beauty_seller_candidates_assignee_review_dm_updated
+  on public.beauty_seller_candidates (
+    assignee,
+    review_status,
+    dm_status,
+    status_updated_at desc,
+    updated_at desc
+  );
+
+create index if not exists idx_beauty_seller_candidates_assignee_review_email_updated
+  on public.beauty_seller_candidates (
+    assignee,
+    review_status,
+    email_status,
+    status_updated_at desc,
+    updated_at desc
+  );
+
 create index if not exists idx_beauty_seller_candidates_scores
   on public.beauty_seller_candidates (combination_score desc, beauty_score desc, selling_score desc);
 
@@ -165,6 +194,9 @@ create table if not exists public.excluded_instagram_handles (
 
 create index if not exists idx_excluded_instagram_handles_handle
   on public.excluded_instagram_handles (handle);
+
+create index if not exists idx_excluded_instagram_handles_reason_excluded_by_created
+  on public.excluded_instagram_handles (reason, excluded_by, created_at desc);
 
 create table if not exists public.outreach_campaigns (
   id bigserial primary key,

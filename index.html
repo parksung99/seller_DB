@@ -830,7 +830,6 @@ tbody tr:hover { background: var(--pink-light); }
         </div>
         <button class="side-menu-item" data-campaign-mode-btn="add" onclick="setCampaignMode('add')">＋ 인플루언서 추가</button>
         <div class="side-menu-title">캠페인</div>
-        <button class="side-menu-item">✉ 메시지 관리</button>
         <button class="side-menu-item active" data-campaign-mode-btn="send" onclick="setCampaignMode('send')">▷ DM/이메일 발송</button>
         <div class="campaign-top">
           <div>
@@ -861,7 +860,7 @@ tbody tr:hover { background: var(--pink-light); }
               <div class="finder-sub" id="finder-sub">크롤링해서 DB에 들어온 인플루언서 명단입니다.</div>
             </div>
             <div class="finder-stats">
-              <button class="action-btn" onclick="loadFinderCandidates()">새로고침</button>
+              <button class="action-btn" onclick="loadFinderCandidates({ force: true })">새로고침</button>
               <button class="action-btn" id="finder-restore-excluded-btn" style="display:none;" onclick="restoreFinderExcluded()">제외 복원</button>
               <span class="status-badge s-call" id="finder-count">0명</span>
             </div>
@@ -1121,6 +1120,7 @@ const state = {
   activeAssigneeTab: "kim-unchecked",
   toastTimer: null,
   candidatesCache: new Map(),
+  candidatesCacheTimes: new Map(),
   requestSeq: 0,
   finderRequestSeq: 0,
   statsLoaded: false,
@@ -1131,6 +1131,7 @@ const state = {
   campaignCandidates: [],
   finderCandidates: [],
   finderCache: new Map(),
+  finderCacheTimes: new Map(),
   campaignMode: "send",
   campaignFindTab: "unchecked",
   campaignManageTab: "pending-dm",
@@ -1143,6 +1144,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const num = (value) => Number(value || 0);
 const TEAM_MEMBERS = ["김시은", "박민서"];
+const CACHE_TTL_MS = 2500;
 const CAMPAIGN_MANAGE_TABS = ["pending-dm", "pending-email", "sent", "replied", "rejected", "excluded"];
 const FIND_TABS = {
   unchecked: { label: "미확인", review_status: "미확인" },
@@ -1264,7 +1266,15 @@ function toast(message) {
   state.toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
 }
 async function api(path, options = {}) {
-  const response = await fetch(path, { ...options, headers: { ...(options.headers || {}) } });
+  const response = await fetch(path, {
+    ...options,
+    cache: "no-store",
+    headers: {
+      "cache-control": "no-cache",
+      pragma: "no-cache",
+      ...(options.headers || {}),
+    },
+  });
   const text = await response.text();
   const contentType = (response.headers.get("content-type") || "").toLowerCase();
   if (!response.ok) {
@@ -1276,6 +1286,26 @@ async function api(path, options = {}) {
   }
   if (!text.trim()) return null;
   return JSON.parse(text);
+}
+function setTimedCache(cache, times, key, rows) {
+  cache.set(key, rows || []);
+  times.set(key, Date.now());
+}
+function cacheIsFresh(times, key) {
+  return Date.now() - (times.get(key) || 0) < CACHE_TTL_MS;
+}
+function invalidateDbCaches({ candidates = true, finder = true, stats = true } = {}) {
+  if (candidates) {
+    state.candidatesCache.clear();
+    state.candidatesCacheTimes.clear();
+  }
+  if (finder) {
+    state.finderCache.clear();
+    state.finderCacheTimes.clear();
+  }
+  if (stats) {
+    state.statsLoaded = false;
+  }
 }
 function setCloudStatus(text, mode = "warn") {
   $("cloud-status").textContent = text;
@@ -1486,7 +1516,7 @@ async function moveSentRowsToManage(rows) {
         review_status: "좋음",
       }),
     })));
-    state.candidatesCache.clear();
+    invalidateDbCaches();
     toast(`발송완료 ${targets.length.toLocaleString()}명을 인플루언서 관리로 옮겼어요.`);
   } catch (error) {
     toast(error.message);
@@ -1724,7 +1754,7 @@ async function saveSelected() {
   $("saveBtn").disabled = true;
   try {
     await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
-    state.candidatesCache.clear();
+    invalidateDbCaches();
     toast("저장 완료");
     const nextDmStatus = normalizeDmStatus(payload.dm_status);
     if (payload.email_status === "답장옴" || nextDmStatus === "답장옴" || payload.email_status === "발송완료" || nextDmStatus === "발송완료" || payload.review_status === "좋음") {
@@ -1744,7 +1774,7 @@ async function saveSelected() {
       document.querySelectorAll(".member-tab").forEach((button) => button.classList.toggle("active", button.dataset.assigneeTab === nextTab));
       renderWorkflowHint();
     }
-    await refresh();
+    await refresh({ force: true });
     const next = state.candidates.find((row) => row.id === state.selected.id);
     if (next) {
       state.selected = next;
@@ -1771,10 +1801,10 @@ async function excludeSelected() {
   $("excludeBtn").disabled = true;
   try {
     await api(`/api/candidates/${state.selected.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
-    state.candidatesCache.clear();
+    invalidateDbCaches();
     toast("제외 처리 완료");
     closeDrawerDirect();
-    await refresh();
+    await refresh({ force: true });
   } catch (error) {
     toast(error.message);
   } finally {
@@ -1815,8 +1845,7 @@ async function saveInfluencer() {
   $("save-new-btn").disabled = true;
   try {
     await api("/api/candidates", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
-    state.candidatesCache.clear();
-    state.finderCache.clear();
+    invalidateDbCaches();
     toast("저장 완료");
     clearForm();
     setCampaignMode("manage", { skipFinderLoad: true });
@@ -1901,7 +1930,6 @@ function setCampaignFindTab(name, { skipFinderLoad = false } = {}) {
     const owner = campaignOwner();
     state.finderCandidates = filterFinderCandidates(cached, owner, "find", state.campaignFindTab);
     renderFinderCandidates();
-    return;
   }
   if (!skipFinderLoad) loadFinderCandidates();
 }
@@ -1921,7 +1949,6 @@ function setCampaignManageTab(name, { skipFinderLoad = false } = {}) {
     const owner = campaignOwner();
     state.finderCandidates = filterFinderCandidates(cached, owner, null, state.campaignManageTab);
     renderFinderCandidates();
-    return;
   }
   if (!skipFinderLoad) loadFinderCandidates();
 }
@@ -1944,7 +1971,7 @@ function getFinderCache() {
 function setFinderCache(rows, requestedMode, requestedOwner, requestedQuery) {
   const tab = requestedMode === "find" ? "all" : state.campaignManageTab;
   const key = finderCacheKey({ mode: requestedMode, owner: requestedOwner, tab, query: requestedQuery });
-  state.finderCache.set(key, rows || []);
+  setTimedCache(state.finderCache, state.finderCacheTimes, key, rows || []);
 }
 function filterFinderCandidates(rows, owner, findTab, manageTab) {
   const list = Array.isArray(rows) ? rows : [];
@@ -1972,7 +1999,7 @@ function filterFinderCandidates(rows, owner, findTab, manageTab) {
   }
   return list.filter((row) => normalizeTeamMember(row.assignee) === owner);
 }
-async function loadFinderCandidates() {
+async function loadFinderCandidates({ force = false } = {}) {
   renderCampaignOwnerUi();
   const seq = ++state.finderRequestSeq;
   const requestedMode = state.campaignMode;
@@ -1982,11 +2009,17 @@ async function loadFinderCandidates() {
   const params = new URLSearchParams();
   const query = $("campaign-q")?.value?.trim();
   if (query) params.set("q", query);
-  const cached = getFinderCache();
+  const cacheKey = finderCacheKey({
+    mode: requestedMode,
+    owner: requestedOwner,
+    tab: requestedMode === "find" ? requestedFindTab : requestedManageTab,
+    query: query || "",
+  });
+  const cached = state.finderCache.get(cacheKey);
   if (cached) {
     state.finderCandidates = filterFinderCandidates(cached, requestedOwner, requestedFindTab, requestedManageTab);
     renderFinderCandidates();
-    return;
+    if (!force && cacheIsFresh(state.finderCacheTimes, cacheKey)) return;
   }
   try {
     params.set("assignee", requestedOwner);
@@ -2108,9 +2141,8 @@ async function restoreFinderExcluded() {
         })
       )
     );
-    state.candidatesCache.clear();
-    state.finderCache.clear();
-    await loadFinderCandidates();
+    invalidateDbCaches();
+    await loadFinderCandidates({ force: true });
     toast(`${ids.length}명을 발송전(좋음)으로 복원했어요`);
   } catch (error) {
     toast(error.message);
@@ -2251,6 +2283,7 @@ async function updateFinderCandidateReview(id, reviewStatus) {
         memo: row.memo || "",
       }),
     });
+    invalidateDbCaches({ candidates: true, finder: false, stats: true });
     toast(`${reviewStatus} 처리 완료`);
   } catch (error) {
     toast(error.message);
@@ -2288,6 +2321,7 @@ async function updateFinderCandidateStatus(id, field, value) {
         [field]: value,
       }),
     });
+    invalidateDbCaches({ candidates: true, finder: false, stats: true });
     toast("상태 저장 완료");
   } catch (error) {
     toast(error.message);
@@ -2781,10 +2815,9 @@ async function sendSelectedCampaign() {
       .map((row) => Number(row.candidate_id))
       .filter(Boolean));
     state.campaignCandidates = state.campaignCandidates.filter((row) => !sentCandidateIds.has(Number(row.id)) && !isContactedComplete(row));
-    state.finderCache.clear();
+    invalidateDbCaches();
     renderCampaignDetail();
     renderCampaignPreview();
-    state.candidatesCache.clear();
     await loadCampaignCandidates();
     toast(`발송 ${result.sent}명 · 실패 ${result.failed}명 · 건너뜀 ${result.skipped}명`);
   } catch (error) {
@@ -2800,7 +2833,7 @@ async function syncCampaignReplies() {
     const result = await api(`/api/campaigns/${id}/sync-replies`, { method: "POST" });
     state.selectedCampaign = result.campaign;
     renderCampaignDetail();
-    state.candidatesCache.clear();
+    invalidateDbCaches();
     toast(`회신 체크 완료 · ${result.replied}명 업데이트`);
   } catch (error) {
     toast(error.message);
@@ -2885,7 +2918,7 @@ function rowMatchesSearchQuery(row, query) {
   ];
   return fields.some((value) => String(value || "").toLowerCase().includes(q));
 }
-async function loadCandidates() {
+async function loadCandidates({ force = false } = {}) {
   const seq = ++state.requestSeq;
   const isExcludedTab = isExcludedAssigneeTab();
   const params = isExcludedTab ? excludedParams() : candidateParams();
@@ -2904,11 +2937,12 @@ async function loadCandidates() {
     renderLoadingStats();
     renderTable();
   }
+  if (cached && !force && cacheIsFresh(state.candidatesCacheTimes, cacheKey)) return;
 
   const endpoint = isExcludedTab ? "/api/excluded" : "/api/candidates";
   const rows = await api(`${endpoint}?${cacheKey}`);
   if (seq !== state.requestSeq) return;
-  state.candidatesCache.set(cacheKey, rows);
+  setTimedCache(state.candidatesCache, state.candidatesCacheTimes, cacheKey, rows);
   state.loadingCandidates = false;
   state.candidates = rows.filter((row) => rowMatchesSearchQuery(row, query));
   setCloudStatus("Supabase 연결됨", "ok");
@@ -2916,10 +2950,10 @@ async function loadCandidates() {
   renderStats();
   renderTable();
 }
-async function refresh() {
+async function refresh({ force = false } = {}) {
   try {
     loadStats();
-    await loadCandidates();
+    await loadCandidates({ force });
   } catch (error) {
     state.loadingCandidates = false;
     setCloudStatus("Supabase 오류", "err");
