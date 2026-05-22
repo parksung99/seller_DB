@@ -1450,20 +1450,18 @@ function instagramIcon() {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>`;
 }
 function openInstagram(event, url) {
-  if (event && event.preventDefault) event.preventDefault();
   if (event && event.stopPropagation) event.stopPropagation();
-  if (!url || url === "#") return false;
-  const next = window.open(url, "_blank", "noopener,noreferrer");
-  if (!next) {
-    window.location.href = url;
+  if (event && event.currentTarget && event.currentTarget.href) {
+    event.currentTarget.href = url;
   }
-  return false;
+  if (!url || url === "#") return false;
+  return true;
 }
 function profileLink(row, className = "handle-link", label = "") {
   const cleanHandle = handle(row);
   const url = profileUrl(row);
   if (!cleanHandle) return `<span class="handle">-</span>`;
-  return `<a class="${className}" href="${esc(url)}" onclick="return openInstagram(event, '${esc(url)}')" aria-label="@${esc(cleanHandle)} Instagram 열기">${label || `<span>@${esc(cleanHandle)}</span>`}<span class="ig-icon">${instagramIcon()}</span></a>`;
+  return `<a class="${className}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" onclick="return openInstagram(event, '${esc(url)}')" aria-label="@${esc(cleanHandle)} Instagram 열기">${label || `<span>@${esc(cleanHandle)}</span>`}<span class="ig-icon">${instagramIcon()}</span></a>`;
 }
 function avatar(row, sizeClass = "") {
   const image = row.profile_image_url;
@@ -1702,6 +1700,8 @@ function renderDrawer(row) {
   $("d-name").textContent = row.seller_name || "—";
   $("d-handle").innerHTML = profileLink(row);
   $("d-profile").href = profileUrl(row);
+  $("d-profile").target = "_blank";
+  $("d-profile").rel = "noopener noreferrer";
   $("d-profile").onclick = (event) => {
     return openInstagram(event, profileUrl(row));
   };
