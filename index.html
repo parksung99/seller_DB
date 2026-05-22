@@ -533,13 +533,14 @@ tbody tr:hover { background: var(--pink-light); }
   max-height: 310px; overflow-y: auto; overflow-x: hidden;
 }
 .campaign-candidate-head {
-  grid-template-columns: 24px minmax(150px, 1.45fr) 60px 44px 62px 62px !important;
+  grid-template-columns: 24px minmax(132px, .9fr) 64px 48px 72px 72px !important;
+  gap: 12px;
   min-width: 0;
 }
 .campaign-candidate-head .campaign-select-all { justify-self: center; }
 .candidate-row {
-  display: grid; grid-template-columns: 24px minmax(150px, 1.45fr) 60px 44px 62px 62px;
-  gap: 8px; align-items: center;
+  display: grid; grid-template-columns: 24px minmax(132px, .9fr) 64px 48px 72px 72px;
+  gap: 12px; align-items: center;
   padding: 9px 14px; border-bottom: 1px solid #f0f1f4; min-height: 64px; min-width: 0;
 }
 .candidate-row:last-child { border-bottom: none; }
@@ -549,7 +550,7 @@ tbody tr:hover { background: var(--pink-light); }
 .candidate-row .profile-mini > div { min-width: 0; }
 .candidate-row .profile-mini strong,
 .candidate-row .profile-mini .handle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.candidate-row > .handle:last-child { justify-self: center; font-size: 18px; line-height: 1; }
+.candidate-row > .handle { justify-self: start; }
 .campaign-select-all { width: 14px; height: 14px; accent-color: #6e56e8; }
 .campaign-email-input {
   width: 100%; border: 1px solid #e4e7ec; border-radius: 4px; padding: 6px 9px;
