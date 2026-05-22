@@ -732,38 +732,44 @@ tbody tr:hover { background: var(--pink-light); }
   .campaign-template-form { border-right: 0; border-bottom: 1px solid #f0f1f4; }
   .campaign-template-preview { border-left: 0; margin-left: 0; border-top: 1px solid #f0f1f4; }
   .campaign-table-head, .recipient-card { grid-template-columns: 1fr; }
-  .finder-table-head.finder-simple { display: none; }
+  .campaign-finder-view.active { overflow-x: auto; }
+  .finder-list { max-height: none; overflow: visible; }
+  .finder-table-head.finder-simple, .finder-row.finder-simple {
+    min-width: 760px;
+    grid-template-columns: 36px minmax(150px, 1fr) 90px minmax(190px, 220px) minmax(120px, 1fr) 86px;
+  }
+  .finder-table-head.finder-simple {
+    display: grid;
+    padding: 9px 14px;
+  }
   .finder-row.finder-simple {
-    grid-template-columns: minmax(0, 1fr) auto;
     gap: 9px 10px;
     align-items: center;
     padding: 12px 14px;
   }
-  .finder-row.finder-simple > .handle:first-child { display: none; }
   .finder-row.finder-simple .profile-mini { min-width: 0; gap: 8px; }
   .finder-row.finder-simple .avatar { width: 30px; height: 30px; }
   .finder-row.finder-simple .profile-mini strong { font-size: 12px; line-height: 1.2; }
   .finder-row.finder-simple .handle-link {
-    max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     font-size: 11px;
   }
   .finder-row.finder-simple .ig-icon { width: 15px; height: 15px; border-radius: 4px; }
   .finder-row.finder-simple .ig-icon svg { width: 14px; height: 14px; }
   .finder-row.finder-simple .followers-cell {
-    justify-self: end; font-size: 12px; padding: 3px 7px; border-radius: 999px;
+    justify-self: start; font-size: 12px; padding: 3px 7px; border-radius: 999px;
     background: #f5f6f8; color: #374151; white-space: nowrap;
   }
   .finder-row.finder-simple .finder-review-actions {
-    grid-column: 1 / 3;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
     width: 100%;
   }
   .finder-row.finder-simple .finder-memo {
-    display: none;
+    display: inline-block;
+    max-width: 100%;
   }
-  .finder-row.finder-simple .status-badge { display: none; }
   .finder-review-btn { min-width: 0; flex: 0 0 auto; padding: 8px 4px; font-size: 12px; }
   .campaign-candidate-head { display: grid; }
 }
