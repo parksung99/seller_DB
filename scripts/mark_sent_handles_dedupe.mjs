@@ -2,7 +2,36 @@ import { readSupabaseEnv } from "./supabase_env.mjs";
 
 const TABLE = "beauty_seller_candidates";
 const SELECT_LIMIT = 20000;
+const TARGET_ASSIGNEE = "김시은";
 const SENT_HANDLES = [
+  "youxria",
+  "dalla__young",
+  "ding__ding2",
+  "mnnxi__",
+  "un2.ve",
+  "pringbee",
+  "sulinmyung",
+  "code__makeup",
+  "seoliynne",
+  "da._.woooooon",
+  "u_9.9",
+  "hjj_starry__cos",
+  "seria_980",
+  "maedamong",
+  "spring_bibi_makeup",
+  "sourfridge",
+  "uhyeoniz",
+  "hwitto_",
+  "lux.som",
+  "uxzic_",
+  "einey_makeup",
+  "amiyameinoella",
+  "aut.mmt",
+  "rockchaeeun",
+  "sena__cho",
+  "sky__jj",
+  "binibininnn",
+  "kiki_12.4",
   "innshushu",
   "j.hyun_only",
   "rabbiitluv",
@@ -11,7 +40,6 @@ const SENT_HANDLES = [
   "visagevoid_",
   "c_omely_1st",
   "zyyunmm",
-  "rinniii___ya",
   "se0_my",
   "dayaremuses",
   "uttie_beauty",
@@ -92,7 +120,7 @@ async function fetchRows(env) {
   const text = await response.text();
   if (!response.ok) throw new Error(`${response.status}: ${text}`);
   return text ? JSON.parse(text) : [];
-}
+  }
 
 async function patchSent(env, id) {
   const now = new Date().toISOString();
@@ -104,6 +132,7 @@ async function patchSent(env, id) {
     }),
     body: JSON.stringify({
       dm_status: "발송완료",
+      assignee: TARGET_ASSIGNEE,
       status_updated_by: "mark_sent_handles_dedupe",
       status_updated_at: now,
       last_contacted_at: now,

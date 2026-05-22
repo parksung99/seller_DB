@@ -140,13 +140,15 @@ body {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: auto;
 }
-table { width: 100%; border-collapse: collapse; min-width: 1120px; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 1180px; }
 thead { background: var(--surface2); }
-th {
-  padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2);
-  border-bottom: 1px solid var(--border); white-space: nowrap;
-}
+	th {
+	  padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700;
+	  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2);
+	  border-bottom: 1px solid var(--border); white-space: nowrap;
+	}
+	.sortable-head { cursor: pointer; user-select: none; }
+	.sortable-head span { color: var(--text3); font-size: 11px; margin-left: 4px; }
 td {
   padding: 12px 14px; font-size: 13px; color: var(--text);
   border-bottom: 1px solid var(--border); vertical-align: middle;
@@ -156,6 +158,9 @@ tbody tr { transition: background 0.1s; cursor: pointer; }
 tbody tr:hover { background: var(--pink-light); }
 .handle { color: var(--text3); font-size: 12px; }
 .profile-mini { display: flex; align-items: center; gap: 9px; min-width: 180px; }
+.profile-mini > div { min-width: 0; }
+.profile-mini strong,
+.profile-mini .handle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
   background: var(--pink-light); border: 1px solid var(--border); flex-shrink: 0;
@@ -184,7 +189,17 @@ tbody tr:hover { background: var(--pink-light); }
   align-items: center; justify-content: center; text-decoration: none; transition: all 0.15s;
 }
 .ig-icon-link svg { width: 17px; height: 17px; display: block; }
-.followers-cell { font-weight: 600; color: var(--text); }
+	.followers-cell { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.memo-cell { max-width: 220px; }
+	.memo-text {
+	  display: inline-block;
+	  max-width: 220px;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	  white-space: nowrap;
+	  color: var(--text3);
+	  font-size: 12px;
+	}
 .er-badge {
   display: inline-block; padding: 3px 8px; border-radius: 20px;
   font-size: 11px; font-weight: 700;
@@ -410,12 +425,12 @@ tbody tr:hover { background: var(--pink-light); }
 }
 .finder-subtabs.active { display:grid; gap:3px; margin:3px 0 8px; }
 .finder-subtab.active { background:#f0edff; color:#6e56e8; }
-.finder-table-head, .finder-row {
-  display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 112px 92px 96px 96px 90px 108px 92px 124px;
-  gap:10px; align-items:center;
-}
-.finder-table-head.finder-simple, .finder-row.finder-simple {
-  grid-template-columns: 44px minmax(180px, 1fr) 86px minmax(190px, 240px) 104px;
+	.finder-table-head, .finder-row {
+	  display:grid; grid-template-columns: 44px minmax(180px,1.2fr) 130px minmax(180px,1fr) 96px 92px 96px 96px 90px 130px 92px 124px 140px;
+	  gap:10px; align-items:center;
+	}
+	.finder-table-head.finder-simple, .finder-row.finder-simple {
+	  grid-template-columns: 44px minmax(180px, 1fr) 86px minmax(190px, 240px) 140px 104px;
 }
 .finder-table-head {
   padding:10px 22px; background:#fafafa; border-bottom:1px solid #edf0f4;
@@ -484,9 +499,18 @@ tbody tr:hover { background: var(--pink-light); }
 .finder-review-select.s-reply { border-color: #c4ead8; }
 .finder-review-select.s-wait { border-color: #f2d59b; }
 .finder-review-select.s-exclude { border-color: #e7e4df; }
-.finder-send-methods {
-  display: flex; align-items: center; gap: 10px; min-width: 0;
-}
+	.finder-send-methods {
+	  display: flex; align-items: center; gap: 10px; min-width: 0;
+	}
+	.finder-memo {
+	  display: inline-block;
+	  max-width: 140px;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	  white-space: nowrap;
+	  color: #4b5563;
+	  font-size: 12px;
+	}
 .method-option {
   display: inline-flex; align-items: center; gap: 6px;
   color: #4b5563; font-size: 12px; font-weight: 700; white-space: nowrap;
@@ -617,13 +641,16 @@ tbody tr:hover { background: var(--pink-light); }
   .campaign-table-head, .recipient-card { grid-template-columns: 1fr; }
   .finder-table-head.finder-simple { display: none; }
   .finder-row.finder-simple {
-    grid-template-columns: 34px minmax(0, 1fr) 78px 92px;
+    grid-template-columns: 34px minmax(0, 1fr) 78px 92px 96px;
     gap: 8px 10px;
     align-items: start;
   }
   .finder-row.finder-simple .finder-review-actions {
-    grid-column: 2 / 5;
+    grid-column: 2 / 6;
     justify-content: flex-start;
+  }
+  .finder-row.finder-simple .finder-memo {
+    display: none;
   }
   .finder-review-btn { flex: 1 1 70px; }
   .campaign-candidate-head { display: none; }
@@ -701,8 +728,8 @@ tbody tr:hover { background: var(--pink-light); }
 
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
+	        <thead>
+            <tr>
             <th>#</th>
             <th>닉네임</th>
             <th>핸들(@)</th>
@@ -714,6 +741,7 @@ tbody tr:hover { background: var(--pink-light); }
             <th>담당자</th>
             <th>DM</th>
             <th>이메일</th>
+            <th class="sortable-head" onclick="setMemoSort()" id="memo-header">메모<span id="memo-sort-indicator"></span></th>
             <th>마지막 액션</th>
             <th></th>
           </tr>
@@ -1107,6 +1135,8 @@ const state = {
   campaignManageTab: "pending",
   campaignSetupPreset: "gugu",
   selectedRecipientId: null,
+  tableSortKey: "",
+  tableSortDirection: 1,
 };
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -1302,6 +1332,37 @@ function formatDate(value) {
   if (!value) return "—";
   try { return new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
   catch { return "—"; }
+}
+function rowMemoText(row) {
+  return String(row.memo || "").trim();
+}
+function rowInfoText(row) {
+  return String(row.notes || "").trim();
+}
+function sortedMainRows(rows) {
+  const list = [...rows];
+  if (state.tableSortKey !== "memo") return list;
+  const direction = state.tableSortDirection || 1;
+  return list.sort((a, b) => {
+    const aMemo = rowMemoText(a).toLowerCase();
+    const bMemo = rowMemoText(b).toLowerCase();
+    return direction * aMemo.localeCompare(bMemo, "ko");
+  });
+}
+function setMemoSort() {
+  if (state.tableSortKey === "memo") {
+    state.tableSortDirection *= -1;
+  } else {
+    state.tableSortKey = "memo";
+    state.tableSortDirection = 1;
+  }
+  renderTable();
+}
+function renderMemoSortIndicator() {
+  const indicator = $("memo-sort-indicator");
+  if (!indicator) return;
+  if (state.tableSortKey !== "memo") return void (indicator.textContent = "");
+  indicator.textContent = state.tableSortDirection === 1 ? "↑" : "↓";
 }
 function profileUrl(row) {
   if (row.profile_url) return row.profile_url;
@@ -1530,10 +1591,12 @@ function renderTable() {
   empty.querySelector("p").textContent = state.loadingCandidates ? "불러오는 중이에요" : "조회된 인플루언서가 없어요";
   empty.querySelector("small").textContent = state.loadingCandidates ? "잠시만 기다려주세요" : "검색어나 필터를 조정해보세요";
   empty.style.display = state.candidates.length ? "none" : "block";
-  tbody.innerHTML = state.candidates.map((row, index) => {
+  renderMemoSortIndicator();
+  tbody.innerHTML = sortedMainRows(state.candidates).map((row, index) => {
     const normalizedDmStatus = normalizeDmStatus(row.dm_status);
     const normalizedEmailStatus = normalizeEmailStatus(row.email_status);
     const normalizedRowId = row.id == null ? "" : String(row.id).trim();
+    const memoText = rowMemoText(row);
     const safeRowId =
       normalizedRowId && Number.isFinite(Number(normalizedRowId)) ? Number(normalizedRowId) : JSON.stringify(normalizedRowId);
     return `
@@ -1549,6 +1612,7 @@ function renderTable() {
       <td>${row.assignee ? `<span class="status-badge s-done">${esc(row.assignee)}</span>` : `<span class="status-badge s-none">미할당</span>`}</td>
       <td><span class="status-badge ${dmClass(normalizedDmStatus)}">${esc(normalizedDmStatus || "미발송")}</span></td>
       <td><span class="status-badge ${emailClass(normalizedEmailStatus)}">${esc(normalizedEmailStatus || "미발송")}</span></td>
+      <td class="memo-cell">${memoText ? `<span class="memo-text" title="${esc(memoText)}">${esc(memoText)}</span>` : "<span class=\"handle\">—</span>"}</td>
       <td class="handle">${formatDate(row.status_updated_at || row.updated_at)}</td>
       <td><button class="action-btn" onclick="event.stopPropagation();openDrawer(${safeRowId})">보기</button></td>
     </tr>
@@ -1591,8 +1655,10 @@ function renderDrawer(row) {
       <div style="display:flex;gap:6px;flex-wrap:wrap;">${postLinks}</div>
     </div>
     <div class="detail-section">
-      <div class="detail-section-title">MEMO</div>
-      <div class="detail-note">${esc(row.notes || row.memo || "-")}</div>
+      <div class="detail-section-title">특이사항</div>
+      <div class="detail-note">${esc(row.memo ? row.memo : "—")}</div>
+      <div class="detail-section-title" style="margin-top:20px;">정보</div>
+      <div class="detail-note">${esc(row.notes ? row.notes : "—")}</div>
       ${row.engagement_refresh_error ? `<div class="detail-note" style="margin-top:8px;color:var(--red);">${esc(row.engagement_refresh_error)}</div>` : ""}
     </div>
       <div class="detail-section">
@@ -1607,7 +1673,7 @@ function renderDrawer(row) {
           <div class="edit-field"><label>담당자</label><input id="edit_assignee" value="${esc(row.assignee || identity().name)}" list="assigneeList" /></div>
         </div>
       <datalist id="assigneeList">${state.assignees.map((name) => `<option value="${esc(name)}"></option>`).join("")}</datalist>
-      <div class="edit-field"><label>팀 메모</label><textarea id="edit_memo">${esc(row.memo || "")}</textarea></div>
+      <div class="edit-field"><label>특이사항</label><textarea id="edit_memo">${esc(row.memo || "")}</textarea></div>
       <div class="edit-actions">
         <button class="btn btn-primary" id="saveBtn" onclick="saveSelected()">저장하기</button>
         <button class="btn btn-ghost" id="excludeBtn" onclick="excludeSelected()">제외 처리</button>
@@ -1730,7 +1796,7 @@ async function saveInfluencer() {
     groupbuy_experience: $("f-groupbuy-experience")?.value || "불명",
     agency_status: $("f-agency-status")?.value || "불명",
     assignee: $("f-assignee").value.trim() || campaignOwner(),
-    notes: $("f-note").value,
+    memo: $("f-note").value,
   };
   if (!payload.seller_name) { toast("닉네임 또는 핸들을 입력하세요."); return; }
   $("save-new-btn").disabled = true;
@@ -1953,8 +2019,8 @@ function renderFinderCandidates() {
   $("finder-title").textContent = isManage ? "인플루언서 관리" : isExcluded ? "제외" : "인플루언서 찾기";
   $("finder-table-head")?.classList.toggle("finder-simple", isFind);
   $("finder-table-head").innerHTML = isFind
-    ? `<span>#</span><span>계정</span><span>팔로워</span><span>검토</span><span>담당자</span>`
-    : `<span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>담당자</span><span>액션시간</span><span>액션</span>`;
+    ? `<span>#</span><span>계정</span><span>팔로워</span><span>검토</span><span>메모</span><span>담당자</span>`
+    : `<span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span><span>담당자</span><span>액션시간</span><span>액션</span>`;
   $("find-subtabs")?.classList.toggle("active", isFind);
   $("manage-subtabs")?.classList.toggle("active", isManage);
   document.querySelectorAll("[data-find-tab]").forEach((button) => {
@@ -2009,12 +2075,13 @@ async function restoreFinderExcluded() {
 }
 function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected }) {
   if (isFind) {
-    return `
+      return `
       <div class="finder-row finder-simple">
         <span class="handle">${index + 1}</span>
         <div class="profile-mini">${avatar(row)}<div><strong>${esc(row.seller_name || "-")}</strong><div>${profileLink(row)}</div></div></div>
         <span class="followers-cell">${num(row.follower_count).toLocaleString()}</span>
         ${finderReviewCell(row, true)}
+        ${finderMemoCell(row)}
         <span class="status-badge s-call">${esc(row.assignee || (row.is_excluded_handle ? "크롤링 제외" : "미할당"))}</span>
       </div>
     `;
@@ -2026,6 +2093,7 @@ function renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManag
       ${sendMethodCell(row)}
       <input class="campaign-email-input finder-email-input" value="${esc(row.profile_email || "")}" placeholder="이메일 없음" readonly />
       ${finderReviewCell(row, false)}
+      ${finderMemoCell(row)}
       ${finderStatusSelect(row, "dm_status", DM_STATUSES)}
       ${finderStatusSelect(row, "email_status", EMAIL_STATUSES)}
       ${finderStatusSelect(row, "groupbuy_experience", GROUPBUY_EXPERIENCE_VALUES)}
@@ -2046,6 +2114,12 @@ function finderStatusSelect(row, field, options) {
       ${options.map((item) => `<option value="${esc(item)}" ${value === item ? "selected" : ""}>${esc(item)}</option>`).join("")}
     </select>
   `;
+}
+function finderMemoCell(row) {
+  const memoText = rowMemoText(row);
+  return memoText
+    ? `<span class="finder-memo" title="${esc(memoText)}">${esc(memoText)}</span>`
+    : `<span class="handle">—</span>`;
 }
 function finderReviewCell(row, editable) {
   if (!editable) {
@@ -2128,7 +2202,7 @@ async function updateFinderCandidateReview(id, reviewStatus) {
         actor: identity().name || campaignOwner(),
         assignee: nextAssignee,
         review_status: nextRow.review_status,
-        memo: row.memo || row.notes || "",
+        memo: row.memo || "",
       }),
     });
     toast(`${reviewStatus} 처리 완료`);
@@ -2726,16 +2800,43 @@ function excludedParams() {
   if (tab.assignee) params.set("assignee", tab.assignee);
   return params;
 }
+function rowMatchesSearchQuery(row, query) {
+  const q = String(query || "").toLowerCase().trim();
+  if (!q) return true;
+  const fields = [
+    row.seller_name,
+    row.seller_id,
+    row.profile_url,
+    row.profile_email,
+    row.category,
+    row.grade,
+    row.review_status,
+    row.assignee,
+    rowMemoText(row),
+    rowInfoText(row),
+    row.dm_status,
+    row.email_status,
+    row.groupbuy_experience,
+    row.agency_status,
+    row.brand_fit,
+    row.matched_hashtags,
+    row.prospect_personas,
+    row.prospect_signal_tags,
+    row.matched_prospect_keywords,
+  ];
+  return fields.some((value) => String(value || "").toLowerCase().includes(q));
+}
 async function loadCandidates() {
   const seq = ++state.requestSeq;
   const isExcludedTab = isExcludedAssigneeTab();
   const params = isExcludedTab ? excludedParams() : candidateParams();
   const cacheKey = params.toString();
   const cached = state.candidatesCache.get(cacheKey);
+  const query = $("q").value || "";
 
   if (cached) {
     state.loadingCandidates = false;
-    state.candidates = cached;
+    state.candidates = cached.filter((row) => rowMatchesSearchQuery(row, query));
     renderStats();
     renderTable();
   } else {
@@ -2750,7 +2851,7 @@ async function loadCandidates() {
   if (seq !== state.requestSeq) return;
   state.candidatesCache.set(cacheKey, rows);
   state.loadingCandidates = false;
-  state.candidates = rows;
+  state.candidates = rows.filter((row) => rowMatchesSearchQuery(row, query));
   setCloudStatus("Supabase 연결됨", "ok");
   $("setup-banner").style.display = "none";
   renderStats();
