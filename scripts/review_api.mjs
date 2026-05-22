@@ -5,6 +5,7 @@ export const EXCLUDED_TABLE = "excluded_instagram_handles";
 export const CAMPAIGNS_TABLE = "outreach_campaigns";
 export const RECIPIENTS_TABLE = "outreach_recipients";
 export const MESSAGES_TABLE = "outreach_messages";
+export const CAMPAIGN_IMAGE_BUCKET = "campaign-assets";
 export const REVIEW_STATUSES = ["\uBBF8\uD655\uC778", "\uC88B\uC74C", "\uBCF4\uB958", "\uC81C\uC678", "\uBE0C\uB79C\uB4DC\uC804\uB2EC"];
 export const DM_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\uB2F5\uC7A5\uC634", "\uAC70\uC808", "\uBCF4\uB958"];
 export const EMAIL_STATUSES = ["\uBBF8\uBC1C\uC1A1", "\uBC1C\uC1A1\uC644\uB8CC", "\uB2F5\uC7A5\uC634", "\uBBF8\uD68C\uC2E0", "\uAC70\uC808", "\uBCF4\uB958"];
@@ -23,6 +24,27 @@ function supabaseHeaders(extra = {}) {
     authorization: `Bearer ${env.serviceRoleKey}`,
     ...extra,
   };
+}
+
+async function supabaseStorageFetch(path, options = {}) {
+  assertConfigured();
+
+  const response = await fetch(`${env.supabaseUrl}/storage/v1/${path}`, {
+    ...options,
+    headers: {
+      ...supabaseHeaders(options.headers),
+    },
+  });
+  const text = await response.text();
+
+  if (!response.ok) {
+    const error = new Error(text || "supabase storage request failed");
+    error.status = response.status;
+    error.body = text;
+    throw error;
+  }
+
+  return text ? JSON.parse(text) : null;
 }
 
 export function assertConfigured() {
@@ -66,6 +88,96 @@ async function supabaseFetch(path, options = {}) {
   }
 
   return text ? JSON.parse(text) : null;
+}
+
+async function ensureCampaignImageBucket() {
+  try {
+    await supabaseStorageFetch("bucket", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        id: CAMPAIGN_IMAGE_BUCKET,
+        name: CAMPAIGN_IMAGE_BUCKET,
+        public: true,
+        file_size_limit: 6 * 1024 * 1024,
+        allowed_mime_types: ["image/png", "image/jpeg", "image/webp", "image/gif"],
+      }),
+    });
+  } catch (error) {
+    if (error.status !== 409 && !/already exists|Duplicate/i.test(String(error.body || error.message || ""))) {
+      throw error;
+    }
+  }
+}
+
+function imageExtension(mimeType, filename = "") {
+  const ext = String(filename || "").toLowerCase().match(/\.([a-z0-9]{2,5})$/)?.[1];
+  if (["png", "jpg", "jpeg", "webp", "gif"].includes(ext)) return ext === "jpg" ? "jpeg" : ext;
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/jpeg") return "jpeg";
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/gif") return "gif";
+  return "";
+}
+
+export async function uploadCampaignImage(body = {}) {
+  const rawDataUrl = String(body.data_url || body.dataUrl || "");
+  const rawBase64 = String(body.base64 || "");
+  const dataUrlMatch = rawDataUrl.match(/^data:(image\/(?:png|jpeg|jpg|webp|gif));base64,([\s\S]+)$/i);
+  const mimeType = String(body.mime_type || body.mimeType || dataUrlMatch?.[1] || "").toLowerCase().replace("image/jpg", "image/jpeg");
+  const allowed = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+  if (!allowed.has(mimeType)) {
+    const error = new Error("PNG, JPG, WEBP, GIF 이미지만 업로드할 수 있어요.");
+    error.status = 400;
+    throw error;
+  }
+
+  const base64 = (dataUrlMatch?.[2] || rawBase64).replace(/\s/g, "");
+  if (!base64) {
+    const error = new Error("이미지 데이터가 비어 있어요.");
+    error.status = 400;
+    throw error;
+  }
+
+  const buffer = Buffer.from(base64, "base64");
+  if (!buffer.length || buffer.length > 6 * 1024 * 1024) {
+    const error = new Error("이미지는 6MB 이하로 넣어주세요.");
+    error.status = 400;
+    throw error;
+  }
+
+  await ensureCampaignImageBucket();
+
+  const ext = imageExtension(mimeType, body.filename || body.fileName);
+  if (!ext) {
+    const error = new Error("지원하지 않는 이미지 형식이에요.");
+    error.status = 400;
+    throw error;
+  }
+  const safeName = String(body.filename || body.fileName || "campaign-image")
+    .toLowerCase()
+    .replace(/\.[a-z0-9]{2,5}$/i, "")
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "campaign-image";
+  const objectPath = `campaigns/${new Date().toISOString().slice(0, 10)}/${Date.now()}-${safeName}.${ext}`;
+
+  await supabaseStorageFetch(`object/${CAMPAIGN_IMAGE_BUCKET}/${objectPath}`, {
+    method: "POST",
+    headers: {
+      "content-type": mimeType,
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-upsert": "false",
+    },
+    body: buffer,
+  });
+
+  return {
+    url: `${env.supabaseUrl}/storage/v1/object/public/${CAMPAIGN_IMAGE_BUCKET}/${objectPath}`,
+    path: objectPath,
+    mime_type: mimeType,
+    size: buffer.length,
+  };
 }
 
 function isMissingCampaignSchema(error) {

@@ -18,6 +18,7 @@ import {
   updateCampaign,
   updateCampaignRecipient,
   updateCandidate,
+  uploadCampaignImage,
 } from "./review_api.mjs";
 
 const PORT = Number(process.env.PORT || 4320);
@@ -69,6 +70,12 @@ const server = http.createServer(async (request, response) => {
     if (url.pathname === "/api/campaigns" && request.method === "POST") {
       const body = await readBody(request);
       sendJson(response, 200, await createCampaign(body, body.actor));
+      return;
+    }
+
+    if (url.pathname === "/api/campaign-images" && request.method === "POST") {
+      const body = await readBody(request);
+      sendJson(response, 200, await uploadCampaignImage(body));
       return;
     }
 

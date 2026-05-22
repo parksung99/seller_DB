@@ -3192,23 +3192,58 @@ function insertTemplateVar(id, value) {
   renderCampaignSetupPreview();
   renderCampaignManagerPreview();
 }
-function insertTemplateImage(id) {
-  const rawUrl = prompt("이미지 URL을 붙여넣어주세요.");
-  const imageUrl = String(rawUrl || "").trim();
-  if (!imageUrl) return;
-  let parsedUrl;
+function chooseImageFile() {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/png,image/jpeg,image/webp,image/gif";
+    input.style.display = "none";
+    document.body.appendChild(input);
+    input.addEventListener("change", () => {
+      const file = input.files?.[0] || null;
+      input.remove();
+      resolve(file);
+    }, { once: true });
+    input.click();
+  });
+}
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error("이미지를 읽지 못했어요."));
+    reader.readAsDataURL(file);
+  });
+}
+async function insertTemplateImage(id) {
+  const file = await chooseImageFile();
+  if (!file) return;
+  if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) {
+    toast("PNG, JPG, WEBP, GIF 이미지만 넣을 수 있어요.");
+    return;
+  }
+  if (file.size > 6 * 1024 * 1024) {
+    toast("이미지는 6MB 이하로 넣어주세요.");
+    return;
+  }
   try {
-    parsedUrl = new URL(imageUrl);
-  } catch {
-    toast("올바른 이미지 URL을 입력해주세요.");
-    return;
+    toast("이미지 업로드 중...");
+    const dataUrl = await fileToDataUrl(file);
+    const uploaded = await api("/api/campaign-images", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        mime_type: file.type,
+        data_url: dataUrl,
+      }),
+    });
+    const imageTag = `<p><img src="${esc(uploaded.url)}" alt="" style="max-width:100%;height:auto;border-radius:12px;display:block;margin:16px 0;" /></p>`;
+    insertTemplateVar(id, imageTag);
+    toast("이미지 삽입 완료");
+  } catch (error) {
+    toast(error.message);
   }
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    toast("이미지는 http 또는 https URL만 넣을 수 있어요.");
-    return;
-  }
-  const imageTag = `<p><img src="${esc(parsedUrl.href)}" alt="" style="max-width:100%;height:auto;border-radius:12px;display:block;margin:16px 0;" /></p>`;
-  insertTemplateVar(id, imageTag);
 }
 function renderCampaignPreview() {
   const recipientSample = state.selectedCampaign?.recipients?.[0];
