@@ -8,7 +8,7 @@ const TRASH_REASON_OUT_OF_RANGE = "out_of_follower_range";
 
 const MEMBER_RULES = {
   "김시은": { min: 5000, max: 100000 },
-  "박민서": { min: 1000, max: 50000 },
+  "박민서": { min: 5000, max: 50000 },
 };
 
 function parseArgs(argv) {

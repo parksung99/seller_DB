@@ -149,6 +149,15 @@ thead { background: var(--surface2); }
 	}
 	.sortable-head { cursor: pointer; user-select: none; }
 	.sortable-head span { color: var(--text3); font-size: 11px; margin-left: 4px; }
+.sort-head-label { display: inline-flex; align-items: center; gap: 3px; }
+.sort-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; margin-left: 2px; padding: 0;
+  border: 0; border-radius: 5px; background: transparent; color: var(--text3);
+  cursor: pointer; vertical-align: middle; transition: background 0.12s, color 0.12s;
+}
+.sort-icon-btn:hover, .sort-icon-btn.active { background: var(--pink-light); color: var(--pink); }
+.sort-icon-btn svg { width: 14px; height: 14px; display: block; }
 td {
   padding: 12px 14px; font-size: 13px; color: var(--text);
   border-bottom: 1px solid var(--border); vertical-align: middle;
@@ -368,6 +377,7 @@ tbody tr:hover { background: var(--pink-light); }
 .campaign-shell.campaigns-mode .campaign-preview,
 .campaign-shell.campaigns-mode .campaign-body-grid { display: none; }
 .campaign-side { border-right: 1px solid #edf0f4; background: #fbfcff; padding: 14px; }
+.campaign-menu-toggle, .campaign-side-backdrop, .side-close { display: none; }
 .campaign-main { padding: 0; border-right: 1px solid #edf0f4; min-width: 0; overflow: hidden; background: #fff; }
 .campaign-preview { padding: 0; background: #fff; min-width: 0; display: flex; flex-direction: column; }
 .campaign-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
@@ -454,6 +464,7 @@ tbody tr:hover { background: var(--pink-light); }
   padding:10px 22px; background:#fafafa; border-bottom:1px solid #edf0f4;
   color:#6b7280; font-size:11px; font-weight:900;
 }
+.finder-head-cell { display:inline-flex; align-items:center; gap:3px; min-width:0; }
 .finder-row { padding:12px 22px; border-bottom:1px solid #f0f1f4; font-size:12px; }
 .finder-row:hover { background:#fafaff; }
 .finder-list { max-height: calc(100vh - 210px); overflow:auto; }
@@ -653,6 +664,7 @@ tbody tr:hover { background: var(--pink-light); }
 .message-log-item.received { border-left-color: var(--green); }
 .workspace-logo { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; margin-bottom:16px; }
 .workspace-mark { width:18px; height:18px; border-radius:4px; background:#b8a6ff; color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; }
+.workspace-logo-main { display:flex; align-items:center; gap:8px; min-width:0; }
 .side-search { width:100%; border:1px solid #e5e7eb; border-radius:4px; padding:8px 9px; font-size:12px; margin-bottom:14px; }
 .side-menu-title { color:#a0a5af; font-size:10px; font-weight:800; margin:18px 0 8px; }
 .side-menu-item { display:flex; align-items:center; gap:8px; width:100%; border:0; background:transparent; border-radius:4px; padding:8px 9px; font-family:inherit; font-size:12px; font-weight:700; color:#4b5563; text-align:left; }
@@ -666,8 +678,55 @@ tbody tr:hover { background: var(--pink-light); }
   .edit-grid-2 { grid-template-columns: 1fr; }
   .engagement-row { display: grid; grid-template-columns: 1fr; }
   #page-campaign { padding: 0; }
-  .campaign-shell { grid-template-columns: 1fr; }
-  .campaign-side, .campaign-main { border-right: none; border-bottom: 1px solid var(--border); }
+  .campaign-shell { display: block; border: 0; overflow: visible; min-height: calc(100vh - 56px); }
+  .campaign-menu-toggle {
+    display: flex; align-items: center; gap: 8px;
+    position: sticky; top: 0; z-index: 70;
+    width: 100%; height: 44px; border: 0; border-bottom: 1px solid #edf0f4;
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
+    padding: 0 14px; font-family: inherit; font-size: 13px; font-weight: 900;
+    color: #374151; text-align: left;
+  }
+  .campaign-menu-toggle::before {
+    content: ""; width: 16px; height: 10px; display: inline-block;
+    border-top: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    box-shadow: 0 4px 0 currentColor;
+  }
+  .campaign-side {
+    position: fixed; top: 56px; left: 0; bottom: 0; z-index: 220;
+    width: min(82vw, 286px); padding: 14px;
+    border-right: 1px solid #edf0f4; border-bottom: 0;
+    box-shadow: 18px 0 44px rgba(17,24,39,0.18);
+    transform: translateX(-105%);
+    transition: transform 0.24s ease;
+    overflow-y: auto;
+  }
+  .campaign-shell.side-open .campaign-side { transform: translateX(0); }
+  .campaign-side-backdrop {
+    display: block; position: fixed; inset: 56px 0 0 0; z-index: 210;
+    background: rgba(17,24,39,0.32); opacity: 0; pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+  .campaign-shell.side-open .campaign-side-backdrop { opacity: 1; pointer-events: auto; }
+  .workspace-logo { justify-content: space-between; }
+  .side-close {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border: 1px solid #e4e7ec; border-radius: 6px;
+    background: #fff; color: #6b7280; font-size: 17px; line-height: 1;
+  }
+  .campaign-main { border-right: 0; border-bottom: 0; min-height: calc(100vh - 56px); }
+  .finder-header {
+    align-items: flex-start; padding: 13px 14px; gap: 10px; flex-wrap: wrap;
+  }
+  .finder-title { font-size: 15px; }
+  .finder-sub { font-size: 11px; line-height: 1.45; }
+  .finder-stats { width: 100%; justify-content: space-between; gap: 6px; }
+  .finder-stats .action-btn { flex: 1 1 0; padding: 7px 8px; }
+  .finder-stats .status-badge { flex: 0 0 auto; }
+  .finder-subtabs.active {
+    display: grid; grid-template-columns: 1fr; gap: 3px; margin: 3px 0 8px;
+  }
+  .finder-subtab { padding: 7px 9px 7px 28px; text-align: left; }
   .campaign-grid, .campaign-step-row, .campaign-setup-layout, .campaign-info-strip, .campaign-history-stats { grid-template-columns: 1fr; }
   .campaign-template-grid { grid-template-columns: minmax(0, 1fr); }
   .campaign-template-form { border-right: 0; border-bottom: 1px solid #f0f1f4; }
@@ -675,18 +734,37 @@ tbody tr:hover { background: var(--pink-light); }
   .campaign-table-head, .recipient-card { grid-template-columns: 1fr; }
   .finder-table-head.finder-simple { display: none; }
   .finder-row.finder-simple {
-    grid-template-columns: 34px minmax(0, 1fr) 78px 92px 96px;
-    gap: 8px 10px;
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px 10px;
+    align-items: center;
+    padding: 12px 14px;
+  }
+  .finder-row.finder-simple > .handle:first-child { display: none; }
+  .finder-row.finder-simple .profile-mini { min-width: 0; gap: 8px; }
+  .finder-row.finder-simple .avatar { width: 30px; height: 30px; }
+  .finder-row.finder-simple .profile-mini strong { font-size: 12px; line-height: 1.2; }
+  .finder-row.finder-simple .handle-link {
+    max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 11px;
+  }
+  .finder-row.finder-simple .ig-icon { width: 15px; height: 15px; border-radius: 4px; }
+  .finder-row.finder-simple .ig-icon svg { width: 14px; height: 14px; }
+  .finder-row.finder-simple .followers-cell {
+    justify-self: end; font-size: 12px; padding: 3px 7px; border-radius: 999px;
+    background: #f5f6f8; color: #374151; white-space: nowrap;
   }
   .finder-row.finder-simple .finder-review-actions {
-    grid-column: 2 / 6;
-    justify-content: flex-start;
+    grid-column: 1 / 3;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
   }
   .finder-row.finder-simple .finder-memo {
     display: none;
   }
-  .finder-review-btn { flex: 1 1 70px; }
+  .finder-row.finder-simple .status-badge { display: none; }
+  .finder-review-btn { min-width: 0; flex: 0 0 auto; padding: 8px 4px; font-size: 12px; }
   .campaign-candidate-head { display: grid; }
 }
 </style>
@@ -762,7 +840,7 @@ tbody tr:hover { background: var(--pink-light); }
             <th>#</th>
             <th>닉네임</th>
             <th>핸들(@)</th>
-            <th>팔로워</th>
+            <th><span class="sort-head-label">팔로워<button class="sort-icon-btn followers-sort-button" type="button" onclick="setFollowerSort(event)" aria-label="팔로워 정렬" title="팔로워 정렬"></button></span></th>
             <th>ER(%)</th>
             <th>카테고리</th>
             <th>해시태그</th>
@@ -840,13 +918,19 @@ tbody tr:hover { background: var(--pink-light); }
     <p class="section-title">DM/이메일 발송</p>
     <p class="section-sub">이메일 있는 인플루언서를 캠페인에 담고, 변수 제안서를 Gmail로 발송한 뒤 회신까지 확인합니다.</p>
     <div class="campaign-shell">
+      <button class="campaign-menu-toggle" type="button" onclick="toggleCampaignSide()">메뉴</button>
+      <div class="campaign-side-backdrop" onclick="toggleCampaignSide(false)"></div>
       <aside class="campaign-side">
-        <div class="workspace-logo"><span class="workspace-mark">피</span><span id="workspace-title">피처링 워크스페이스</span></div>
+        <div class="workspace-logo">
+          <div class="workspace-logo-main"><span class="workspace-mark">피</span><span id="workspace-title">피처링 워크스페이스</span></div>
+          <button class="side-close" type="button" onclick="toggleCampaignSide(false)" aria-label="메뉴 닫기">×</button>
+        </div>
         <input class="side-search" id="campaign-q" placeholder="계정 및 채널 검색" />
         <div class="side-menu-title">인플루언서</div>
         <button class="side-menu-item" data-campaign-mode-btn="find" onclick="setCampaignMode('find')">◎ 인플루언서 찾기</button>
         <div class="finder-subtabs" id="find-subtabs">
           <button class="finder-subtab active" data-find-tab="unchecked" onclick="switchCampaignFinderTab('find', 'unchecked')">미확인</button>
+          <button class="finder-subtab" data-find-tab="good" onclick="switchCampaignFinderTab('find', 'good')">좋음</button>
           <button class="finder-subtab" data-find-tab="hold" onclick="switchCampaignFinderTab('find', 'hold')">보류</button>
           <button class="finder-subtab" data-find-tab="excluded" onclick="switchCampaignFinderTab('find', 'excluded')">제외</button>
         </div>
@@ -910,10 +994,6 @@ tbody tr:hover { background: var(--pink-light); }
           </div>
           <div class="campaign-setup-layout">
             <div class="campaign-setup-form">
-              <div class="field" style="margin-bottom:16px;">
-                <label>캠페인명 *</label>
-                <input id="setup-campaign-name" placeholder="예) 초기전략 캠페인" oninput="renderCampaignSetupPreview()" />
-              </div>
               <div class="field">
                 <label>캠페인 유형</label>
                 <div class="campaign-type-grid" id="campaign-type-grid"></div>
@@ -949,12 +1029,6 @@ tbody tr:hover { background: var(--pink-light); }
           </div>
         </div>
         <div class="campaign-body-grid">
-          <div class="campaign-title-edit">
-            <div class="field">
-              <label>캠페인명</label>
-              <input id="campaign-name" placeholder="예) 6월 앰플 협찬 캠페인" />
-            </div>
-          </div>
           <div class="campaign-step-row">
             <div class="campaign-step-aside">
               <div><span class="step-label">STEP 1</span><span class="campaign-step-title">수신인 추가</span></div>
@@ -1190,6 +1264,7 @@ const CACHE_TTL_MS = 2500;
 const CAMPAIGN_MANAGE_TABS = ["pending-dm", "pending-email", "sent", "replied", "rejected", "excluded"];
 const FIND_TABS = {
   unchecked: { label: "미확인", review_status: "미확인" },
+  good: { label: "좋음", review_status: "좋음" },
   hold: { label: "보류", review_status: "보류" },
   excluded: { label: "제외", review_status: "제외" },
 };
@@ -1413,8 +1488,20 @@ function rowMemoText(row) {
 function rowInfoText(row) {
   return String(row.notes || "").trim();
 }
+function followerSortValue(row) {
+  return Number(row?.follower_count || 0);
+}
+function sortRowsByFollowers(rows) {
+  const direction = state.tableSortDirection || -1;
+  return rows.sort((a, b) => {
+    const diff = followerSortValue(a) - followerSortValue(b);
+    if (diff) return direction * diff;
+    return String(a.seller_name || "").localeCompare(String(b.seller_name || ""), "ko");
+  });
+}
 function sortedMainRows(rows) {
   const list = [...rows];
+  if (state.tableSortKey === "followers") return sortRowsByFollowers(list);
   if (state.tableSortKey !== "memo") return list;
   const direction = state.tableSortDirection || 1;
   return list.sort((a, b) => {
@@ -1422,6 +1509,10 @@ function sortedMainRows(rows) {
     const bMemo = rowMemoText(b).toLowerCase();
     return direction * aMemo.localeCompare(bMemo, "ko");
   });
+}
+function sortedFinderRows(rows) {
+  const list = [...rows];
+  return state.tableSortKey === "followers" ? sortRowsByFollowers(list) : list;
 }
 function setMemoSort() {
   if (state.tableSortKey === "memo") {
@@ -1432,11 +1523,54 @@ function setMemoSort() {
   }
   renderTable();
 }
+function sortIconSvg(direction = 0) {
+  if (direction === 1) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>`;
+  }
+  if (direction === -1) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m18 13-6 6-6-6"/></svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14"/><path d="m5 16 3 3 3-3"/><path d="M16 19V5"/><path d="m13 8 3-3 3 3"/></svg>`;
+}
+function followerSortControl() {
+  return `<button class="sort-icon-btn followers-sort-button" type="button" onclick="setFollowerSort(event)" aria-label="팔로워 정렬" title="팔로워 정렬">${sortIconSvg(state.tableSortKey === "followers" ? state.tableSortDirection : 0)}</button>`;
+}
+function setFollowerSort(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  if (state.tableSortKey === "followers") {
+    state.tableSortDirection *= -1;
+  } else {
+    state.tableSortKey = "followers";
+    state.tableSortDirection = -1;
+  }
+  renderTable();
+  if (["find", "manage", "excluded"].includes(state.campaignMode)) {
+    renderFinderCandidates();
+  }
+}
 function renderMemoSortIndicator() {
   const indicator = $("memo-sort-indicator");
   if (!indicator) return;
   if (state.tableSortKey !== "memo") return void (indicator.textContent = "");
   indicator.textContent = state.tableSortDirection === 1 ? "↑" : "↓";
+}
+function renderFollowerSortIndicators() {
+  const active = state.tableSortKey === "followers";
+  const direction = active ? state.tableSortDirection : 0;
+  const label = active
+    ? state.tableSortDirection === -1
+      ? "팔로워 내림차순 정렬 중"
+      : "팔로워 오름차순 정렬 중"
+    : "팔로워 내림차순 정렬";
+  document.querySelectorAll(".followers-sort-button").forEach((button) => {
+    button.classList.toggle("active", active);
+    button.innerHTML = sortIconSvg(direction);
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
+  });
 }
 function profileUrl(row) {
   if (row.profile_url) return row.profile_url;
@@ -1670,6 +1804,7 @@ function renderTable() {
   empty.querySelector("small").textContent = state.loadingCandidates ? "잠시만 기다려주세요" : "검색어나 필터를 조정해보세요";
   empty.style.display = state.candidates.length ? "none" : "block";
   renderMemoSortIndicator();
+  renderFollowerSortIndicators();
   tbody.innerHTML = sortedMainRows(state.candidates).map((row, index) => {
     const normalizedDmStatus = normalizeDmStatus(row.dm_status);
     const normalizedEmailStatus = normalizeEmailStatus(row.email_status);
@@ -1919,6 +2054,15 @@ function campaignStatusClass(value) {
 function selectedCampaignId() {
   return state.selectedCampaign?.id;
 }
+function isMobileCampaignLayout() {
+  return window.matchMedia("(max-width: 720px)").matches;
+}
+function toggleCampaignSide(open) {
+  const shell = document.querySelector(".campaign-shell");
+  if (!shell) return;
+  const nextOpen = typeof open === "boolean" ? open : !shell.classList.contains("side-open");
+  shell.classList.toggle("side-open", nextOpen);
+}
 function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   state.campaignMode = mode;
   const listMode = mode === "find" || mode === "manage" || mode === "excluded";
@@ -1940,6 +2084,7 @@ function setCampaignMode(mode, { skipFinderLoad = false } = {}) {
   if (listMode && !skipFinderLoad) loadFinderCandidates();
   if (setupMode) renderCampaignSetup();
   if (addMode && $("f-assignee") && !$("f-assignee").value.trim()) $("f-assignee").value = campaignOwner();
+  if (isMobileCampaignLayout()) toggleCampaignSide(false);
 }
 function switchCampaignFinderTab(mode, tab) {
   const requestedMode = mode === "find" ? "find" : "manage";
@@ -1965,6 +2110,7 @@ function switchCampaignFinderTab(mode, tab) {
     : filterFinderCandidates(fallbackRows, requestedOwner, requestedFindTab, requestedMode === "manage" ? nextManageTab : requestedFindTab);
   renderFinderCandidates();
   loadFinderCandidates();
+  if (isMobileCampaignLayout()) toggleCampaignSide(false);
 }
 function setCampaignFindTab(name, { skipFinderLoad = false } = {}) {
   state.campaignFindTab = FIND_TABS[name] ? name : "unchecked";
@@ -2083,7 +2229,7 @@ async function loadFinderCandidates({ force = false } = {}) {
       }
       params.set("manage_tab", requestedManageTab);
     } else if (requestedMode === "find") {
-      params.set("review_status_in", "미확인,보류,제외");
+      params.set("review_status_in", "미확인,좋음,보류,제외");
       params.set("row_limit", "2000");
       params.delete("manage_tab");
       params.delete("review_status");
@@ -2106,6 +2252,7 @@ async function loadFinderCandidates({ force = false } = {}) {
 }
 function renderFinderCandidates() {
   const rows = state.finderCandidates || [];
+  const displayRows = sortedFinderRows(rows);
   const isFind = state.campaignMode === "find";
   const isManage = state.campaignMode === "manage";
   const isExcluded = state.campaignMode === "excluded";
@@ -2135,8 +2282,9 @@ function renderFinderCandidates() {
   $("finder-title").textContent = isManage ? "인플루언서 관리" : isExcluded ? "제외" : "인플루언서 찾기";
   $("finder-table-head")?.classList.toggle("finder-simple", isFind);
   $("finder-table-head").innerHTML = isFind
-    ? `<span>#</span><span>계정</span><span>팔로워</span><span>검토</span><span>메모</span><span>담당자</span>`
+    ? `<span>#</span><span>계정</span><span class="finder-head-cell">팔로워${followerSortControl()}</span><span>검토</span><span>메모</span><span>담당자</span>`
     : `<span>#</span><span>계정</span><span>발송 수단</span><span>이메일</span><span>검토</span><span>DM 상태</span><span>이메일 상태</span><span>공구경험</span><span>에이전시 여부</span><span>메모</span><span>담당자</span><span>액션시간</span><span>메모</span>`;
+  renderFollowerSortIndicators();
   $("find-subtabs")?.classList.toggle("active", isFind);
   $("manage-subtabs")?.classList.toggle("active", isManage);
   document.querySelectorAll("[data-find-tab]").forEach((button) => {
@@ -2162,8 +2310,8 @@ function renderFinderCandidates() {
       ? `크롤링 제외와 검토 제외 처리된 인플루언서입니다.`
     : `${campaignOwner()} 담당 ${FIND_TABS[state.campaignFindTab]?.label || "미확인"} 인플루언서입니다. 검토 상태를 선택하면 해당 탭으로 바로 이동합니다.`;
   const fallbackLabel = isFind ? findStatusLabel : manageStatusLabel;
-  $("finder-list").innerHTML = rows.length
-    ? rows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected, isManage })).join("")
+  $("finder-list").innerHTML = displayRows.length
+    ? displayRows.map((row, index) => renderFinderRow(row, index, { isFind, isExcluded, isManageSent, isManageReply, isManageRejected, isManage })).join("")
     : `<div class="empty-state" style="display:block;"><p>${esc(activeAssignee)} 담당 ${esc(fallbackLabel)}가 없습니다</p><small>${isExcluded ? "크롤링 제외 핸들이나 검토 제외 후보가 이곳에 표시됩니다." : isManage ? "검토 좋음 명단이 발송/회신 상태별로 나뉘어 표시됩니다." : "크롤링/배정 후 이곳에 표시됩니다."}</small></div>`;
 }
 async function restoreFinderExcluded() {
@@ -2274,6 +2422,7 @@ async function excludeFinderCandidate(id) {
   return updateFinderCandidateReview(id, "제외");
 }
 function findTabForReviewStatus(reviewStatus) {
+  if (reviewStatus === "좋음") return "good";
   if (reviewStatus === "보류") return "hold";
   if (reviewStatus === "제외") return "excluded";
   return "";
@@ -2431,10 +2580,6 @@ function renderCampaignManager() {
   editor.innerHTML = `
     <div class="campaign-manager-form">
       <div class="campaign-manager-fields">
-        <div class="field" style="margin-bottom:16px;">
-          <label>캠페인명</label>
-          <input id="manager-campaign-name" value="${esc(campaign.name || "")}" placeholder="예) 6월 앰플 협찬 캠페인" />
-        </div>
         <div class="template-tools" style="justify-content:flex-start;">
           <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{account}}')">계정명</button>
           <button class="action-btn" onclick="insertTemplateVar('manager-campaign-body', '{{name}}')">이름</button>
@@ -2562,14 +2707,12 @@ function renderCampaignSetup() {
       <span>${esc(item.copy)}</span>
     </button>
   `).join("");
-  if (!$("setup-campaign-name").value.trim()) $("setup-campaign-name").value = setupCampaignDefaultName(preset);
   if (!$("setup-campaign-subject").value.trim()) $("setup-campaign-subject").value = preset.subject;
   if (!$("setup-campaign-body").value.trim()) $("setup-campaign-body").value = preset.body;
   renderCampaignSetupPreview();
 }
 function openCampaignSetup() {
   const preset = CAMPAIGN_PRESETS[state.campaignSetupPreset] || CAMPAIGN_PRESETS.initial;
-  $("setup-campaign-name").value = setupCampaignDefaultName(preset);
   $("setup-campaign-subject").value = preset.subject;
   $("setup-campaign-body").value = preset.body;
   setCampaignMode("setup");
@@ -2577,7 +2720,6 @@ function openCampaignSetup() {
 function selectCampaignPreset(key) {
   const preset = CAMPAIGN_PRESETS[key] || CAMPAIGN_PRESETS.initial;
   state.campaignSetupPreset = key;
-  $("setup-campaign-name").value = setupCampaignDefaultName(preset);
   $("setup-campaign-subject").value = preset.subject;
   $("setup-campaign-body").value = preset.body;
   renderCampaignSetup();
@@ -2593,7 +2735,7 @@ function createNewCampaign() {
 async function createCampaignFromSetup() {
   const owner = campaignOwner();
   const preset = CAMPAIGN_PRESETS[state.campaignSetupPreset] || CAMPAIGN_PRESETS.initial;
-  const name = $("setup-campaign-name").value.trim() || setupCampaignDefaultName(preset);
+  const name = setupCampaignDefaultName(preset);
   const subject = $("setup-campaign-subject").value.trim() || preset.subject;
   const body = $("setup-campaign-body").value.trim() || preset.body;
   $("create-campaign-btn").disabled = true;
@@ -2635,7 +2777,6 @@ async function deleteSelectedCampaign(event, id) {
     if (next?.id) {
       await selectCampaign(next.id);
     } else {
-      $("campaign-name").value = "";
       $("campaign-subject").value = "";
       $("campaign-body").value = "";
       renderCampaignList();
@@ -2650,7 +2791,6 @@ async function deleteSelectedCampaign(event, id) {
 async function selectCampaign(id) {
   try {
     state.selectedCampaign = await api(`/api/campaigns/${id}`);
-    $("campaign-name").value = state.selectedCampaign.name || "";
     $("campaign-subject").value = state.selectedCampaign.subject_template || "";
     $("campaign-body").value = state.selectedCampaign.body_template || "";
     renderCampaignList();
@@ -2846,7 +2986,7 @@ async function saveManagedCampaignTemplate({ silent = false } = {}) {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        name: $("manager-campaign-name")?.value.trim() || state.selectedCampaign.name,
+        name: state.selectedCampaign.name,
         subject_template: $("manager-campaign-subject")?.value || "",
         body_template: $("manager-campaign-body")?.value || "",
       }),
@@ -2872,7 +3012,7 @@ async function saveCampaignTemplate({ silent = false } = {}) {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        name: $("campaign-name").value.trim() || state.selectedCampaign.name,
+        name: state.selectedCampaign.name,
         subject_template: $("campaign-subject").value,
         body_template: $("campaign-body").value,
       }),
