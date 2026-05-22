@@ -8,6 +8,8 @@ const DEFAULT_OUTPUT_DIR = "data";
 const DEFAULT_LIMIT_PER_TAG = 50;
 const DEFAULT_DELAY_MS = 2500;
 const DEFAULT_PROFILE_DELAY_MS = 1200;
+const DEFAULT_SEARCH_PAGES = 1;
+const DEFAULT_SEARCH_PAGE_DELAY_MS = 1500;
 const DEFAULT_SEARCH_DOC_ID = "26586987494245638";
 const WEB_PROFILE_ENDPOINT = "https://i.instagram.com/api/v1/users/web_profile_info/";
 const CANDIDATES_TABLE = "beauty_seller_candidates";
@@ -266,6 +268,8 @@ function parseArgs(argv) {
     cookie: process.env.IG_COOKIE || "",
     cookieFile: "",
     searchDocId: process.env.IG_SEARCH_DOC_ID || DEFAULT_SEARCH_DOC_ID,
+    searchPages: Number(process.env.IG_SEARCH_PAGES || "") || DEFAULT_SEARCH_PAGES,
+    searchPageDelayMs: Number(process.env.IG_SEARCH_PAGE_DELAY_MS || "") || DEFAULT_SEARCH_PAGE_DELAY_MS,
     excludedHandlesFile: "",
     skipSupabaseExclusions: false,
     requireBeauty: false,
@@ -284,6 +288,10 @@ function parseArgs(argv) {
     else if (arg === "--cookie") args.cookie = argv[++i];
     else if (arg === "--cookie-file") args.cookieFile = argv[++i];
     else if (arg === "--search-doc-id") args.searchDocId = argv[++i];
+    else if (arg === "--search-pages" || arg === "--pages") args.searchPages = Number(argv[++i]) || args.searchPages;
+    else if (arg === "--search-page-delay-ms" || arg === "--page-delay-ms") {
+      args.searchPageDelayMs = Number(argv[++i]) || args.searchPageDelayMs;
+    }
     else if (arg === "--excluded-handles-file") args.excludedHandlesFile = argv[++i];
     else if (arg === "--skip-supabase-exclusions") args.skipSupabaseExclusions = true;
     else if (arg === "--require-beauty" || arg === "--beauty-only") args.requireBeauty = true;
@@ -613,13 +621,13 @@ function getCookieValue(cookie, name) {
   return cookie.match(new RegExp(`(?:^|;\\s*)${escaped}=([^;]+)`))?.[1] || "";
 }
 
-async function fetchInstagramSearch(hashtag, args) {
-  const sessionId = crypto.randomUUID();
+async function fetchInstagramSearch(hashtag, args, { sessionId = crypto.randomUUID(), after = "" } = {}) {
   const variables = {
     query: `#${hashtag}`,
     search_session_id: sessionId,
     serp_session_id: sessionId,
   };
+  if (after) variables.after = after;
   const url = `https://www.instagram.com/graphql/query?doc_id=${encodeURIComponent(
     args.searchDocId
   )}&variables=${encodeURIComponent(JSON.stringify(variables))}`;
@@ -664,6 +672,35 @@ async function fetchInstagramSearch(hashtag, args) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function searchPageInfo(json) {
+  return json?.data?.xdt_fbsearch__top_serp_graphql?.page_info || {};
+}
+
+async function fetchInstagramSearchPages(hashtag, args) {
+  const sessionId = crypto.randomUUID();
+  const pages = [];
+  let after = "";
+
+  for (let page = 1; page <= args.searchPages; page += 1) {
+    const result = await fetchInstagramSearch(hashtag, args, { sessionId, after });
+    const pageInfo = searchPageInfo(result.json);
+    const rows = result.json ? extractCandidatesFromSearch(result.json, hashtag) : [];
+    pages.push({
+      ...result,
+      page,
+      rows,
+      hasNextPage: Boolean(pageInfo.has_next_page),
+      endCursor: pageInfo.end_cursor || "",
+    });
+
+    if (!pageInfo.has_next_page || !pageInfo.end_cursor) break;
+    after = pageInfo.end_cursor;
+    if (page < args.searchPages) await sleep(args.searchPageDelayMs);
+  }
+
+  return pages;
 }
 
 function unique(values) {
@@ -1225,15 +1262,22 @@ async function main() {
 
   for (const hashtag of hashtags) {
     const htmlUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag)}/`;
-    console.log(`[instagram] #${hashtag} 검색 API 요청 중`);
+    console.log(`[instagram] #${hashtag} 검색 API 요청 중 (${args.searchPages} page max)`);
 
     let result = null;
+    let pageResults = [];
     let rows = [];
     let source = "graphql_search";
 
     if (args.cookie) {
-      result = await fetchInstagramSearch(hashtag, args);
-      rows = result.json ? extractCandidatesFromSearch(result.json, hashtag) : [];
+      pageResults = await fetchInstagramSearchPages(hashtag, args);
+      rows = dedupeRows(pageResults.flatMap((page) => page.rows));
+      const lastPage = pageResults.at(-1);
+      result = {
+        status: lastPage?.status || 0,
+        contentType: lastPage?.contentType || "",
+        text: pageResults.map((page) => page.text || "").join("\n"),
+      };
     }
 
     if (!rows.length) {
@@ -1241,6 +1285,7 @@ async function main() {
       console.log(`[instagram] #${hashtag} 검색 API 후보 없음. HTML fallback 요청 중: ${htmlUrl}`);
       result = await fetchText(htmlUrl, args.cookie);
       rows = extractCandidatesFromHtml(result.text, hashtag);
+      pageResults = [];
     }
 
     const beforeBeautyFilter = rows.length;
@@ -1281,6 +1326,9 @@ async function main() {
       status: result.status,
       contentType: result.contentType,
       responseLength: result.text.length,
+      searchPagesRequested: args.searchPages,
+      searchPagesFetched: pageResults.length || (source === "html_fallback" ? 0 : 1),
+      searchHasNextPage: pageResults.at(-1)?.hasNextPage || false,
       rows: rows.length,
       nonBeautyRows: beautyDroppedCount,
       nonCommercialRows: commercialDroppedCount,

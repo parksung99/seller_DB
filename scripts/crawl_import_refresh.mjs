@@ -10,6 +10,8 @@ function parseArgs(argv) {
     delayMs: 3000,
     cookie: process.env.IG_COOKIE || "",
     cookieFile: "",
+    searchPages: "",
+    searchPageDelayMs: "",
     requireBeauty: false,
     requireCommercial: false,
     prospectMode: false,
@@ -26,6 +28,8 @@ function parseArgs(argv) {
     else if (arg === "--delay-ms") args.delayMs = Number(argv[++i]) || args.delayMs;
     else if (arg === "--cookie") args.cookie = argv[++i] || "";
     else if (arg === "--cookie-file") args.cookieFile = argv[++i] || "";
+    else if (arg === "--search-pages" || arg === "--pages") args.searchPages = Number(argv[++i]) || "";
+    else if (arg === "--search-page-delay-ms" || arg === "--page-delay-ms") args.searchPageDelayMs = Number(argv[++i]) || "";
     else if (arg === "--require-beauty" || arg === "--beauty-only") args.requireBeauty = true;
     else if (arg === "--require-commercial" || arg === "--commercial-only") args.requireCommercial = true;
     else if (arg === "--prospect-mode") args.prospectMode = true;
@@ -78,6 +82,8 @@ function buildCrawlerArgs(args) {
   const crawlerArgs = ["--hashtag-file", args.hashtagFile, "--delay-ms", String(args.delayMs)];
   if (args.outputDir) crawlerArgs.push("--output-dir", args.outputDir);
   if (args.limit) crawlerArgs.push("--limit", String(args.limit));
+  if (args.searchPages) crawlerArgs.push("--search-pages", String(args.searchPages));
+  if (args.searchPageDelayMs) crawlerArgs.push("--search-page-delay-ms", String(args.searchPageDelayMs));
   if (args.cookieFile) crawlerArgs.push("--cookie-file", args.cookieFile);
   else if (args.cookie) crawlerArgs.push("--cookie", args.cookie);
   if (args.requireBeauty) crawlerArgs.push("--require-beauty");

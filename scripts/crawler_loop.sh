@@ -31,6 +31,8 @@ else
     "8000"
     "--limit"
     "20"
+    "--search-pages"
+    "5"
     "--refresh-limit"
     "120"
   )
